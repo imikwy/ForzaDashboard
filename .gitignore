@@ -1,22 +1,31 @@
-# Persönliche Daten – gehören nie ins Repo
-/daten/
+# Bauen
+app/target/
+app/gen/
+build-log.txt
+
+# Persönliche Daten und Laufzeit-Dateien (liegen im Datenordner neben der exe) – gehören nie ins Repo
 /_Archiv/
+/ForzaDashboard.exe
+/ForzaDashboard.exe.*
+/einstellungen.txt
+/gelernte-strassen.*
+/freunde-strassen.json*
+/karte-gemeinsam*.json*
+/karte-lokal.json
+/lobbys.json
+/Kartenversionen/
+/Sitzungen/
+/Sicherungen/
+/updates/
+/update-*.json
+/ForzaDashboard-log*.txt
+/dashboard.html
+herausgeber*
 *.pem
 *.key
-
-# Alte Version (ForzaDashboard.exe) – liegt nur noch zum Umstieg im Ordner
-/ForzaDashboard.exe
-/ForzaDashboard.exe.vorher
-/dashboard.html
-/src/
-/Sicherungen/
-/karte-gemeinsam*.json
-/gelernte-strassen.*
-/freunde-strassen.json
-/einstellungen.txt
-/ForzaDashboard-log.txt
-/herausgeber*
-/*.lnk
-
-node_modules/
+*.alt
+*.neu
+*.kaputt
+*.zip
 *.tmp
+node_modules/

@@ -1,0 +1,242 @@
+ForzaDashboard – Telemetrie-Dashboard für Forza Horizon 6
+=========================================================
+
+EINMALIG EINRICHTEN
+Nichts installieren - nur "ForzaDashboard.exe" doppelklicken.
+-> Das Dashboard öffnet sich im Vollbild, unten rechts in der Taskleiste
+   erscheint das ForzaDashboard-Symbol.
+Die exe kann in einen eigenen Ordner (z. B. Dokumente\ForzaDashboard).
+Liegen dort schon einstellungen.txt / gelernte-strassen.json (alte
+Version), benutzt sie diese Dateien. Sonst speichert sie alles in
+%APPDATA%\ForzaDashboard (Symbol -> "Ordner mit Einstellungen öffnen").
+Benötigt Windows 10/11 (WebView2 ist dort schon dabei).
+Bei der ersten Ausführung kann Windows "Der Computer wurde durch Windows
+geschützt" zeigen -> "Weitere Informationen" -> "Trotzdem ausführen".
+
+IM SPIEL (Forza Horizon 6)
+Einstellungen > HUD und Gameplay
+  - Data Out ............... An
+  - Data Out IP-Adresse .... 127.0.0.1
+  - Data Out IP-Port ....... 5400
+Daten kommen nur während der Fahrt, nicht im Menü oder in der Pause.
+
+BENUTZEN
+- ForzaDashboard.exe -> Dashboard öffnet sich im Vollbild.
+- Unten rechts in der Taskleiste erscheint ein Symbol:
+  Klick = Dashboard öffnen, Rechtsklick = Port fürs Spiel, Adresse für
+  Tablet/Handy, Ordner mit Einstellungen, Beenden.
+- Vollbild an/aus: F11 (verlassen auch mit Esc) · Fenster schließen: Alt+F4
+  Damit wird ForzaDashboard ganz beendet (auch Tablet/Handy trennen sich).
+- Zweiter Bildschirm: F11, Fenster auf den anderen Bildschirm ziehen, F11.
+  Fenster, Bildschirm und Vollbild werden für den nächsten Start gemerkt.
+- Taste M = zwischen Dashboard und großer Karte wechseln
+- Karte: + / − oder Mausrad zoomen, ziehen zum Verschieben,
+  "Übersicht" zeigt alle gefahrenen Straßen, "Folgen" zentriert wieder.
+- Kompass oben links: Karte in Fahrtrichtung oder nach Norden.
+- Die Karte merkt sich alle gefahrenen Straßen (grau) und baut sich
+  so mit der Zeit auf. Die aktuelle Fahrt ist farbig (Farbe = Tempo).
+
+SPOTIFY
+Die Kachel "Läuft gerade" zeigt Titel und Interpret aus der Spotify-App
+am PC und steuert sie (Play/Pause, Weiter, Zurück, Lautstärke).
+Dafür muss nur die normale Spotify-App laufen – kein Login nötig.
+Wenn Spotify pausiert ist, steht dort "Pausiert" (Spotify zeigt den Titel
+dann nicht an).
+
+KACHELN & AUSSEHEN
+Über das Regler-Symbol links: Kacheln ein-/ausschalten (Ladedruck,
+Leistung, Tank, Fahrwerk, Untergrund, Fahrzeuglage, Verlauf, Fahrzeug …),
+Akzentfarbe, Schriftgröße, Ecken, Einheiten.
+Reifenverschleiß sendet nur Forza Motorsport, nicht Forza Horizon.
+
+FORZA-KARTE AUSRICHTEN (einmalig, ca. 1 Minute)
+Die Forza-Horizon-6-Karte ist eingebaut. Sie muss nur einmal wissen,
+wo du im Spiel bist:
+1. Normal losfahren, am besten 1-2 km mit ein paar Kurven/Abzweigungen.
+2. Zum Dashboard wechseln, auf der Karte das Ebenen-Symbol antippen.
+3. Auf der Karte die Stelle antippen, an der du gerade bist (der erste
+   Tipp zoomt heran, der zweite setzt den Punkt). Fertig.
+Das Dashboard legt deine gefahrene Strecke automatisch auf die Straßen
+und justiert beim Weiterfahren selbst nach.
+Rauswechseln ist kein Problem: Es zählt die letzte Position vor dem Wechsel.
+Die Ausrichtung wird mit deiner Gruppe geteilt: Hat sie einer gemacht,
+ist die Karte bei allen anderen automatisch richtig ausgerichtet.
+
+WEGPUNKTE
+"Wegpunkt" unten auf der Karte antippen, dann auf die Karte tippen.
+Oben steht die Entfernung, eine Linie zeigt die Richtung.
+Hinweis: Die Navi-Route aus dem Spiel sendet Forza nicht mit.
+
+STRASSEN LERNEN (automatisch)
+- Gefahrene Strecken werden zuerst nur unsichtbar vorgemerkt. Eine Straße
+  erscheint erst, wenn du eine Stelle ein zweites Mal fährst oder sie auf
+  einer Straße der Forza-Karte liegt. Ausflüge ins Gelände bleiben weg.
+- Typ: Rütteln des Untergrunds + Unruhe im Fahrwerk. Offroad = orange,
+  Schotter = gestrichelt, Straße = grau, Autobahn = gelb.
+- Bearbeiten: siehe "KARTE BEARBEITEN". Einen Ort auf der Karte antippen =
+  Wegpunkt dorthin.
+- Gespeichert in "gelernte-strassen.json" im ForzaDashboard-Ordner (alle Geräte).
+
+NAVIGATION
+Wegpunkt setzen (Knopf "Wegpunkt" oder einen markierten Ort antippen):
+Die Route wird über die Straßen berechnet, oben stehen Abbiegehinweis,
+Restdistanz und Ankunftszeit. Beim Abkommen wird neu berechnet.
+Die Karte kippt beim Folgen in eine 3D-Navi-Ansicht (abschaltbar in
+Einstellungen -> Karte). Voraussetzung: Karte einmal ausrichten.
+
+REIFEN / SCHADEN
+Reifen -> "Verschleiß": Abrieb in % (nur Forza Motorsport sendet das).
+Das Auto in der Mitte zeigt Schäden vorne/hinten/links/rechts. Forza sendet
+keine Schadensdaten - sie werden aus harten Aufprällen geschätzt.
+
+KACHELN / UMBAU-MODUS
+Einstellungen -> Kacheln -> "Oberfläche bearbeiten": Kacheln mit der Maus
+oder dem Finger auf eine andere ziehen = Plätze tauschen. Knopf oben rechts
+an jeder Kachel: breit/quadratisch, Zahnrad = Extras (z. B. Lenkanzeige,
+Kupplung, Spur bei G-Kraft, Zeilen bei Fahrt, Gewicht beim Tank),
+X = ausblenden, "+ Kachel" = weitere Kacheln einblenden. Auf kleinen Bildschirmen (Laptop) passen
+sich die Kacheln automatisch an, sodass nichts abgeschnitten ist.
+
+SPOTIFY-LAUTSTÄRKE
+Die Lautstärke-Knöpfe in der Musik-Kachel regeln nur Spotify (wie im
+Windows-Lautstärkemixer), nicht den ganzen PC. Falls Windows das nicht
+zulässt, regeln sie wie früher die PC-Lautstärke.
+Abschalten: in einstellungen.txt  spotify_lautstaerke=nein
+
+TANK / SPRIT
+Forza Horizon hat keinen echten Tank (das Spiel meldet immer 100 %).
+Darum berechnet das Dashboard den Verbrauch aus der Motorleistung:
+Vollgas verbraucht viel, Rollen fast nichts. Jedes Auto hat seinen eigenen
+Tank. Die Tankgröße richtet sich nach dem Gewicht des Autos: das
+Programm misst es beim Vollgas-Beschleunigen (nach etwa 20-30 Sekunden
+Vollgas). Bis dahin wird sie nach dem Motor geschätzt.
+Ein neues Auto startet vollgetankt.
+Tanken: "Volltanken" in der Tank-Kachel, oder an einer Tankstelle halten.
+Tankstellen legst du selbst an: Karte -> Stift -> Ort -> Art "Tankstelle".
+Dort anhalten = der Tank füllt sich. "Zur Tanke" navigiert zur nächsten.
+Verbrauch und Tankgröße: Einstellungen -> Einheiten.
+
+FREUNDE AUF DER KARTE
+Alle, die ForzaDashboard mit derselben Gruppe benutzen, sehen sich
+gegenseitig live auf der Karte (Name + Tempo). Dieses Paket hat schon
+eine gemeinsame Gruppe eingestellt - einfach beide diese Version starten.
+Antippen eines Freundes auf der Karte = Navigation zu ihm.
+Name und Gruppe ändern: Einstellungen -> Freunde.
+Gesendet wird nur dein Name und deine Position im Spiel, über einen
+öffentlichen Vermittlungsdienst (MQTT, broker.hivemq.com). Wer das nicht
+will: Einstellungen -> Freunde -> Aus.
+
+KARTE VERFEINERT SICH BEIM FAHREN
+- Fährst du mit Wegpunkt/Navi-Linie, liefert Forza deine Position relativ
+  zur Linie. Daraus misst das Dashboard je 40 m, wo die echte Straßenmitte
+  liegt und wie breit die Straße ist, und korrigiert die Karte.
+- Straßen, auf denen du länger schneller als 125 km/h fährst oder die sehr
+  breit sind, werden als Autobahn angezeigt.
+- Tunnel fehlen auf der Forza-Karte. Fährst du durch, lernt das Dashboard
+  die Strecke (zweimal fahren). Im Bearbeiten-Modus der Karte (Stift) kannst
+  du sie als "Tunnel" markieren - sie wird dann gestrichelt angezeigt.
+
+KARTE BEARBEITEN (Stift-Symbol oder Taste E)
+Oben erscheint die Werkzeugleiste. Alles geht auch mit der Tastatur
+(Übersicht: Taste ? im Editor).
+- Auswählen (V): Straße oder Ort antippen. An der ausgewählten Straße
+  erscheinen Punkte: ziehen = verschieben, die kleinen "+" dazwischen ziehen
+  = Punkt einfügen, Doppelklick (oder Entf über einem Punkt) = Punkt löschen.
+  Das geht auch mit den Straßen der Forza-Karte - so rückst du verschobene
+  Straßen an die richtige Stelle. "Original" holt die Forza-Straße zurück.
+- Neue Straße (N): Punkt für Punkt klicken. Die Straße läuft genau durch die
+  Punkte, Kurven werden weich, Knicke über 60° bleiben eckig. Enter = fertig
+  und gleich die nächste, Shift+Enter = fertig, Backspace = Punkt zurück,
+  Esc = verwerfen. F = Freihand (mit gedrückter Maus nachfahren).
+  Anfang und Ende rasten an Straßen ein (grüner Kreis, S schaltet das um).
+  Andere Straßen werden dabei NICHT mehr verändert oder abgerundet.
+- Radierer (R): über Straßen wischen - nur dieses Stück verschwindet.
+- Ort (P): Parkplatz, Car-Meet, Tankstelle ... auf die Karte setzen.
+- Typ: Tasten 1-5 (Autobahn, Straße, Schotter, Offroad, Tunnel) - beim
+  Zeichnen für die neue Straße, sonst für die ausgewählte. L = Ebene
+  (Boden, Brücke 1, Brücke 2, Tunnel/unten), K = Kurven weich/eckig.
+- Layer: jede Straßenart hat einen eigenen Layer und lässt sich oben
+  ein-/ausblenden (Alt+1 bis Alt+5, Alt+6 = Kartenbild, Alt+7 = Orte).
+  Ausgeblendete Layer kann man weder antippen noch daran einrasten -
+  praktisch, um z. B. nur Schotterwege zu bearbeiten. Die Layer gelten nur
+  im Editor, die normale Karte zeigt immer alles.
+- Strg+Z / Strg+Y: Rückgängig / Wiederholen (viele Schritte).
+- T = Vorlage an/aus: ein Bild liegt als Vorlage darunter (Forza-Karte,
+  zwei Stadtbilder oder ein eigenes Bild - "Bild ausrichten" zum
+  Verschieben, -/+ Größe, Pfeile drehen).
+- Maus 4 = Punkt zurück, Maus 5 = Radierer an/aus. E oder Esc = fertig.
+
+GEMEINSAME KARTE (zu zweit bearbeiten)
+Alles, was von Hand bearbeitet wird - gezeichnete Straßen, korrigierte
+Forza-Straßen, gelöschte Straßen, Orte und Radierungen - gehört der ganzen
+Gruppe. Jede Änderung ist nach etwa einer Sekunde bei allen anderen.
+- Jeder PC hat den kompletten Stand (Datei "karte-gemeinsam.json") und legt
+  ihn zusätzlich beim Vermittler ab. Beim Start holt sich jeder PC sofort
+  die neueste Karte - auch wenn die anderen gerade nicht laufen.
+- Wer offline war, bekommt beim nächsten Verbinden alles nachgeliefert;
+  seine eigenen Änderungen gehen dann an die anderen.
+- Ändern zwei Leute dieselbe Straße, gewinnt die spätere Änderung. Damit
+  das nicht passiert: Im Editor siehst du den Mauszeiger der anderen mit
+  Namen, und was jemand gerade ausgewählt hat, ist in seiner Farbe markiert
+  und für dich gesperrt, bis er fertig ist.
+- Eine gelernte Straße, die du änderst, wird dabei in die gemeinsame Karte
+  übernommen (das Original verschwindet).
+- Oben rechts im Editor steht, ob die Karte aktuell ist und wer mitarbeitet.
+- Bisher nur auf diesem PC gezeichnete Straßen, Orte und Radierungen werden
+  beim ersten Start automatisch in die gemeinsame Karte übernommen.
+- Ist in den Einstellungen "Freunde" aus, bleibt alles nur auf diesem PC.
+- Karte eines Freundes übernehmen (auch von der alten Version): seine Datei
+  "gelernte-strassen.json" einfach aufs Dashboard ziehen, oder Einstellungen
+  -> Karte -> "Karte importieren". Seine Zeichnungen, Orte und Radierungen
+  kommen in die gemeinsame Karte, was er inzwischen gelöscht hat, verschwindet,
+  seine gelernten Straßen werden angezeigt. Strg+Z im Editor macht den Import
+  rückgängig.
+
+GEMEINSAM LERNEN
+Die Straßen, die das Dashboard aus deinen Fahrten lernt, werden mit deiner
+Gruppe geteilt - du siehst die gelernten Straßen deines Kollegen und er
+deine. Fährst du eine Strecke, die er schon einmal gefahren ist (oder
+umgekehrt), wird sie sofort zur Straße (sonst erst beim zweiten Mal).
+
+AUTOMATISCHE UPDATES
+Neue Versionen werden automatisch geladen und installiert - kein Zip mehr
+nötig. Das Programm startet dabei kurz neu, das Dashboard lädt sich selbst
+neu. Updates sind digital signiert: installiert wird nur, was vom PC des
+Herausgebers kommt. Die Datei "herausgeber.key" gibt es nur dort -
+NIEMALS weitergeben (wer sie hat, könnte Updates verteilen).
+Die neue ForzaDashboard.exe ersetzt sich dabei selbst (die exe muss in
+einem Ordner liegen, in den man schreiben darf - also nicht in
+"C:\Programme").
+Herausgeber: "ForzaDashboard-bauen.bat" baut die exe neu (vorher APP_VER in
+app\src\main.rs erhöhen). Sobald die neue exe auf dem Herausgeber-PC
+läuft, wird sie an alle verteilt.
+
+SMART APP CONTROL
+Ist bei jemandem Windows "Smart App Control" eingeschaltet, blockiert es
+unsignierte Programme - auch die ForzaDashboard.exe. Abhilfe: die exe mit
+einem Code-Signing-Zertifikat signieren, oder Smart App Control ausschalten
+(Windows-Sicherheit -> App- und Browsersteuerung).
+
+HANDY / TABLET / ZWEITER BILDSCHIRM
+Ja, das geht im selben WLAN: ForzaDashboard muss auf dem PC laufen.
+Rechtsklick aufs Symbol unten rechts zeigt die Adresse
+(z. B. http://192.168.x.x:8080), ebenso Einstellungen -> Verbindung im
+Dashboard. Diese im Handy-/Tablet-Browser öffnen. Tipp: "Zum
+Home-Bildschirm hinzufügen" - dann startet es wie eine App im Vollbild.
+Beim ersten Start fragt die Windows-Firewall eventuell nach -> "Zulassen".
+
+KEINE DATEN?
+- Port im Spiel und in einstellungen.txt müssen gleich sein.
+- Nicht die Ports 5200–5300 benutzen (die nutzt das Spiel selbst).
+- Forza über Game Pass / Microsoft Store: einmal "GamePass-Fix.bat"
+  ausführen (fragt nach Admin-Rechten). Steam-Version braucht das nicht.
+
+EINSTELLUNGEN
+einstellungen.txt (wird beim ersten Start angelegt; Symbol -> "Ordner mit
+Einstellungen öffnen"). Nach einer Änderung ForzaDashboard neu starten.
+  udp_port=5400            Port, an den Forza sendet
+  web_port=8080            Port für das Dashboard
+  beim_start_oeffnen=ja    Dashboard automatisch öffnen
+  name=...                 dein Name für Freunde (sonst Windows-Benutzername)
+  gruppe=...               Freunde-Gruppe (alle mit derselben sehen sich)
+  freunde=ja               Freunde-Anzeige an/aus
