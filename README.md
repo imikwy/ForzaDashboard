@@ -22,7 +22,7 @@ Für Spieler steht alles in [LIESMICH.txt](LIESMICH.txt). Diese Datei richtet si
 4. **main schützen:** Settings → Rules → *New branch ruleset* für `main`: „Block force pushes“ und „Restrict deletions“ aktivieren. Keine Pull-Request-Pflicht, denn das Dashboard veröffentlicht direkt auf main.
 5. **Kumpel einladen:** Settings → Collaborators → mit Rolle *Write*. Nur wer Schreibrechte hat, kann eine Kartenversion veröffentlichen.
 6. **Erste Releases:**
-   - Actions → „Karte veröffentlichen“ → *Run workflow*. Daraus wird `karte-v1` aus `karte/karte.json`.
+   - Karte: Der erste Push erstellt automatisch `karte-v1` aus `karte/karte.json` (Actions → „Karte veröffentlichen“). Fehlte das Secret noch, dort *Run workflow* erneut auslösen.
    - Programm: `git tag app-v3.0.0 && git push origin app-v3.0.0`. Daraus werden `app-v3.0.0` und eine Zip zum Herunterladen.
 7. **Kumpel:** `git clone https://github.com/imikwy/ForzaDashboard.git`, dann im Ordner `ForzaDashboard-starten.bat`. Ein Repo-Klon ist automatisch ein „Herausgeber-PC“ und kann veröffentlichen. Alle anderen Spieler laden einfach die Zip aus dem neuesten `app-v…`-Release.
 
