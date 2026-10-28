@@ -1,5 +1,5 @@
 // einstellungen.txt lesen und schreiben (gleiches Format wie die Node-Version)
-use crate::util::{random_hex, take_chars};
+use crate::util::{device_id, take_chars};
 use std::path::Path;
 
 pub const DEFAULT_GROUP: &str = "fd-mattis-crew-7k3q";
@@ -13,6 +13,8 @@ pub struct Settings {
     pub fr_name: String,
     pub sid: String,
     pub spv_on: bool,
+    pub updates: bool,
+    pub update_repo: String,
 }
 
 const TEMPLATE: &str = "# ForzaDashboard Einstellungen\r\n# Im Spiel: Einstellungen > HUD und Gameplay > Data Out = An,\r\n# Data Out IP-Adresse = 127.0.0.1, Data Out IP-Port = gleicher Wert wie udp_port\r\nudp_port=5400\r\nweb_port=8080\r\nbeim_start_oeffnen=ja\r\n";
@@ -27,6 +29,7 @@ pub fn load(path: &Path) -> Settings {
     let mut s = Settings {
         udp_port: 5400, web_port: 8080, open_on_start: true, fr_on: true,
         fr_group: DEFAULT_GROUP.into(), fr_name: name, sid: String::new(), spv_on: true,
+        updates: true, update_repo: String::new(),
     };
     if !path.exists() { let _ = std::fs::write(path, TEMPLATE); }
     let text = std::fs::read_to_string(path).unwrap_or_default();
@@ -42,15 +45,14 @@ pub fn load(path: &Path) -> Settings {
             "freunde" => s.fr_on = !is_off(v),
             "gruppe" if !v.is_empty() => s.fr_group = take_chars(v, 40),
             "name" if !v.is_empty() => s.fr_name = take_chars(v, 24),
-            "id" if v.len() == 10 && v.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()) => s.sid = v.into(),
             "spotify_lautstaerke" => s.spv_on = !is_off(v),
+            "updates" => s.updates = !is_off(v),
+            "update_repo" if v.split('/').count() == 2 => s.update_repo = v.into(),
             _ => {}
         }
     }
-    if s.sid.is_empty() {
-        s.sid = random_hex(5);
-        set(path, "id", &s.sid);
-    }
+    // eine alte "id=" Zeile wird nicht mehr benutzt (sie wurde beim Kopieren des Ordners mitkopiert)
+    s.sid = device_id();
     s
 }
 

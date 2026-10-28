@@ -3,13 +3,20 @@
 // zusätzlich im WLAN für Handy/Tablet bereit. Ein Symbol unten rechts in der Taskleiste hält es am Laufen.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod bruecke;
+mod dienst;
+mod kanal;
+mod karte;
+mod lobby;
 mod media;
-mod net;
+mod mqtt;
 mod settings;
-mod shared;
+mod sitzung;
 mod state;
 mod telemetry;
+mod updates;
 mod util;
+mod veroeffentlichen;
 mod web;
 
 use state::{MyPos, Shared};
@@ -27,7 +34,10 @@ use tokio::net::{TcpListener, TcpStream, UdpSocket};
 use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
-pub const APP_VER: &str = "2026-10-28.10";
+// Format JJJJ-MM-TT.N (ForzaDashboard-bauen.bat zählt hoch; Releases auf GitHub setzen FD_VERSION beim Bauen)
+pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => "2026-10-28.11" };
+// hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
+pub const REPO: &str = "imikwy/ForzaDashboard";
 
 // F11 / Esc und der Vollbild-Knopf des Dashboards schalten das Fenster selbst in den Vollbildmodus
 const FULLSCREEN_JS: &str = r#"(function(){
@@ -62,10 +72,11 @@ fn main() {
     let root = util::find_root();
     util::log_init(&root);
     log(format!("ForzaDashboard {APP_VER} startet, Datenordner {}", root.display()));
-    if let Ok(exe) = std::env::current_exe() {
-        let _ = std::fs::remove_file(exe.with_file_name(format!("{}.alt", exe.file_name().and_then(|n| n.to_str()).unwrap_or(""))));
-    }
+    // frisch installiertes Update? Dann aufpassen, ob es sauber läuft (sonst automatisch zurück)
+    updates::startup_probe();
     let shared = Arc::new(Shared::new(root));
+    log(format!("Gerät {} · Karte Version {}", shared.sid, shared.karten.active_version()));
+    dienst::setup(&shared);
     let restarted = std::env::var("FD_RESTARTED").is_ok();
     let want_window = if restarted { std::env::var("FD_WINDOW").as_deref() == Ok("1") } else { shared.cfg.lock().unwrap().open_on_start };
 
@@ -79,6 +90,7 @@ fn main() {
             let _ = s_setup.app.set(handle.clone());
             if let Err(e) = tauri::async_runtime::block_on(start(s_setup.clone())) {
                 log(&e);
+                if updates::rollback("Start fehlgeschlagen") { std::process::exit(0); }
                 util::msgbox(&e);
                 std::process::exit(1);
             }
@@ -167,9 +179,8 @@ async fn start(s: Arc<Shared>) -> Result<(), String> {
     tauri::async_runtime::spawn(udp_loop(s.clone(), udp));
     log(format!("Im Spiel: 127.0.0.1 Port {port} · Dashboard: http://localhost:{web_port}"));
 
-    tauri::async_runtime::spawn(net::run(s.clone()));
-    net::spawn_timers(s.clone());
-    shared::spawn_timers(s.clone());
+    dienst::start(&s);
+    updates::spawn(s.clone());
     let sm = s.clone();
     tauri::async_runtime::spawn(async move {
         loop {
@@ -189,6 +200,7 @@ async fn udp_loop(s: Arc<Shared>, sock: UdpSocket) {
         let data: Arc<str> = p.json.to_string().into();
         *s.latest.lock().unwrap() = Some(data.clone());
         s.packets.fetch_add(1, Ordering::Relaxed);
+        s.last_packet.store(now_ms(), Ordering::Relaxed);
         s.last_len.store(n, Ordering::Relaxed);
         // sofort an die Dashboards schicken (kein Takt-Raster -> kein Ruckeln)
         let _ = s.tx.send(state::Ev { name: None, data });
@@ -309,8 +321,11 @@ fn build_tray(app: &AppHandle, s: &Arc<Shared>) -> tauri::Result<()> {
 
 // ---------------- Beenden / Neustart ----------------
 pub fn quit(s: &Arc<Shared>) {
-    net::bye(s);
-    shared::flush(s);
+    // bei den anderen abmelden (Sitzung, Lobbys); das Journal ist ohnehin schon auf der Platte
+    if let Some(c) = s.sitz().cur() { c.stop(); }
+    s.lobbys().stop();
+    let net = s.net.clone();
+    std::thread::spawn(move || { std::thread::sleep(Duration::from_millis(300)); net.stop(); });
     let Some(app) = s.app.get().cloned() else { std::process::exit(0) };
     let _ = app.save_window_state(state_flags());
     tauri::async_runtime::spawn(async move {

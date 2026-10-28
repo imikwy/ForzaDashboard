@@ -20,17 +20,6 @@ pub fn random_hex(bytes: usize) -> String {
     hex::encode(b)
 }
 
-// JavaScript-Wahrheitswert (für "x || null" / "x || 0" aus der Node-Version)
-pub fn truthy(v: &Value) -> bool {
-    match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64().map(|f| f != 0.0 && !f.is_nan()).unwrap_or(true),
-        Value::String(s) => !s.is_empty(),
-        _ => true,
-    }
-}
-
 pub fn take_chars(s: &str, n: usize) -> String {
     s.chars().take(n).collect()
 }
@@ -90,10 +79,111 @@ fn writable(dir: &Path) -> bool {
     ok
 }
 
+// ---------------- Dateien absturzsicher schreiben ----------------
+// Erst in eine temporäre Datei, auf die Platte zwingen, dann umbenennen: nach einem Stromausfall liegt
+// entweder die alte oder die neue Datei da – nie eine halbe.
+pub fn write_atomic(path: &Path, data: &[u8]) -> std::io::Result<()> {
+    if let Some(d) = path.parent() { std::fs::create_dir_all(d)?; }
+    let tmp = path.with_extension(format!("{}.tmp", random_hex(3)));
+    {
+        let mut f = std::fs::File::create(&tmp)?;
+        f.write_all(data)?;
+        f.sync_all()?;
+    }
+    // Virenscanner/Indexer halten Dateien manchmal kurz fest
+    for i in 0..10 {
+        match std::fs::rename(&tmp, path) {
+            Ok(()) => return Ok(()),
+            Err(e) if i < 9 => { let _ = e; std::thread::sleep(std::time::Duration::from_millis(40 * (i + 1))); }
+            Err(e) => { let _ = std::fs::remove_file(&tmp); return Err(e); }
+        }
+    }
+    Ok(())
+}
+
+pub fn write_json(path: &Path, v: &Value) {
+    if let Err(e) = write_atomic(path, serde_json::to_string_pretty(v).unwrap_or_default().as_bytes()) {
+        log(format!("{} konnte nicht gespeichert werden: {e}", path.display()));
+    }
+}
+
+pub fn read_json(path: &Path) -> Option<Value> {
+    serde_json::from_str(&std::fs::read_to_string(path).ok()?).ok()
+}
+
+// Zeile anhängen und sofort auf die Platte schreiben (Journal)
+pub fn append_line(path: &Path, line: &str) -> std::io::Result<()> {
+    if let Some(d) = path.parent() { std::fs::create_dir_all(d)?; }
+    let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path)?;
+    f.write_all(line.as_bytes())?;
+    f.write_all(b"\n")?;
+    f.sync_data()
+}
+
+// ---------------- Einladungscodes ----------------
+// lesbar und ohne verwechselbare Zeichen (kein 0/O, 1/I/L), angezeigt als K7M-2QX-9PA
+pub const CODE_LEN: usize = 9;
+const CODE_ABC: &[u8] = b"23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+
+pub fn new_code() -> String {
+    let mut b = [0u8; CODE_LEN];
+    let _ = getrandom::fill(&mut b);
+    b.iter().map(|x| CODE_ABC[*x as usize % CODE_ABC.len()] as char).collect()
+}
+
+pub fn norm_code(s: &str) -> String {
+    s.to_uppercase().chars().filter(|c| c.is_ascii_alphanumeric()).collect()
+}
+
+pub fn valid_code(s: &str) -> bool {
+    let c = norm_code(s);
+    c.len() == CODE_LEN && c.bytes().all(|b| CODE_ABC.contains(&b))
+}
+
+pub fn fmt_code(s: &str) -> String {
+    let c: Vec<char> = norm_code(s).chars().collect();
+    c.chunks(3).map(|p| p.iter().collect::<String>()).collect::<Vec<_>>().join("-")
+}
+
+// ---------------- Geräte-Kennung ----------------
+// Früher stand die Kennung in einstellungen.txt: wer den Ordner kopiert hat, hatte dieselbe Kennung wie der
+// Absender, und die Programme hielten die Änderungen des anderen für ihre eigenen. Jetzt liegt sie im
+// Benutzerprofil (nicht im Programmordner) und ist an diesen PC gebunden – kopierte Ordner bekommen eine eigene.
+pub fn local_dir() -> PathBuf {
+    let base = std::env::var("LOCALAPPDATA").map(PathBuf::from).unwrap_or_else(|_| std::env::temp_dir());
+    base.join("ForzaDashboard")
+}
+
+fn machine_fingerprint() -> String {
+    let mut m = String::new();
+    if let Ok(out) = no_window(std::process::Command::new("reg").args(["query", r"HKLM\SOFTWARE\Microsoft\Cryptography", "/v", "MachineGuid"])).output() {
+        let t = String::from_utf8_lossy(&out.stdout);
+        if let Some(l) = t.lines().find(|l| l.contains("MachineGuid")) { m = l.split_whitespace().last().unwrap_or("").to_string(); }
+    }
+    if m.is_empty() { m = format!("{}|{}", std::env::var("COMPUTERNAME").unwrap_or_default(), std::env::var("USERNAME").unwrap_or_default()); }
+    sha_hex(format!("fd-geraet:{m}").as_bytes())[..16].to_string()
+}
+
+pub fn device_id() -> String {
+    if let Ok(id) = std::env::var("FD_DEVICE_ID") { return id; }
+    let file = local_dir().join("geraet.json");
+    let fp = machine_fingerprint();
+    if let Some(o) = read_json(&file) {
+        let id = o["id"].as_str().unwrap_or("");
+        if id.len() == 10 && id.bytes().all(|b| b.is_ascii_hexdigit()) && o["machine"].as_str() == Some(&fp) { return id.to_string(); }
+    }
+    let id = random_hex(5);
+    write_json(&file, &serde_json::json!({"id": id, "machine": fp, "created": now_ms()}));
+    log(format!("Neue Geräte-Kennung für diesen PC: {id}"));
+    id
+}
+
 static LOG: OnceLock<Mutex<Option<std::fs::File>>> = OnceLock::new();
 
 pub fn log_init(root: &Path) {
     let p = root.join("ForzaDashboard-log.txt");
+    // das Protokoll des letzten Laufs bleibt als ForzaDashboard-log-vorher.txt (z. B. nach einem Absturz)
+    let _ = std::fs::rename(&p, root.join("ForzaDashboard-log-vorher.txt"));
     let f = std::fs::File::create(p).ok();
     let _ = LOG.set(Mutex::new(f));
 }
@@ -124,4 +214,11 @@ pub fn wait_pid(pid: u32) {
             let _ = CloseHandle(h);
         }
     }
+}
+
+pub fn gzip(b: &[u8]) -> Vec<u8> {
+    use flate2::{write::GzEncoder, Compression};
+    let mut e = GzEncoder::new(Vec::new(), Compression::new(9));
+    let _ = e.write_all(b);
+    e.finish().unwrap_or_default()
 }
