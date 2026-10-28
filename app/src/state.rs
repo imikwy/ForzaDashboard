@@ -150,6 +150,12 @@ impl Shared {
         self.net.ok()
     }
 
+    // Repo-Kopie für "Veröffentlichen": der Datenordner selbst oder repo_ordner aus einstellungen.txt
+    pub fn repo_root(&self) -> PathBuf {
+        let r = self.cfg.lock().unwrap().repo_ordner.clone();
+        if !self.root.join(".git").exists() && !r.is_empty() && PathBuf::from(&r).join(".git").exists() { PathBuf::from(r) } else { self.root.clone() }
+    }
+
     pub fn packets(&self) -> u64 {
         self.packets.load(Ordering::Relaxed)
     }

@@ -1,19 +1,23 @@
 ForzaDashboard – Telemetrie-Dashboard und gemeinsame Karte für Forza Horizon 6
 ================================================================================
-Version 3 · Programm und Karte kommen automatisch von GitHub, die Karte ist geschützt.
+Programm und Karte kommen automatisch von GitHub, die Karte ist geschützt.
 
 EINMALIG EINRICHTEN
-1. Node.js installieren: https://nodejs.org (LTS-Version, normal installieren).
-2. Den ForzaDashboard-Ordner von GitHub laden (Release "ForzaDashboard-app-v…zip"
-   entpacken) – NICHT den Ordner eines Freundes kopieren.
-3. Doppelklick auf "ForzaDashboard-starten.bat".
-   -> Ein schwarzes Fenster zeigt die Adressen, das Dashboard öffnet sich im Vollbild.
-   Danach liegt im Ordner die Verknüpfung "ForzaDashboard starten" – die geht auch,
-   wenn Windows (Smart App Control) die .bat blockiert.
-   Falls auch das blockiert wird: Rechtsklick auf starten.js -> "Öffnen mit" -> Node.js.
-Umstieg von der alten ForzaDashboard.exe: einfach die neue Version im selben Ordner
-starten. Die alte exe wird beendet, deine gelernten Straßen, Einstellungen, Kacheln und
-dein Tank werden einmalig übernommen (nur kopiert – die alten Dateien bleiben liegen).
+Nichts installieren – nur "ForzaDashboard.exe" doppelklicken.
+-> Das Dashboard öffnet sich im Vollbild, unten rechts in der Taskleiste
+   erscheint das ForzaDashboard-Symbol.
+- Neu dabei? Die neueste Version von GitHub laden (Release "ForzaDashboard …",
+  Datei ForzaDashboard.zip) und entpacken – NICHT den Ordner eines Freundes kopieren.
+- Die exe kann in einen eigenen Ordner (z. B. Dokumente\ForzaDashboard).
+  Liegt dort schon eine einstellungen.txt (ältere Version), benutzt sie diesen Ordner
+  für deine Daten. Sonst speichert sie alles in %APPDATA%\ForzaDashboard
+  (Symbol -> "Ordner mit Einstellungen öffnen").
+- Umstieg von einer älteren ForzaDashboard.exe: passiert automatisch (Update) oder
+  neue exe einfach an die Stelle der alten legen. Gelernte Straßen, Kacheln, Tank und
+  Einstellungen bleiben erhalten.
+- Benötigt Windows 10/11 (WebView2 ist dort schon dabei).
+  Beim ersten Start zeigt Windows evtl. "Der Computer wurde durch Windows geschützt"
+  -> "Weitere Informationen" -> "Trotzdem ausführen".
 
 IM SPIEL (Forza Horizon 6)
 Einstellungen > HUD und Gameplay
@@ -30,7 +34,7 @@ DIE KARTE – EINE WAHRHEIT FÜR ALLE
 - Beim normalen Fahren ist die Karte schreibgeschützt – sie kann nicht aus Versehen
   geändert oder überschrieben werden. Alle PCs zeigen exakt dieselben Straßen
   (auch Ausrichtung und Straßenkorrekturen kommen aus der Kartenversion).
-- Die letzten 10 Versionen bleiben im Ordner daten\karten liegen.
+- Die letzten 10 Versionen bleiben im Ordner Kartenversionen liegen.
 
 KARTE GEMEINSAM BEARBEITEN (BEARBEITEN-SITZUNG)
 1. Karte -> Stift. Es öffnet sich "Karte bearbeiten".
@@ -90,10 +94,13 @@ AUTOMATISCHE UPDATES
 - Einstellungen -> Freunde -> Updates -> "Jetzt prüfen".
 
 BENUTZEN
-- ForzaDashboard-starten.bat -> Dashboard öffnet sich im Vollbild.
+- ForzaDashboard.exe -> Dashboard öffnet sich im Vollbild.
 - Unten rechts in der Taskleiste erscheint ein Symbol:
-  Rechtsklick = Dashboard öffnen, Adresse für Tablet/Handy, Beenden.
-- Vollbild verlassen: F11 oder Esc · Fenster schließen: Alt+F4
+  Klick = Dashboard öffnen, Rechtsklick = Port fürs Spiel, Adresse für
+  Tablet/Handy, Ordner mit Einstellungen, Beenden.
+- Vollbild an/aus: F11 (verlassen auch mit Esc) · Fenster schließen: Alt+F4
+  Damit wird ForzaDashboard ganz beendet (auch Tablet/Handy trennen sich).
+- Zweiter Bildschirm: F11, Fenster auf den anderen Bildschirm ziehen, F11.
 - Taste M = zwischen Dashboard und großer Karte wechseln
 - Karte: + / − oder Mausrad zoomen, ziehen zum Verschieben,
   "Übersicht" zeigt alle gefahrenen Straßen, "Folgen" zentriert wieder.
@@ -204,37 +211,30 @@ der Forza-Karte), "Rückgängig" holt es zurück. Höhere Ebenen werden mit Scha
 
 HANDY / TABLET
 Ja, das geht im selben WLAN: ForzaDashboard muss auf dem PC laufen.
-Das schwarze Fenster zeigt die Adresse (z. B. http://192.168.x.x:8080).
+Rechtsklick auf das Symbol unten rechts zeigt die Adresse (z. B.
+http://192.168.x.x:8080), ebenso Einstellungen -> Verbindung.
 Diese im Handy-/Tablet-Browser öffnen. Tipp: "Zum Home-Bildschirm
 hinzufügen" - dann startet es wie eine App im Vollbild.
-
-ZWEITER BILDSCHIRM / TABLET / HANDY
-Im schwarzen Fenster steht eine Adresse wie http://192.168.x.x:8080 –
-die im Browser auf dem Tablet öffnen (gleiches WLAN).
 Beim ersten Start fragt die Windows-Firewall eventuell nach -> "Zulassen".
 
 KEINE DATEN?
 - Port im Spiel und in einstellungen.txt müssen gleich sein.
 - Nicht die Ports 5200–5300 benutzen (die nutzt das Spiel selbst).
-- Forza über Game Pass / Microsoft Store: einmal "GamePass-Fix.bat"
-  ausführen (fragt nach Admin-Rechten). Steam-Version braucht das nicht.
-
-KEINE DATEN?
-- Port im Spiel und in daten\einstellungen.txt müssen gleich sein.
-- Nicht die Ports 5200–5300 benutzen (die nutzt das Spiel selbst).
 - Forza über Game Pass / Microsoft Store: einmal "GamePass-Fix.bat" ausführen
   (fragt nach Admin-Rechten). Steam-Version braucht das nicht.
-- Probleme: daten\logs\forzadashboard.log an die Herausgeber schicken.
+- Probleme: ForzaDashboard-log.txt (im Ordner mit Einstellungen) an die Herausgeber schicken.
 
-DEIN ORDNER
-  app\          das Programm (wird bei Updates ersetzt – nichts darin ändern)
-  daten\        DEINE Daten: Einstellungen, gelernte Straßen, Lobbys, Sitzungen,
-                Kartenversionen, Protokolle. Wird von Updates nie angefasst.
-  starten.js    Starter (installiert Updates, startet bei Absturz neu)
-Den daten-Ordner nicht an andere weitergeben – Freunde laden sich das Programm
+DEIN ORDNER (neben der exe oder %APPDATA%\ForzaDashboard)
+  einstellungen.txt        Einstellungen (siehe unten)
+  gelernte-strassen.json   deine gelernten Straßen
+  lobbys.json              deine Lobbys
+  Kartenversionen\         geprüfte, schreibgeschützte Kartenversionen (die letzten 10)
+  Sitzungen\               Journal deiner Bearbeiten-Sitzungen
+  ForzaDashboard-log.txt   Protokoll
+Den Ordner nicht an andere weitergeben – Freunde laden sich das Programm
 selbst von GitHub und treten deiner Lobby mit dem Code bei.
 
-EINSTELLUNGEN (daten\einstellungen.txt)
+EINSTELLUNGEN (einstellungen.txt)
   udp_port=5400            Port, an den Forza sendet
   web_port=8080            Port für das Dashboard
   beim_start_oeffnen=ja    Dashboard automatisch öffnen

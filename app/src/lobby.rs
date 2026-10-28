@@ -28,6 +28,7 @@ pub struct Lobby {
 struct LFriend {
     f: Friend,
     lobbys: BTreeSet<String>,
+    pos: bool,
 }
 
 pub type OnRoads = Arc<dyn Fn(&str, &Value) + Send + Sync>;
@@ -89,12 +90,14 @@ impl Lobbys {
         if d.is_empty() || d == self.dev { return; }
         match o["y"].as_str().unwrap_or("") {
             "pos" => {
-                let (Some(x), Some(z)) = (o["x"].as_f64(), o["z"].as_f64()) else { return };
+                // ohne Koordinaten: online, aber gerade nicht im Spiel unterwegs (nur in der Lobby-Liste, nicht auf der Karte)
+                let (x, z) = (o["x"].as_f64(), o["z"].as_f64());
                 let num = |k: &str| o[k].as_f64().filter(|f| f.is_finite()).unwrap_or(0.0);
-                let f = Friend { n: take_chars(o["n"].as_str().unwrap_or("Freund"), 24), x, z, h: num("h"), v: num("v"), c: num("c") as i64, g: if num("g") != 0.0 { 1 } else { 0 }, seen: now_ms() };
+                let f = Friend { n: take_chars(o["n"].as_str().unwrap_or("Freund"), 24), x: x.unwrap_or(0.0), z: z.unwrap_or(0.0), h: num("h"), v: num("v"), c: num("c") as i64, g: if num("g") != 0.0 { 1 } else { 0 }, seen: now_ms() };
                 let mut fr = self.friends.lock().unwrap();
-                let e = fr.entry(d.to_string()).or_insert_with(|| LFriend { f: f.clone(), lobbys: BTreeSet::new() });
+                let e = fr.entry(d.to_string()).or_insert_with(|| LFriend { f: f.clone(), lobbys: BTreeSet::new(), pos: false });
                 e.f = f;
+                e.pos = x.is_some() && z.is_some();
                 e.lobbys.insert(code.to_string());
                 drop(fr);
                 // Lobby-Name vom Ersteller übernehmen (wer beitritt, kennt erst nur den Code)
@@ -117,9 +120,8 @@ impl Lobbys {
     pub fn pub_pos(&self, p: Option<MyPos>, name: &str, on: bool) {
         let now = now_ms();
         self.friends.lock().unwrap().retain(|_, f| now.saturating_sub(f.f.seen) <= 12000);
-        let Some(p) = p else { return };
         if !on || !self.net.ok() || self.kanaele.lock().unwrap().is_empty() { return; }
-        let fresh = now.saturating_sub(p.t) < 3000;
+        let fresh = p.is_some_and(|p| now.saturating_sub(p.t) < 3000);
         {
             let mut lp = self.last_pub.lock().unwrap();
             if !fresh && now.saturating_sub(*lp) < 5000 { return; }
@@ -130,7 +132,10 @@ impl Lobbys {
         let ks = self.kanaele.lock().unwrap();
         for l in ls {
             let Some(k) = ks.get(&l.code) else { continue };
-            let mut m = json!({"y": "pos", "d": self.dev, "n": name, "x": r(p.x, 10.0), "z": r(p.z, 10.0), "h": r(p.h, 1000.0), "v": r(p.v, 10.0), "c": p.c, "g": if fresh { 1 } else { 0 }});
+            let mut m = match p {
+                Some(p) => json!({"y": "pos", "d": self.dev, "n": name, "x": r(p.x, 10.0), "z": r(p.z, 10.0), "h": r(p.h, 1000.0), "v": r(p.v, 10.0), "c": p.c, "g": if fresh { 1 } else { 0 }}),
+                None => json!({"y": "pos", "d": self.dev, "n": name}),
+            };
             if l.owner { m["ln"] = json!(l.name); m["own"] = json!(1); }
             k.send(&m);
         }
@@ -243,7 +248,7 @@ impl Lobbys {
 
     pub fn friend_list(&self) -> Vec<Value> {
         let now = now_ms();
-        self.friends.lock().unwrap().iter().map(|(id, f)| {
+        self.friends.lock().unwrap().iter().filter(|(_, f)| f.pos).map(|(id, f)| {
             let f = &f.f;
             json!({"id": id, "n": f.n, "x": f.x, "z": f.z, "h": f.h, "v": f.v, "c": f.c, "g": f.g, "age": now.saturating_sub(f.seen)})
         }).collect()

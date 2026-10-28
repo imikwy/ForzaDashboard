@@ -1,6 +1,6 @@
-# Neue Kartenversion: sobald karte/karte.json auf main geändert wird.
-# Prüft gegen die letzte Version, signiert (Secret FD_SIGN_KEY) und erstellt das Release "karte-vN".
-# Alle Spieler laden es danach automatisch. Nur wer Schreibrechte auf das Repo hat, kann das auslösen.
+# Neue Kartenversion: sobald karte/karte.json auf main geändert wird (z. B. durch "Veröffentlichen" im Dashboard).
+# Prüft gegen die letzte Version, signiert (Secret FD_SIGN_KEY = Inhalt von herausgeber.key) und erstellt das
+# Release "karte-vN". Alle Spieler laden es danach automatisch. Nur wer Schreibrechte auf das Repo hat, kann das auslösen.
 name: Karte veröffentlichen
 on:
   push:
@@ -20,8 +20,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Tests
-        run: node --test "test/*.test.js"
       - name: Release bauen und veröffentlichen
         env:
           GH_TOKEN: ${{ github.token }}
@@ -36,6 +34,5 @@ jobs:
             args="--vorher /tmp/vorher/karte.json.gz"
           fi
           if git log -1 --pretty=%B | grep -q "\[massenloeschung-ok\]"; then args="$args --massenloeschung-ok"; fi
-          subject=$(git log -1 --pretty=%s)
-          node tools/karte.js release --version "$next" --out out $args --notiz "$subject"
+          node tools/karte.js release --version "$next" --out out $args --notiz "$(git log -1 --pretty=%s)"
           gh release create "karte-v$next" out/karte.json.gz out/karte.manifest.json --repo "$GITHUB_REPOSITORY" --title "Karte v$next" --notes "$(git log -1 --pretty=%B)"

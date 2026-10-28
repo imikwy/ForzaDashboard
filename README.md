@@ -1,83 +1,73 @@
-# ForzaDashboard 3
+# ForzaDashboard
 
-Telemetrie-Dashboard für Forza Horizon 6 mit **einer gemeinsamen, geschützten Karte**, gemeinsamem Bearbeiten in Echtzeit, dauerhaften Spiel-Lobbys und automatischen Updates über GitHub.
+Telemetrie-Dashboard für Forza Horizon 6 als eigene Windows-App (Rust + Tauri): **eine gemeinsame, geschützte Karte**, gemeinsames Bearbeiten in Echtzeit, dauerhafte Spiel-Lobbys und automatische Updates über GitHub.
 
-Für Spieler steht alles in [LIESMICH.txt](LIESMICH.txt). Diese Datei richtet sich an die **Herausgeber**, also an euch zwei, die Karte und Programm veröffentlichen.
+Für Spieler steht alles in [LIESMICH.txt](LIESMICH.txt). Diese Datei ist für euch zwei, die Herausgeber.
 
 ---
 
-## Einmalige Einrichtung (Herausgeber)
+## Einmal einrichten
 
-1. **Repo anlegen:** `imikwy/ForzaDashboard` als **öffentliches** Repo. Die Spieler laden Karten und Updates ohne Anmeldung, das geht nur bei öffentlichen Releases. Ein anderer Name? Dann `repo` in [app/config.json](app/config.json) ändern.
-2. **Signier-Schlüssel als Secret eintragen:** Repo → Settings → Secrets and variables → Actions → *New repository secret*
+1. **Repo** `imikwy/ForzaDashboard` anlegen, **öffentlich** (Spieler laden Updates ohne Anmeldung).
+2. **Secret** eintragen: Repo → Settings → Secrets and variables → Actions → *New repository secret*
    - Name: `FD_SIGN_KEY`
-   - Wert: der komplette Inhalt von `C:\Users\ikwyg\ForzaDashboard-Signierschluessel\signier-schluessel.pem`
-   - Danach die Datei auf einen USB-Stick sichern und vom PC löschen. Der Schlüssel gehört **nur** ins GitHub-Secret, nie ins Repo und nie zu den Spielern.
-3. **Code hochladen** (in diesem Ordner):
+   - Wert: der komplette Inhalt von `herausgeber.key` (derselbe Schlüssel wie bisher)
+3. **Hochladen**, in diesem Ordner:
    ```bash
-   gh auth setup-git
    git remote add origin https://github.com/imikwy/ForzaDashboard.git
+   ```
+   ```bash
    git push -u origin main
    ```
-4. **main schützen:** Settings → Rules → *New branch ruleset* für `main`: „Block force pushes“ und „Restrict deletions“ aktivieren. Keine Pull-Request-Pflicht, denn das Dashboard veröffentlicht direkt auf main.
-5. **Kumpel einladen:** Settings → Collaborators → mit Rolle *Write*. Nur wer Schreibrechte hat, kann eine Kartenversion veröffentlichen.
-6. **Erste Releases:**
-   - Karte: Der erste Push erstellt automatisch `karte-v1` aus `karte/karte.json` (Actions → „Karte veröffentlichen“). Fehlte das Secret noch, dort *Run workflow* erneut auslösen.
-   - Programm: `git tag app-v3.0.0 && git push origin app-v3.0.0`. Daraus werden `app-v3.0.0` und eine Zip zum Herunterladen.
-7. **Kumpel:** `git clone https://github.com/imikwy/ForzaDashboard.git`, dann im Ordner `ForzaDashboard-starten.bat`. Ein Repo-Klon ist automatisch ein „Herausgeber-PC“ und kann veröffentlichen. Alle anderen Spieler laden einfach die Zip aus dem neuesten `app-v…`-Release.
+   Daraus entsteht automatisch die Kartenversion `karte-v1`.
+4. **Kumpel einladen:** Settings → Collaborators → Rolle *Write*. Nur wer Schreibrechte hat, kann veröffentlichen.
+5. **main schützen** (empfohlen): Settings → Rules → *New branch ruleset* für `main` mit „Block force pushes“ und „Restrict deletions“.
+6. **Erste Programmversion:** Actions → „Programm veröffentlichen“ → *Run workflow*.
 
-### Wichtig für den Umstieg
+## Umstieg der alten exe (einmalig, auf dem PC des Kumpels)
 
-- **Straßenkorrekturen deines Kumpels:** Die alte exe hat Korrekturen der Forza-Straßen nur lokal auf seinem PC gespeichert. Deshalb sahen die Straßen bei dir „kaputt“ aus. Beim ersten Start übernimmt das neue Dashboard sie aus dem Speicher der alten exe. Dann: Sitzung starten → im Editor **„Fahr-Korrekturen übernehmen“** → veröffentlichen. Danach sieht jeder exakt dieselbe Karte.
-- **Hat dein Kumpel nach dem 28.10. um 04:33 Uhr noch mit der alten exe bearbeitet?** Dann in einer Sitzung seine `karte-gemeinsam.json` aufs Dashboard ziehen. Übernommen wird nur, was neuer ist, und danach wird veröffentlicht.
-- Die alte `ForzaDashboard.exe` beendet sich beim ersten Start der neuen Version automatisch. Ihre Dateien im Hauptordner werden nicht mehr benutzt und können später nach `_Archiv` verschoben werden.
+Wer noch die alte ForzaDashboard.exe hat, bekommt die neue automatisch über den alten Update-Weg. Das passiert von selbst, sobald die neue exe auf dem PC mit `herausgeber.key` läuft:
 
----
+1. `git clone https://github.com/imikwy/ForzaDashboard.git`
+2. Im geklonten Ordner `ForzaDashboard-bauen.bat` doppelklicken. Sie baut die exe, legt sie in den bisherigen Ordner auf dem Desktop (dort liegt `herausgeber.key`) und startet sie.
+   Liegt `herausgeber.key` woanders: neben die gestartete exe legen und die exe neu starten.
+3. Die neue exe verteilt sich jetzt an alle alten exes. Nach ein paar Tagen, wenn alle umgestiegen sind, `herausgeber.key` aus dem Desktop-Ordner nehmen und sicher aufbewahren, damit er nicht wieder mit einem kopierten Ordner verteilt wird.
+4. Einmal in einer Bearbeiten-Sitzung **„Fahr-Korrekturen übernehmen“** klicken und veröffentlichen. Damit kommen seine Straßenkorrekturen in die Karte, und alle sehen dieselben Straßen.
 
-## Wie es funktioniert
+## Alltag
 
-```
-           ┌────────────── GitHub (imikwy/ForzaDashboard) ──────────────┐
-           │ karte/karte.json  ──Actions: prüfen + signieren──▶ karte-vN  │
-           │ Tag app-v3.x.y    ──Actions: Tests + signieren───▶ app-v3.x.y│
-           └───────▲──────────────────────────────────────────┬─────────┘
-    Veröffentlichen│ (nur Herausgeber, git push)              │ alle 20 min (signiert)
-                   │                                          ▼
-   ┌─ PC A (Host) ─┴──┐   verschlüsselt über 2 öffentliche   ┌─ PC B ───────────┐
-   │ Bearbeiten-       │◀── MQTT-Vermittler gleichzeitig ───▶│ Bearbeiten-       │
-   │ Sitzung (Journal) │   (Sitzung: Code, Lobby: Code)       │ Sitzung (Journal) │
-   └───────────────────┘                                      └──────────────────┘
-```
+| Was | Wie |
+|---|---|
+| Karte ändern | Dashboard → Karte → Stift → Sitzung starten (Code an die anderen) → bearbeiten → **Veröffentlichen**. GitHub prüft, signiert und verteilt die neue Version in 1–2 Minuten. |
+| Neue Programmversion | Code ändern, committen, pushen → Actions → „Programm veröffentlichen“ → *Run workflow*. Jeder bekommt sie automatisch, sobald er gerade nicht fährt. |
+| Lokal ausprobieren | `ForzaDashboard-bauen.bat` (zählt die Version hoch, baut, startet) |
 
-| Teil | Datei | Aufgabe |
-|---|---|---|
-| Kartenversionen | [app/lib/karte.js](app/lib/karte.js) | geprüfte, schreibgeschützte Versionen in `daten/karten/`, Selbstreparatur |
-| Kartenprüfung | [app/lib/kartenpruefung.js](app/lib/kartenpruefung.js) | Schema, einheitliches Format, Diff, Schutz gegen Massenlöschung, Zusammenführen |
-| Bearbeiten-Sitzung | [app/lib/sitzung.js](app/lib/sitzung.js) | Host legt die Reihenfolge fest, Journal auf jedem PC, Host-Wechsel, Prüfsummen-Kette für den Abgleich, Verlauf und Rückgängig |
-| Lobbys | [app/lib/lobby.js](app/lib/lobby.js) | dauerhafte Spiel-Lobbys per Code, Positionen und gelernte Straßen |
-| Netz | [app/lib/netz.js](app/lib/netz.js), [kanal.js](app/lib/kanal.js) | MQTT über TLS, zwei Vermittler gleichzeitig, AES-256-GCM mit Schlüssel aus dem Code |
-| Updates | [app/lib/updates.js](app/lib/updates.js), [starten.js](starten.js) | GitHub Releases, Signaturprüfung, Installation im Stand, automatisches Zurück |
-| Veröffentlichen | [app/lib/veroeffentlichen.js](app/lib/veroeffentlichen.js) | Sitzung mit `origin/main` zusammenführen, prüfen, Commit direkt auf main |
-| Umzug | [app/lib/umzug.js](app/lib/umzug.js) | einmalige Übernahme aus der alten exe (auch ihr Browser-Speicher) |
+Veröffentlichen geht nur auf PCs mit einer Repo-Kopie (die Bat trägt den Ordner automatisch ein) und nur mit Schreibrechten.
 
-**Warum die Karte jetzt auf jedem PC gleich aussieht:** Alles, was die Geometrie beeinflusst, steht in der Kartenversion: gezeichnete Straßen, Radierungen, Ausblendungen, Kartenausrichtung (`cfg:mapfit`) und Straßenkorrekturen (`cfg:roadfix`). Lokale Messungen sind nur noch Vorschläge. Jede Geräte-Kennung ist an den PC gebunden (`%LOCALAPPDATA%\ForzaDashboard\geraet.json`), kopierte Ordner bekommen automatisch eine neue.
+## Wie die Karte geschützt ist
 
-**Warum nichts mehr verloren geht:** Die veröffentlichte Karte ist schreibgeschützt. Jede Version bleibt auf GitHub und lokal erhalten, und jede Sitzung führt auf jedem PC ein Journal. Beim Veröffentlichen wird mit dem neuesten Stand zusammengeführt, statt ihn zu überschreiben. GitHub lehnt außerdem Massenlöschungen ohne `[massenloeschung-ok]` ab.
+- **Eine Wahrheit:** `karte/karte.json` im Repo. Jede Version wird von GitHub geprüft und signiert (`karte-vN`), jedes Dashboard prüft die Signatur, bevor es eine Version benutzt. Versionen sind schreibgeschützt, die letzten 10 bleiben liegen.
+- **Gleiche Straßen überall:** Kartenausrichtung (`cfg:mapfit`) und Straßenkorrekturen (`cfg:roadfix`) stehen in der Karte. Lokale Messungen sind nur Vorschläge.
+- **Nichts wird überschrieben:** Veröffentlichen führt mit dem neuesten Stand auf GitHub zusammen. Wer mehr als 5 % der Karte (mindestens 200 Objekte) löscht, wird blockiert, außer mit `[massenloeschung-ok]`.
+- **Bearbeiten nur in Sitzungen:** Ein Host legt die Reihenfolge fest, jeder PC führt ein Journal (`Sitzungen\`). Fällt der Host aus, übernimmt ein anderer. Getrennt gemachte Änderungen werden beim Wiederverbinden nachgereicht.
+- **Geräte-Kennung** ist an den PC gebunden (`%LOCALAPPDATA%\ForzaDashboard\geraet.json`). Kopierte Ordner bekommen eine eigene.
 
-## Entwickeln
+## Aufbau
 
-```bash
-node --test "test/*.test.js"
-```
+| Datei | Aufgabe |
+|---|---|
+| [app/src/karte.rs](app/src/karte.rs) | Prüfung, Format, Signatur, Kartenversionen |
+| [app/src/sitzung.rs](app/src/sitzung.rs) | Bearbeiten-Sitzungen, Verlauf, Rückgängig |
+| [app/src/lobby.rs](app/src/lobby.rs) | Lobbys per Code |
+| [app/src/mqtt.rs](app/src/mqtt.rs), [kanal.rs](app/src/kanal.rs) | zwei Vermittler gleichzeitig, Verschlüsselung (AES-256-GCM, Schlüssel aus dem Code) |
+| [app/src/updates.rs](app/src/updates.rs) | Updates von GitHub, automatisch zurück bei Absturz |
+| [app/src/veroeffentlichen.rs](app/src/veroeffentlichen.rs) | Sitzung → Commit auf main |
+| [app/src/bruecke.rs](app/src/bruecke.rs) | Umstieg der alten exe |
+| [src/dashboard.html](src/dashboard.html) | Oberfläche |
+| [tools/](tools) | Karten- und Programm-Releases (für GitHub Actions) |
+
+Tests:
 
 ```bash
-node tools/telemetrie-simulator.js 5400
+cargo test --manifest-path app/Cargo.toml
 ```
-
-```bash
-node tools/karte.js pruefen
-```
-
-Zwei Instanzen auf einem PC testen: `FD_DATA=<ordner> FD_DEVICE_ID=aaaaaaaaaa node app/server.js`, mit eigenen Ports in `<ordner>/einstellungen.txt`.
-
-Neue Programmversion: Version in [app/package.json](app/package.json) erhöhen, committen, dann `git tag app-vX.Y.Z` und pushen.

@@ -34,8 +34,9 @@ use tokio::net::{TcpListener, TcpStream, UdpSocket};
 use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
-// Format JJJJ-MM-TT.N (ForzaDashboard-bauen.bat zählt hoch; Releases auf GitHub setzen FD_VERSION beim Bauen)
-pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => "2026-10-28.11" };
+// Format JJJJ-MM-TT.N. BAU_VER zählt ForzaDashboard-bauen.bat hoch; Releases auf GitHub setzen FD_VERSION beim Bauen.
+const BAU_VER: &str = "2026-10-28.11";
+pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => BAU_VER };
 // hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
 pub const REPO: &str = "imikwy/ForzaDashboard";
 

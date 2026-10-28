@@ -15,6 +15,7 @@ pub struct Settings {
     pub spv_on: bool,
     pub updates: bool,
     pub update_repo: String,
+    pub repo_ordner: String,
 }
 
 const TEMPLATE: &str = "# ForzaDashboard Einstellungen\r\n# Im Spiel: Einstellungen > HUD und Gameplay > Data Out = An,\r\n# Data Out IP-Adresse = 127.0.0.1, Data Out IP-Port = gleicher Wert wie udp_port\r\nudp_port=5400\r\nweb_port=8080\r\nbeim_start_oeffnen=ja\r\n";
@@ -29,7 +30,7 @@ pub fn load(path: &Path) -> Settings {
     let mut s = Settings {
         udp_port: 5400, web_port: 8080, open_on_start: true, fr_on: true,
         fr_group: DEFAULT_GROUP.into(), fr_name: name, sid: String::new(), spv_on: true,
-        updates: true, update_repo: String::new(),
+        updates: true, update_repo: String::new(), repo_ordner: String::new(),
     };
     if !path.exists() { let _ = std::fs::write(path, TEMPLATE); }
     let text = std::fs::read_to_string(path).unwrap_or_default();
@@ -48,6 +49,8 @@ pub fn load(path: &Path) -> Settings {
             "spotify_lautstaerke" => s.spv_on = !is_off(v),
             "updates" => s.updates = !is_off(v),
             "update_repo" if v.split('/').count() == 2 => s.update_repo = v.into(),
+            // Repo-Kopie der Herausgeber (trägt ForzaDashboard-bauen.bat ein, wenn die exe woanders läuft)
+            "repo_ordner" => s.repo_ordner = v.into(),
             _ => {}
         }
     }

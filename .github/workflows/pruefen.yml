@@ -1,30 +1,26 @@
-# Bei jedem Push und Pull Request: Tests + Kartenprüfung (inkl. Schutz gegen Massenlöschung)
+# Bei jedem Push: Programm bauen und testen, Karte prüfen.
 name: Prüfen
 on:
   push:
+    branches: [main]
   pull_request:
-permissions:
-  contents: read
+  workflow_dispatch:
 jobs:
-  pruefen:
+  programm:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      - name: Tests
+        run: cargo test --manifest-path app/Cargo.toml
+  karte:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Tests
-        run: node --test "test/*.test.js"
       - name: Karte prüfen
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          prev=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '[.[].tagName | select(startswith("karte-v")) | ltrimstr("karte-v") | tonumber] | max // empty')
-          if [ -n "$prev" ]; then
-            gh release download "karte-v$prev" --repo "$GITHUB_REPOSITORY" --pattern karte.json.gz --dir /tmp/vorher
-            extra=""
-            if git log -1 --pretty=%B | grep -q "\[massenloeschung-ok\]"; then extra="--massenloeschung-ok"; fi
-            node tools/karte.js pruefen --vorher /tmp/vorher/karte.json.gz $extra
-          else
-            node tools/karte.js pruefen
-          fi
+        run: node tools/karte.js pruefen

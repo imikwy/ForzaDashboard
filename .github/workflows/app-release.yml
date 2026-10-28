@@ -1,42 +1,70 @@
-# Neue Programmversion: Tag "app-v3.1.0" pushen (Version muss in app/package.json stehen).
-# Legt die neueste Kartenversion als Startkarte bei, signiert und erstellt das Release.
+# Neue Programmversion für alle Spieler: auf GitHub unter Actions -> "Programm veröffentlichen" -> "Run workflow".
+# Baut die ForzaDashboard.exe mit der neuesten Kartenversion als Startkarte, testet sie, signiert sie und erstellt das
+# Release "app-JJJJ-MM-TT.N". Jedes Dashboard installiert es automatisch, sobald gerade nicht gefahren wird.
 name: Programm veröffentlichen
 on:
-  push:
-    tags: ['app-v*']
+  workflow_dispatch:
+    inputs:
+      notiz:
+        description: Was ist neu? (erscheint im Release)
+        required: false
 permissions:
   contents: write
+concurrency:
+  group: app-release
+  cancel-in-progress: false
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Version prüfen
-        run: |
-          v=$(node -p "require('./app/package.json').version")
-          if [ "app-v$v" != "$GITHUB_REF_NAME" ]; then echo "Tag $GITHUB_REF_NAME passt nicht zu app/package.json ($v)"; exit 1; fi
-      - name: Tests
-        run: node --test "test/*.test.js"
-      - name: Neueste Karte als Startkarte beilegen
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      - name: Version bestimmen
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          prev=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '[.[].tagName | select(startswith("karte-v")) | ltrimstr("karte-v") | tonumber] | max // empty')
-          if [ -n "$prev" ]; then
-            gh release download "karte-v$prev" --repo "$GITHUB_REPOSITORY" --pattern 'karte.*' --dir /tmp/k
-            cp /tmp/k/karte.json.gz app/karte-start.json.gz
-            cp /tmp/k/karte.manifest.json app/karte-start.manifest.json
+          heute=$(TZ=Europe/Berlin date +%Y-%m-%d)
+          lokal=$(grep -oE 'BAU_VER: &str = "[0-9-]+\.[0-9]+"' app/src/main.rs | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+')
+          gh_neu=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '[.[].tagName | select(startswith("app-")) | ltrimstr("app-")] | .[]' || true)
+          n=0
+          for v in $lokal $gh_neu; do
+            if [ "${v%.*}" = "$heute" ] && [ "${v##*.}" -gt "$n" ]; then n=${v##*.}; fi
+          done
+          echo "FD_VERSION=$heute.$((n + 1))" >> "$GITHUB_ENV"
+          echo "Version $heute.$((n + 1))"
+      - name: Neueste Karte als Startkarte einbauen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          neu=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '[.[].tagName | select(startswith("karte-v")) | ltrimstr("karte-v") | tonumber] | max // 0')
+          if [ "$neu" -gt 0 ]; then
+            gh release download "karte-v$neu" --repo "$GITHUB_REPOSITORY" --dir karte-neu
+            cp karte-neu/karte.json.gz app/karte-start.json.gz
+            cp karte-neu/karte.manifest.json app/karte-start.manifest.json
           fi
-      - name: Paket bauen und veröffentlichen
+      - name: Tests
+        run: cargo test --manifest-path app/Cargo.toml
+      - name: Bauen
+        run: cargo build --release --manifest-path app/Cargo.toml
+      - name: Selbsttest
+        run: app/target/release/ForzaDashboard.exe --selbsttest
+      - name: Signieren und veröffentlichen
         env:
           GH_TOKEN: ${{ github.token }}
           FD_SIGN_KEY: ${{ secrets.FD_SIGN_KEY }}
+          NOTIZ: ${{ github.event.inputs.notiz }}
         run: |
           if [ -z "$FD_SIGN_KEY" ]; then echo "Secret FD_SIGN_KEY fehlt"; exit 1; fi
-          node tools/app-release.js --out out
-          mkdir -p dist/ForzaDashboard && cp -r app starten.js LIESMICH.txt ForzaDashboard-starten.bat GamePass-Fix.bat dist/ForzaDashboard/
-          (cd dist && zip -qr ../ForzaDashboard-$GITHUB_REF_NAME.zip ForzaDashboard)
-          gh release create "$GITHUB_REF_NAME" out/app-bundle.json.gz out/app.manifest.json "ForzaDashboard-$GITHUB_REF_NAME.zip" --repo "$GITHUB_REPOSITORY" --title "ForzaDashboard ${GITHUB_REF_NAME#app-v}" --generate-notes
+          node tools/app-release.js --exe app/target/release/ForzaDashboard.exe --version "$FD_VERSION" --out out
+          mkdir -p zip/ForzaDashboard && cp out/ForzaDashboard.exe LIESMICH.txt GamePass-Fix.bat zip/ForzaDashboard/
+          (cd zip && 7z a -tzip ../out/ForzaDashboard.zip ForzaDashboard > /dev/null)
+          gh release create "app-$FD_VERSION" out/ForzaDashboard.exe out/app.manifest.json out/ForzaDashboard.zip --repo "$GITHUB_REPOSITORY" \
+            --title "ForzaDashboard $FD_VERSION" --notes "$NOTIZ"

@@ -91,7 +91,7 @@ pub fn on_map_version(s: &Shared) {
 
 pub fn capability(s: &Shared) -> Value {
     let mut c = s.pub_cap.lock().unwrap();
-    if now_ms().saturating_sub(c.0) > 60_000 { *c = (now_ms(), veroeffentlichen::capability(&s.root)); }
+    if now_ms().saturating_sub(c.0) > 60_000 { *c = (now_ms(), veroeffentlichen::capability(&s.repo_root())); }
     c.1.clone()
 }
 

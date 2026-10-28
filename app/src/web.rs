@@ -111,8 +111,8 @@ pub fn router(s: Arc<Shared>) -> Router {
         }).await }))
         .route("/sitzung/veroeffentlichen", post(|State(s): S, b: Bytes| async move { let b = body(&b); blocking(s, move |s| {
             let Some(c) = s.sitz().cur().filter(|c| c.ready()) else { return json!({"ok": false, "why": "Keine Sitzung aktiv"}) };
-            if b["vorschau"].as_bool().unwrap_or(false) { return veroeffentlichen::preview(&c, &s.karten, &s.root); }
-            let r = veroeffentlichen::publish(&c, &s.root, b["notiz"].as_str().unwrap_or(""), &s.name(), b["massenloeschung"].as_bool().unwrap_or(false));
+            if b["vorschau"].as_bool().unwrap_or(false) { return veroeffentlichen::preview(&c, &s.karten, &s.repo_root()); }
+            let r = veroeffentlichen::publish(&c, &s.repo_root(), b["notiz"].as_str().unwrap_or(""), &s.name(), b["massenloeschung"].as_bool().unwrap_or(false));
             if r["ok"] == true { c.send(json!({"y": "pub", "n": s.name()})); }
             r
         }).await }))

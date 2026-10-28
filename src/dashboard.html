@@ -696,7 +696,7 @@ function connect(){
     const ips = (info.ips || []).map(ip => "<b>http://" + ip + ":" + info.webPort + "</b>").join("<br>");
     $("infoBox").innerHTML = "Im Spiel eintragen: IP <b>127.0.0.1</b> · Port <b>" + info.udpPort + "</b><br>" +
       (ips ? "Auf Tablet oder Handy im gleichen WLAN öffnen:<br>" + ips + "<br>" : "") +
-      "Port ändern: <b>daten\\einstellungen.txt</b> im ForzaDashboard-Ordner.";
+      "Port ändern: <b>einstellungen.txt</b> im Ordner der ForzaDashboard.exe.";
     es = new EventSource("/events");
     es.onopen = () => { linkOk = true; };
     es.onerror = () => { linkOk = false; };
@@ -4261,7 +4261,7 @@ function buildSettings(){
   const bdb = document.createElement("button"); bdb.textContent = "Für dieses Auto ändern";
   bdb.onclick = () => { if (!D || !(D.car > 0)) { bdb.textContent = "Erst ein Auto fahren"; return; } if (!S.brandDash) { S.brandDash = true; saveSettings(); } $("sheet").classList.remove("open"); bdAskUI(D.car, true); };
   const bdw = document.createElement("div"); bdw.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:center"; bdw.appendChild(seg("brandDash", [[false,"Aus"],[true,"An"]])); bdw.appendChild(bdb);
-  lg.appendChild(row("Marken-Tacho", "Tacho im Stil der Marke (Audi, BMW, Mercedes, Porsche, Lamborghini, Nissan, Toyota). Jedes Auto wird einmal zugeordnet – gilt für die ganze Gruppe", bdw));
+  lg.appendChild(row("Marken-Tacho", "Tacho im Stil der Marke (Audi, BMW, Mercedes, Porsche, Lamborghini, Nissan, Toyota). Jedes Auto wird einmal zugeordnet – gilt auf diesem PC", bdw));
   const ug = $("unitGroup"); ug.innerHTML = "";
   ug.appendChild(row("Geschwindigkeit", "", seg("unit", [["kmh","km/h"],["mph","mph"]])));
   ug.appendChild(row("Temperatur", "", seg("temp", [["c","°C"],["f","°F"]])));
@@ -4317,7 +4317,7 @@ function buildSettings(){
 
 /* ======================= Marken-Tachos ======================= */
 // Forza meldet fürs Auto nur eine Kennnummer (d.car). Welcher Tacho-Stil dazu gehört, legt man einmal fest; die
-// Zuordnung steht in der gemeinsamen Karte ("cfg:car:<nr>", Feld st) und gilt so für die ganze Gruppe.
+// Zuordnung wird auf diesem PC gespeichert ("cfg:car:<nr>", Feld st, in karte-lokal.json).
 // Die Stile sind den Cockpits der Marken nachempfunden (ohne Logos). Schalter: S.brandDash (Standard aus).
 const BD_STYLES = [["audi","Audi"],["audi_rs","Audi RS"],["bmw","BMW M"],["bmw_track","BMW M-Track"],["mercedes","Mercedes"],["porsche","Porsche"],["lambo","Lamborghini"],["nissan","Nissan Z"],["toyota","Toyota GR86"],["std","Standard"]];
 const BD = {askFor:null, force:false};
