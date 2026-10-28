@@ -35,4 +35,4 @@ jobs:
           fi
           if git log -1 --pretty=%B | grep -q "\[massenloeschung-ok\]"; then args="$args --massenloeschung-ok"; fi
           node tools/karte.js release --version "$next" --out out $args --notiz "$(git log -1 --pretty=%s)"
-          gh release create "karte-v$next" out/karte.json.gz out/karte.manifest.json --repo "$GITHUB_REPOSITORY" --title "Karte v$next" --notes "$(git log -1 --pretty=%B)"
+          gh release create "karte-v$next" out/karte.json.gz out/karte.manifest.json --repo "$GITHUB_REPOSITORY" --title "Karte v$next" --notes "$(git log -1 --pretty=%B)" --latest=false

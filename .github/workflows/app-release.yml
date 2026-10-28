@@ -67,4 +67,4 @@ jobs:
           mkdir -p zip/ForzaDashboard && cp out/ForzaDashboard.exe LIESMICH.txt GamePass-Fix.bat zip/ForzaDashboard/
           (cd zip && 7z a -tzip ../out/ForzaDashboard.zip ForzaDashboard > /dev/null)
           gh release create "app-$FD_VERSION" out/ForzaDashboard.exe out/app.manifest.json out/ForzaDashboard.zip --repo "$GITHUB_REPOSITORY" \
-            --title "ForzaDashboard $FD_VERSION" --notes "$NOTIZ"
+            --title "ForzaDashboard $FD_VERSION" --notes "$NOTIZ" --latest
