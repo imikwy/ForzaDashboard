@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+LIESMICH.txt text eol=crlf
+*.gz binary
+*.png binary
+*.jpg binary

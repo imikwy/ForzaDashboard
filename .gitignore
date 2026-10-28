@@ -1,0 +1,22 @@
+# Persönliche Daten – gehören nie ins Repo
+/daten/
+/_Archiv/
+*.pem
+*.key
+
+# Alte Version (ForzaDashboard.exe) – liegt nur noch zum Umstieg im Ordner
+/ForzaDashboard.exe
+/ForzaDashboard.exe.vorher
+/dashboard.html
+/src/
+/Sicherungen/
+/karte-gemeinsam*.json
+/gelernte-strassen.*
+/freunde-strassen.json
+/einstellungen.txt
+/ForzaDashboard-log.txt
+/herausgeber*
+/*.lnk
+
+node_modules/
+*.tmp

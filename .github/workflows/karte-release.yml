@@ -1,0 +1,41 @@
+# Neue Kartenversion: sobald karte/karte.json auf main geändert wird.
+# Prüft gegen die letzte Version, signiert (Secret FD_SIGN_KEY) und erstellt das Release "karte-vN".
+# Alle Spieler laden es danach automatisch. Nur wer Schreibrechte auf das Repo hat, kann das auslösen.
+name: Karte veröffentlichen
+on:
+  push:
+    branches: [main]
+    paths: [karte/karte.json]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: karte-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests
+        run: node --test "test/*.test.js"
+      - name: Release bauen und veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FD_SIGN_KEY: ${{ secrets.FD_SIGN_KEY }}
+        run: |
+          if [ -z "$FD_SIGN_KEY" ]; then echo "Secret FD_SIGN_KEY fehlt"; exit 1; fi
+          prev=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '[.[].tagName | select(startswith("karte-v")) | ltrimstr("karte-v") | tonumber] | max // 0')
+          next=$((prev + 1))
+          args=""
+          if [ "$prev" -gt 0 ]; then
+            gh release download "karte-v$prev" --repo "$GITHUB_REPOSITORY" --pattern karte.json.gz --dir /tmp/vorher
+            args="--vorher /tmp/vorher/karte.json.gz"
+          fi
+          if git log -1 --pretty=%B | grep -q "\[massenloeschung-ok\]"; then args="$args --massenloeschung-ok"; fi
+          subject=$(git log -1 --pretty=%s)
+          node tools/karte.js release --version "$next" --out out $args --notiz "$subject"
+          gh release create "karte-v$next" out/karte.json.gz out/karte.manifest.json --repo "$GITHUB_REPOSITORY" --title "Karte v$next" --notes "$(git log -1 --pretty=%B)"

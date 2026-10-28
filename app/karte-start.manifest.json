@@ -1,0 +1,15 @@
+{
+ "typ": "karte",
+ "version": 1,
+ "datei": "karte.json.gz",
+ "sha256": "4ecd8f5b8382b247a5bed73906ad2e1d910fd1667279611eb657485e3721da61",
+ "groesse": 1045482,
+ "objekte": 10756,
+ "basis": "3c4bc4e3405bfc1f",
+ "minApp": "3.0.0",
+ "erstellt": "2026-10-28T04:03:33.420Z",
+ "notiz": "Startversion aus karte-gemeinsam.json (28.10.2026)",
+ "quelle": "",
+ "aenderungen": null,
+ "sig": "enpIWFb4zToIxEqoYMGP2ff2zj3JxNYJGFkAGYgzdipLEAamohSKVRYBxHh5JlBcm6czsTrCN7fCYCI2BwpABA=="
+}

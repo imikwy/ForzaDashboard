@@ -1,0 +1,42 @@
+# Neue Programmversion: Tag "app-v3.1.0" pushen (Version muss in app/package.json stehen).
+# Legt die neueste Kartenversion als Startkarte bei, signiert und erstellt das Release.
+name: Programm veröffentlichen
+on:
+  push:
+    tags: ['app-v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Version prüfen
+        run: |
+          v=$(node -p "require('./app/package.json').version")
+          if [ "app-v$v" != "$GITHUB_REF_NAME" ]; then echo "Tag $GITHUB_REF_NAME passt nicht zu app/package.json ($v)"; exit 1; fi
+      - name: Tests
+        run: node --test "test/*.test.js"
+      - name: Neueste Karte als Startkarte beilegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prev=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '[.[].tagName | select(startswith("karte-v")) | ltrimstr("karte-v") | tonumber] | max // empty')
+          if [ -n "$prev" ]; then
+            gh release download "karte-v$prev" --repo "$GITHUB_REPOSITORY" --pattern 'karte.*' --dir /tmp/k
+            cp /tmp/k/karte.json.gz app/karte-start.json.gz
+            cp /tmp/k/karte.manifest.json app/karte-start.manifest.json
+          fi
+      - name: Paket bauen und veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FD_SIGN_KEY: ${{ secrets.FD_SIGN_KEY }}
+        run: |
+          if [ -z "$FD_SIGN_KEY" ]; then echo "Secret FD_SIGN_KEY fehlt"; exit 1; fi
+          node tools/app-release.js --out out
+          mkdir -p dist/ForzaDashboard && cp -r app starten.js LIESMICH.txt ForzaDashboard-starten.bat GamePass-Fix.bat dist/ForzaDashboard/
+          (cd dist && zip -qr ../ForzaDashboard-$GITHUB_REF_NAME.zip ForzaDashboard)
+          gh release create "$GITHUB_REF_NAME" out/app-bundle.json.gz out/app.manifest.json "ForzaDashboard-$GITHUB_REF_NAME.zip" --repo "$GITHUB_REPOSITORY" --title "ForzaDashboard ${GITHUB_REF_NAME#app-v}" --generate-notes
