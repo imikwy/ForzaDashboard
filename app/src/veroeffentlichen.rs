@@ -91,3 +91,67 @@ pub fn publish(s: &Sitzung, root: &Path, notiz: &str, name: &str, mass_ok: bool)
     }
     json!({"ok": false, "why": "Veröffentlichen fehlgeschlagen – bitte erneut versuchen"})
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::mqtt::TestBus;
+    use crate::sitzung::{Ctx, Sitzungen};
+    use std::sync::Arc;
+
+    fn sh(dir: &Path, args: &[&str]) -> String {
+        git(dir, args, None, None).unwrap_or_else(|e| panic!("git {args:?}: {e}"))
+    }
+
+    #[test]
+    fn veroeffentlichen_fuehrt_zusammen_und_schuetzt() {
+        let root = std::env::temp_dir().join(format!("fd-test-pub-{}", crate::util::random_hex(4)));
+        let (bare, a, b) = (root.join("origin.git"), root.join("a"), root.join("b"));
+        std::fs::create_dir_all(&root).unwrap();
+        sh(&root, &["init", "-q", "--bare", "-b", "main", bare.to_str().unwrap()]);
+        // Ausgangsstand auf GitHub: die Startkarte
+        let start = crate::karte::Karten::new(&root.join("start"));
+        for d in [&a, &b] { sh(&root, &["clone", "-q", bare.to_str().unwrap(), d.to_str().unwrap()]); }
+        for d in [&a, &b] { sh(d, &["config", "user.email", "t@t"]); sh(d, &["config", "user.name", "Test"]); }
+        std::fs::create_dir_all(a.join("karte")).unwrap();
+        std::fs::write(a.join("karte/karte.json"), serialize(&start.active().unwrap().ents)).unwrap();
+        sh(&a, &["add", "-A"]);
+        sh(&a, &["commit", "-q", "-m", "Start"]);
+        sh(&a, &["push", "-q", "origin", "main"]);
+        assert_eq!(capability(&a)["ok"], true);
+
+        let bus = Arc::new(TestBus::default());
+        let mk = |d: &Path, dev: &str| {
+            let ctx = Ctx { net: bus.net(dev), karten: Arc::new(crate::karte::Karten::new(&d.with_extension("daten"))), dev: dev.into(),
+                name: Arc::new(|| "Test".into()), dir: d.with_extension("daten").join("Sitzungen"), emit: Arc::new(|_| {}) };
+            Sitzungen::new(ctx)
+        };
+        // zwei Herausgeber veröffentlichen nacheinander aus getrennten Sitzungen – keiner überschreibt den anderen
+        let (sa, sb) = (mk(&a, "aaaaaaaaaa"), mk(&b, "bbbbbbbbbb"));
+        sa.create("A");
+        sb.create("B");
+        sa.cur().unwrap().submit(&[json!({"id": "r-pub-a", "k": "r", "t": "road", "p": [0, 0, 10, 10]})], None);
+        sb.cur().unwrap().submit(&[json!({"id": "r-pub-b", "k": "r", "t": "road", "p": [5, 5, 20, 20]})], None);
+        let ra = publish(&sa.cur().unwrap(), &a, "Test A", "A", false);
+        assert_eq!(ra["ok"], true, "{ra}");
+        let rb = publish(&sb.cur().unwrap(), &b, "", "B", false);
+        assert_eq!(rb["ok"], true, "{rb}");
+        sh(&a, &["fetch", "-q", "origin", "main"]);
+        let remote = parse(&sh(&a, &["show", "origin/main:karte/karte.json"])).unwrap();
+        assert!(remote.iter().any(|e| e["id"] == "r-pub-a") && remote.iter().any(|e| e["id"] == "r-pub-b"));
+        // der Arbeitsordner wurde nicht angefasst
+        assert!(sh(&a, &["status", "--porcelain"]).trim().is_empty());
+        // nichts Neues -> nichts zu veröffentlichen
+        assert_eq!(publish(&sa.cur().unwrap(), &a, "", "A", false)["ok"], false);
+        // Massenlöschung wird blockiert
+        let all: Vec<Value> = start.active().unwrap().ents.iter().filter(|e| e["k"] == "e").take(600)
+            .map(|e| json!({"id": e["id"], "k": "e", "d": 1})).collect();
+        sa.cur().unwrap().submit(&all, None);
+        let r = publish(&sa.cur().unwrap(), &a, "", "A", false);
+        assert_eq!(r["ok"], false);
+        assert!(r["why"].as_str().unwrap().starts_with("Schutzregel"), "{r}");
+        sa.close(false);
+        sb.close(false);
+        let _ = std::fs::remove_dir_all(root);
+    }
+}

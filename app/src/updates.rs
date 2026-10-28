@@ -82,11 +82,12 @@ fn asset<'a>(rel: &'a Value, name: &str) -> Option<&'a str> {
     rel["assets"].as_array()?.iter().find(|a| a["name"] == name)?["browser_download_url"].as_str()
 }
 
-fn newest<'a>(list: &'a Value, prefix: &str, num: bool) -> Option<(String, &'a Value)> {
+fn newest<'a>(list: &'a Value, prefix: &str, num: bool, skip: &[String]) -> Option<(String, &'a Value)> {
     let mut best: Option<(String, &Value)> = None;
     for rel in list.as_array()? {
         if rel["draft"] == true || rel["prerelease"] == true { continue; }
         let Some(v) = rel["tag_name"].as_str().and_then(|t| t.strip_prefix(prefix)) else { continue };
+        if skip.iter().any(|x| x == v) { continue; }
         let better = match &best {
             None => true,
             Some((b, _)) => if num { v.parse::<u64>().unwrap_or(0) > b.parse::<u64>().unwrap_or(0) } else { ver_newer(v, b) },
@@ -96,11 +97,7 @@ fn newest<'a>(list: &'a Value, prefix: &str, num: bool) -> Option<(String, &'a V
     best
 }
 
-fn check_map(s: &Arc<Shared>, list: &Value) -> Result<(), String> {
-    let Some((v, rel)) = newest(list, "karte-v", true) else { return Ok(()) };
-    let v: u64 = v.parse().unwrap_or(0);
-    s.upd.lock().unwrap().karte_neueste = v;
-    if v <= s.karten.active_version() || s.karten.has(v) { return Ok(()); }
+fn install_map(s: &Arc<Shared>, v: u64, rel: &Value) -> Result<(), String> {
     let (Some(mu), Some(du)) = (asset(rel, "karte.manifest.json"), asset(rel, "karte.json.gz")) else { return Err(format!("Release karte-v{v} unvollständig")) };
     let man = String::from_utf8(get(mu, 1 << 20)?).map_err(|_| "Manifest unlesbar")?;
     verify_signed(&man).map_err(|e| format!("Karte v{v}: {e} – wird NICHT übernommen"))?;
@@ -109,15 +106,37 @@ fn check_map(s: &Arc<Shared>, list: &Value) -> Result<(), String> {
     Ok(())
 }
 
+// neueste gültige Kartenversion übernehmen; eine kaputte Version blockiert die vorherigen nicht
+fn check_map(s: &Arc<Shared>, list: &Value) -> Result<(), String> {
+    let mut rels: Vec<(u64, &Value)> = list.as_array().into_iter().flatten()
+        .filter(|r| r["draft"] != true && r["prerelease"] != true)
+        .filter_map(|r| Some((r["tag_name"].as_str()?.strip_prefix("karte-v")?.parse().ok()?, r)))
+        .collect();
+    rels.sort_by(|a, b| b.0.cmp(&a.0));
+    let Some(newest) = rels.first().map(|r| r.0) else { return Ok(()) };
+    s.upd.lock().unwrap().karte_neueste = newest;
+    let mut err = None;
+    for (v, rel) in rels {
+        if v <= s.karten.active_version() { break; }
+        if s.karten.has(v) { continue; }
+        match install_map(s, v, rel) {
+            Ok(()) => break,
+            Err(e) => { log(format!("Update-Prüfung: {e}")); err.get_or_insert(e); }
+        }
+    }
+    err.map_or(Ok(()), Err)
+}
+
 fn blocked() -> Vec<String> {
     let f = exe_path().with_file_name("update-gesperrt.json");
     read_json(&f).and_then(|v| v.as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect())).unwrap_or_default()
 }
 
 fn check_app(s: &Arc<Shared>, list: &Value) -> Result<(), String> {
-    let Some((v, rel)) = newest(list, "app-", false) else { return Ok(()) };
+    // eine Version, die hier schon einmal abgestürzt ist, wird übersprungen
+    let Some((v, rel)) = newest(list, "app-", false, &blocked()) else { return Ok(()) };
     s.upd.lock().unwrap().app_neueste = v.clone();
-    if !ver_newer(&v, APP_VER) || !s.cfg.lock().unwrap().updates || blocked().contains(&v) { return Ok(()); }
+    if !ver_newer(&v, APP_VER) || !s.cfg.lock().unwrap().updates { return Ok(()); }
     if s.upd.lock().unwrap().ready.as_ref().is_some_and(|r| r.0 == v) { return Ok(()); }
     let (Some(mu), Some(eu)) = (asset(rel, "app.manifest.json"), asset(rel, EXE_NAME)) else { return Err(format!("Release app-{v} unvollständig")) };
     let man = verify_signed(&String::from_utf8(get(mu, 1 << 20)?).map_err(|_| "Manifest unlesbar")?).map_err(|e| format!("Programm {v}: {e} – wird NICHT installiert"))?;
@@ -138,10 +157,20 @@ pub fn check(s: &Arc<Shared>, force: bool) {
         u.busy = true;
         u.last = now_ms();
     }
-    let res = releases(s).and_then(|list| { check_map(s, &list)?; check_app(s, &list) });
+    // Karte und Programm unabhängig voneinander: ein Fehler beim einen hält das andere nicht auf
+    // (Fehler bei Kartenversionen protokolliert check_map selbst)
+    let res = match releases(s) {
+        Ok(list) => {
+            let m = check_map(s, &list);
+            let a = check_app(s, &list);
+            if let Err(e) = &a { log(format!("Update-Prüfung: {e}")); }
+            a.and(m)
+        }
+        Err(e) => { log(format!("Update-Prüfung: {e}")); Err(e) }
+    };
     let mut u = s.upd.lock().unwrap();
     u.busy = false;
-    u.error = match res { Ok(()) => String::new(), Err(e) => { log(format!("Update-Prüfung: {e}")); e } };
+    u.error = res.err().unwrap_or_default();
 }
 
 pub fn state(s: &Shared) -> Value {
@@ -210,7 +239,21 @@ fn install_and_restart(s: &Arc<Shared>, ver: &str, f: &std::path::Path) {
             log(format!("Update {ver} installiert – startet neu"));
             s.emit(Some("upd"), json!({"ver": ver}).to_string());
             std::thread::sleep(Duration::from_millis(1500));
-            crate::restart_self(s);
+            if !crate::restart_self(s) {
+                // neue exe startet nicht einmal -> sofort zurück
+                let exe = exe_path();
+                let alt = exe.with_file_name(format!("{}.alt", exe.file_name().and_then(|n| n.to_str()).unwrap_or(EXE_NAME)));
+                let _ = std::fs::rename(&exe, exe.with_file_name(format!("{EXE_NAME}.kaputt")));
+                let _ = std::fs::rename(&alt, &exe);
+                let _ = std::fs::remove_file(marker());
+                let mut b = blocked();
+                b.push(ver.to_string());
+                write_json(&exe.with_file_name("update-gesperrt.json"), &json!(b));
+                log(format!("Update {ver} ließ sich nicht starten – diese Version läuft weiter"));
+                let mut u = s.upd.lock().unwrap();
+                u.installing = false;
+                u.ready = None;
+            }
         }
         Err(e) => {
             let mut u = s.upd.lock().unwrap();

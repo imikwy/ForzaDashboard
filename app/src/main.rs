@@ -68,12 +68,15 @@ fn state_flags() -> StateFlags {
 }
 
 fn main() {
+    if std::env::args().any(|a| a == "--selbsttest") { std::process::exit(selbsttest()); }
     if let Some(pid) = std::env::var("FD_WAIT_PID").ok().and_then(|p| p.parse().ok()) { util::wait_pid(pid); }
     let root = util::find_root();
     util::log_init(&root);
     log(format!("ForzaDashboard {APP_VER} startet, Datenordner {}", root.display()));
     // frisch installiertes Update? Dann aufpassen, ob es sauber läuft (sonst automatisch zurück)
     updates::startup_probe();
+    // nur für den Test "automatisch zurück" (wird nie in Releases gesetzt)
+    if option_env!("FD_TEST_ABSTURZ").is_some() { panic!("Test-Absturz"); }
     let shared = Arc::new(Shared::new(root));
     log(format!("Gerät {} · Karte Version {}", shared.sid, shared.karten.active_version()));
     dienst::setup(&shared);
@@ -82,8 +85,12 @@ fn main() {
 
     let s_single = shared.clone();
     let s_setup = shared.clone();
-    let app = tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(move |app, _args, _cwd| open_window(app, &s_single)))
+    let mut builder = tauri::Builder::default();
+    // zum Testen mehrerer "PCs" auf einem Rechner (eigener Datenordner per FD_ROOT): kein Einzel-Start-Schutz
+    if std::env::var("FD_ZWEITE_INSTANZ").is_err() {
+        builder = builder.plugin(tauri_plugin_single_instance::init(move |app, _args, _cwd| open_window(app, &s_single)));
+    }
+    let app = builder
         .plugin(tauri_plugin_window_state::Builder::default().with_state_flags(state_flags()).build())
         .setup(move |app| {
             let handle = app.handle().clone();
@@ -106,6 +113,16 @@ fn main() {
         // speichert die gemeinsame Karte und beendet dann selbst (oder die App läuft ohne Fenster: beim_start_oeffnen=nein)
         if let RunEvent::ExitRequested { code: None, api, .. } = ev { api.prevent_exit(); }
     });
+}
+
+// Wird vor jedem Programm-Release auf GitHub ausgeführt: startet die exe überhaupt, ist die eingebaute Karte gültig?
+fn selbsttest() -> i32 {
+    let dir = std::env::temp_dir().join(format!("fd-selbsttest-{}", util::random_hex(4)));
+    let k = karte::Karten::new(&dir);
+    let ok = k.active_version() > 0 && k.info()["basisOk"] == true && web::html_ok();
+    let _ = std::fs::remove_dir_all(&dir);
+    println!("ForzaDashboard {APP_VER}: Selbsttest {}", if ok { "OK" } else { "FEHLGESCHLAGEN" });
+    if ok { 0 } else { 1 }
 }
 
 // ---------------- Start: alte Version ablösen, Ports öffnen ----------------
@@ -335,14 +352,15 @@ pub fn quit(s: &Arc<Shared>) {
 }
 
 // nach einem Update: neue exe starten (sie wartet, bis diese beendet ist), dann beenden
-pub fn restart_self(s: &Arc<Shared>) {
+// false = die neue exe ließ sich gar nicht starten (dann läuft diese Version weiter)
+pub fn restart_self(s: &Arc<Shared>) -> bool {
     let window_open = s.app.get().and_then(|a| a.get_webview_window("main")).is_some();
-    if let Ok(exe) = std::env::current_exe() {
-        let _ = std::process::Command::new(exe)
-            .env("FD_WAIT_PID", std::process::id().to_string())
-            .env("FD_RESTARTED", "1")
-            .env("FD_WINDOW", if window_open { "1" } else { "0" })
-            .spawn();
-    }
-    quit(s);
+    let started = std::env::current_exe().is_ok_and(|exe| std::process::Command::new(exe)
+        .env("FD_WAIT_PID", std::process::id().to_string())
+        .env("FD_RESTARTED", "1")
+        .env("FD_WINDOW", if window_open { "1" } else { "0" })
+        .spawn()
+        .is_ok());
+    if started { quit(s); }
+    started
 }

@@ -28,6 +28,10 @@ static HTML: &str = include_str!("../../src/dashboard.html");
 static VORLAGEN: &[u8] = include_bytes!("../../src/fh6-vorlagen.js");
 static FH6_KARTE: &[u8] = include_bytes!("../../src/fh6-karte.js");
 
+pub fn html_ok() -> bool {
+    HTML.contains("const APP_VER") && HTML.contains("fh6-karte.js") && VORLAGEN.len() > 100_000 && FH6_KARTE.len() > 100_000
+}
+
 pub fn router(s: Arc<Shared>) -> Router {
     Router::new()
         .route("/", get(index))
@@ -115,8 +119,6 @@ pub fn router(s: Arc<Shared>) -> Router {
         // Updates
         .route("/updates", get(|State(s): S| async move { j(updates::state(&s)) }))
         .route("/updates/pruefen", post(|State(s): S| async move { s.upd.lock().unwrap().last = 0; j(json!({"ok": true})) }))
-        // die Einstellungen der bisherigen exe liegen schon im Speicher dieses Fensters – nichts zu übernehmen
-        .route("/umzug/speicher", get(|| async { j(json!({"ok": false, "werte": {}})) }))
         .fallback(|| async { (StatusCode::NOT_FOUND, "Nicht gefunden") })
         .layer(DefaultBodyLimit::max(64 << 20))
         .with_state(s)
