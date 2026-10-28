@@ -2,14 +2,11 @@
 use crate::util::{device_id, take_chars};
 use std::path::Path;
 
-pub const DEFAULT_GROUP: &str = "fd-mattis-crew-7k3q";
-
 pub struct Settings {
     pub udp_port: u16,
     pub web_port: u16,
     pub open_on_start: bool,
     pub fr_on: bool,
-    pub fr_group: String,
     pub fr_name: String,
     pub sid: String,
     pub spv_on: bool,
@@ -29,7 +26,7 @@ pub fn load(path: &Path) -> Settings {
     if name.is_empty() { name = "Fahrer".into(); }
     let mut s = Settings {
         udp_port: 5400, web_port: 8080, open_on_start: true, fr_on: true,
-        fr_group: DEFAULT_GROUP.into(), fr_name: name, sid: String::new(), spv_on: true,
+        fr_name: name, sid: String::new(), spv_on: true,
         updates: true, update_repo: String::new(), repo_ordner: String::new(),
     };
     if !path.exists() { let _ = std::fs::write(path, TEMPLATE); }
@@ -44,7 +41,6 @@ pub fn load(path: &Path) -> Settings {
             "web_port" => if let Ok(p) = v.parse::<u16>() { if p > 0 { s.web_port = p; } },
             "beim_start_oeffnen" => s.open_on_start = !matches!(v.to_lowercase().as_str(), "nein" | "0" | "false"),
             "freunde" => s.fr_on = !is_off(v),
-            "gruppe" if !v.is_empty() => s.fr_group = take_chars(v, 40),
             "name" if !v.is_empty() => s.fr_name = take_chars(v, 24),
             "spotify_lautstaerke" => s.spv_on = !is_off(v),
             "updates" => s.updates = !is_off(v),
