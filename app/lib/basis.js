@@ -36,9 +36,11 @@ const CONFIG = Object.assign({repo:"", signaturSchluessel:"", brokers:[]}, readJ
 // ---------------- Einstellungen (einstellungen.txt, von Hand lesbar) ----------------
 const DEFAULTS = {udp_port:5400, web_port:8080, beim_start_oeffnen:true, name:"", freunde:true, spotify_lautstaerke:true, updates:true, update_repo:""};
 const S = Object.assign({}, DEFAULTS);
+let SETTINGS_FRESH = false;   // Datei wurde gerade erst angelegt (noch nichts eingestellt)
 const yes = v => !["nein", "0", "false", "aus", "off", "no"].includes(String(v).trim().toLowerCase());
 function loadSettings(){
   if (!fs.existsSync(P.SETTINGS)) {
+    SETTINGS_FRESH = true;
     writeAtomic(P.SETTINGS, "# ForzaDashboard Einstellungen\r\n# Im Spiel: Einstellungen > HUD und Gameplay > Data Out = An,\r\n# Data Out IP-Adresse = 127.0.0.1, Data Out IP-Port = gleicher Wert wie udp_port\r\nudp_port=5400\r\nweb_port=8080\r\nbeim_start_oeffnen=ja\r\n");
   }
   for (const raw of fs.readFileSync(P.SETTINGS, "utf8").split(/\r?\n/)) {
@@ -90,4 +92,4 @@ const DEVICE_ID = process.env.FD_DEVICE_ID || loadIdentity();
 
 function updateRepo(){ return S.update_repo || CONFIG.repo || ""; }
 
-module.exports = {P, S, VERSION, CONFIG, DEVICE_ID, setSetting, updateRepo};
+module.exports = {P, S, VERSION, CONFIG, DEVICE_ID, setSetting, updateRepo, settingsFresh:() => SETTINGS_FRESH};

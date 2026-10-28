@@ -4,7 +4,7 @@
 // Außerdem: Verknüpfung "ForzaDashboard starten" anlegen (funktioniert auch, wenn Smart App Control .bat blockiert).
 "use strict";
 const fs = require("fs"), path = require("path");
-const {P, S, setSetting} = require("./basis");
+const {P, S, setSetting, settingsFresh} = require("./basis");
 const {readJson, writeJson, log} = require("./util");
 
 const FLAG = () => path.join(P.DATA, "umzug.json");
@@ -16,8 +16,9 @@ function run(){
   copy("gelernte-strassen.json", P.LEARNED);
   copy("gelernte-strassen.version", P.LEARNED_VER);
   copy("freunde-strassen.json", P.FRIENDS_LR);
+  // alte Einstellungen nur in eine frisch angelegte Datei übernehmen – nie bewusst Eingestelltes überschreiben
   const old = path.join(P.ROOT, "einstellungen.txt");
-  if (fs.existsSync(old)) {
+  if (fs.existsSync(old) && settingsFresh()) {
     for (const raw of fs.readFileSync(old, "utf8").split(/\r?\n/)) {
       const m = /^\s*([a-z_]+)\s*=\s*(.*?)\s*$/i.exec(raw); if (!m) continue;
       const k = m[1].toLowerCase();
