@@ -597,7 +597,7 @@ const APP_VER = "2026-10-27.22";
 
 /* ======================= Einstellungen ======================= */
 const DEF = {unit:"kmh", temp:"c", press:"bar", power:"ps", orient:"heading", autozoom:true, color:"speed", mirror:false,
-  save:true, zoom:1, mapDim:true, brandDash:false, trailShow:"off", learn:true, tilt:true, lrSens:1.4, mapSrc:"both", accent:"#0a84ff", fs:1, corners:"round", tireMode:"temp", fuelMul:1, fuelCap:0, friends:true, fname:"",
+  save:true, zoom:1, mapDim:true, brandDash:false, trailShow:"off", learn:false, carSnap:true, tilt:true, lrSens:1.4, mapSrc:"both", accent:"#0a84ff", fs:1, corners:"round", tireMode:"temp", fuelMul:1, fuelCap:0, friends:true, fname:"",
   w:{boost:true, pedals:true, tires:true, gforce:true, laps:true, music:true, power:false, fuel:true, susp:false, attitude:false, graph:false, surface:false, car:false}};
 const S = JSON.parse(JSON.stringify(DEF));
 try { const st = JSON.parse(localStorage.getItem("fd.settings") || "{}"); Object.assign(S, st); S.w = Object.assign({}, DEF.w, st.w || {}); } catch (e) {}
@@ -606,6 +606,8 @@ if (S.lrSens === 1) S.lrSens = 1.4; else if (S.lrSens === 1.5) S.lrSens = 2.2; e
 function saveSettings(){ try { localStorage.setItem("fd.settings", JSON.stringify(S)); } catch (e) {} }
 // neue Tank-Kachel einmalig einschalten
 if (!S.fuelSeen) { S.w.fuel = true; S.fuelSeen = 1; saveSettings(); }
+// eigenes Straßenlernen einmalig ausschalten (die Karte wird jetzt von Hand gepflegt); in den Einstellungen wieder einschaltbar
+if (!S.learnOff1) { S.learn = false; S.learnOff1 = 1; saveSettings(); }
 
 function applyLook(){
   const r = document.documentElement;
@@ -1200,11 +1202,15 @@ function track(d){
   const hdx = x - trail.hx, hdz = z - trail.hz, hd = Math.hypot(hdx, hdz);
   if (hd > 60) { trail.hx = x; trail.hz = z; }
   else if (hd > 1.2) {
+    // Fahrtrichtung aus der Bewegung eicht nur den Versatz zur Ausrichtung des Autos (yaw)
     const h = Math.atan2(mirror() * hdx, hdz);
-    trail.heading = angLerp(trail.heading, h, 0.35);
     const yo = h - d.yaw; trail.yawOff = trail.yawOff === null ? yo : angLerp(trail.yawOff, yo, 0.05);
+    if (trail.yawOff === null || trail.headT === undefined) trail.headT = h;
     trail.hx = x; trail.hz = z;
-  } else if (d.spd < 2 && trail.yawOff !== null) trail.heading = angLerp(trail.heading, d.yaw + trail.yawOff, 0.1);
+  }
+  // Ziel-Kurs kommt mit jedem Paket aus der Fahrzeug-Ausrichtung -> der Pfeil zeigt sofort, wohin das Auto schaut;
+  // weich nachgeführt wird er in jedem Bild (carUpdate)
+  if (trail.yawOff !== null) trail.headT = d.yaw + trail.yawOff;
   const gap = isNaN(trail.lastX) ? 0 : Math.hypot(x - trail.lastX, z - trail.lastZ);
   const add = () => {
     trail.x.push(x); trail.z.push(z); trail.v.push(d.spd * 3.6);
@@ -1263,10 +1269,45 @@ function predTrack(d){
   } else { PRED.vx = PRED.vz = 0; }
   PRED.x = d.px; PRED.z = d.pz; PRED.t = now;
 }
+// Position des Pfeils (Kartenkoordinaten), einmal je Bild in carUpdate berechnet
+const CAR = {x:0, y:0, ox:0, oz:0, t:0, ok:false};
 function carMap(){
   if (!(D && D.dash)) return [cam.cx, cam.cy];
+  return CAR.ok ? [CAR.x, CAR.y] : carRaw();
+}
+function carRaw(){
   const dt = D.on ? Math.min(0.05, (performance.now() - PRED.t) / 1000) : 0;
   return [mirror() * (D.px + PRED.vx * dt), -(D.pz + PRED.vz * dt)];
+}
+// Nächster Punkt auf einer sichtbaren Straße, die ungefähr in Fahrtrichtung läuft (Welt), sonst null.
+// Die Kartenausrichtung ist nie ganz exakt – so bleibt der Pfeil auf der Straße statt daneben.
+function carSnapTarget(x, z, hd){
+  const maxD = 9, dx = mirror() * Math.sin(hd), dz = Math.cos(hd); let best = null;
+  if (mapImg.T && !mapImg.demo && S.mapSrc !== "learned" && fit.quality && fit.quality.sure) {
+    crBuild(); const [u, v] = worldToImg(x, z);
+    for (const c of crCandidates(u, v, maxD / mapImg.k)) {
+      const L = CR.lines[c.li]; if (smBaseOff(L.key)) continue;
+      const q = L.p[c.i], [wx, wz] = imgToWorld(q[0] + c.sx * c.t, q[1] + c.sy * c.t);
+      const [ax, az] = imgToWorld(q[0], q[1]), [bx, bz] = imgToWorld(q[0] + c.sx, q[1] + c.sy), sl = Math.hypot(bx - ax, bz - az) || 1;
+      if (Math.abs(((bx - ax) * dx + (bz - az) * dz) / sl) < 0.8 || erasedAt(wx, wz)) continue;   // quer zur Fahrtrichtung oder wegradiert
+      const d = Math.hypot(wx - x, wz - z); if (!best || d < best.d) best = {x:wx, z:wz, d};
+    }
+  }
+  const m = lrNearest(LR.grid, x, z, dx, dz, maxD, null, 0, r => layOn(lrType(r)), (r, px, pz) => r.s || !erasedAt(px, pz));
+  if (m && (!best || m.d < best.d)) best = {x:m.px, z:m.pz, d:m.d};
+  return best;
+}
+// einmal je Bild: Kurs weich nachführen, Position vorausrechnen und (optional) auf die Straße ziehen
+function carUpdate(){
+  const now = performance.now(), dt = Math.min(0.1, CAR.t ? (now - CAR.t) / 1000 : 0.016); CAR.t = now;
+  if (!(D && D.dash && (D.px || D.pz))) { CAR.ok = false; return; }
+  if (trail.headT !== undefined) trail.heading = angLerp(trail.heading, trail.headT, 1 - Math.exp(-dt / 0.06));
+  const [mx, my] = carRaw(), x = mirror() * mx, z = -my;
+  // Versatz zur Straße weich ein- und ausblenden – keine Sprünge, wenn eine Straße auftaucht oder endet
+  let tx = 0, tz = 0;
+  if (S.carSnap !== false && D.spd > 1.5) { const t = carSnapTarget(x, z, trail.heading); if (t) { tx = t.x - x; tz = t.z - z; } }
+  const k = 1 - Math.exp(-dt / 0.25); CAR.ox += (tx - CAR.ox) * k; CAR.oz += (tz - CAR.oz) * k;
+  CAR.x = mirror() * (x + CAR.ox); CAR.y = -(z + CAR.oz); CAR.ok = true;
 }
 function isNavi(){ return S.tilt !== false && cam.mode === "follow" && S.orient === "heading" && !ed.on && !cal.open && !wp.placing; }
 function anchor(){ return (cam.mode === "follow" && S.orient === "heading") ? [W/2, H*(isNavi() ? 0.87 : 0.68)] : [W/2, H/2]; }
@@ -1298,6 +1339,7 @@ let camT = 0;
 function updateCam(){
   const tnow = performance.now(), dt = Math.min(0.1, camT ? (tnow - camT) / 1000 : 0.016); camT = tnow;
   const kz = 1 - Math.exp(-dt / 0.16), kr = 1 - Math.exp(-dt / 0.22), kv = 1 - Math.exp(-dt / 1.2);
+  carUpdate();
   const [carX, carY] = carMap(), spd = D ? D.spd * 3.6 : 0;
   cam.spdS = cam.spdS === undefined ? spd : cam.spdS + (spd - cam.spdS) * kv;   // geglättetes Tempo -> kein Zoom-Gezappel
   if (cam.mode === "follow") {
@@ -1355,8 +1397,8 @@ function staticKey(){
 function mcValid(key, axS, ayS){
   const C = MC.c; if (!C || key !== MC.key || C.W !== W || C.H !== H || C.dpr !== DPR) return false;
   const ratio = cam.s / C.s; let dr = cam.rot - C.rot; while (dr > Math.PI) dr -= 2 * Math.PI; while (dr < -Math.PI) dr += 2 * Math.PI; dr = Math.abs(dr);
-  const follow = cam.mode === "follow";
-  if (ratio < (follow ? 0.94 : 0.6) || ratio > (follow ? 1.06 : 1.7) || dr > (follow ? 0.06 : 3.2)) return false;
+  // Der Puffer deckt jede Drehung ab (siehe mcRender) – Drehen und leichtes Zoomen beim Fahren kosten keinen Neuaufbau mehr
+  if (ratio < 0.75 || ratio > 1.4 || dr > 3.2) return false;
   // alle vier Bildschirmecken müssen im Zwischenspeicher liegen
   const co = Math.cos(cam.rot), si = Math.sin(cam.rot), cc = Math.cos(-C.rot), cs = Math.sin(-C.rot);
   for (const [px, py] of [[0, 0], [W, 0], [0, H], [W, H]]) {
@@ -1368,9 +1410,11 @@ function mcValid(key, axS, ayS){
   return true;
 }
 function mcRender(key, axS, ayS){
-  const M = Math.round(Math.max(W, H) * 0.35), w = W + 2 * M, h = H + 2 * M, pw = Math.round(w * DPR), ph = Math.round(h * DPR);
+  // quadratischer Puffer um den Ankerpunkt: reicht für jede Drehung der Karte (Fahrtrichtung oben), dazu Rand zum Fahren/Zoomen
+  const reach = Math.hypot(Math.max(axS, W - axS), Math.max(ayS, H - ayS)), M = Math.round(Math.max(W, H) * 0.2);
+  const w = Math.round(2 * (reach + M)), h = w, pw = Math.round(w * DPR), ph = pw;
   if (!MC.g || MC.cv.width !== pw || MC.cv.height !== ph) { MC.cv.width = pw; MC.cv.height = ph; MC.g = MC.cv.getContext("2d"); }
-  const c = {cx:cam.cx, cy:cam.cy, rot:cam.rot, s:cam.s, ax:axS + M, ay:ayS + M, w, h, W, H, dpr:DPR};
+  const c = {cx:cam.cx, cy:cam.cy, rot:cam.rot, s:cam.s, ax:w / 2, ay:h / 2, w, h, W, H, dpr:DPR};
   renderStatic(MC.g, c); MC.c = c; MC.key = key;
 }
 function renderStatic(g, c){
@@ -1465,8 +1509,8 @@ function drawMap(){
     const [carX, carY] = carMap(), dx = (carX - cam.cx) * s, dy = (carY - cam.cy) * s;
     const c = Math.cos(-cam.rot), sn = Math.sin(-cam.rot), px = axS + dx * c - dy * sn, py = ayS + dx * sn + dy * c;
     ctx.save(); ctx.translate(px, py);
-    ctx.globalAlpha = 0.18; ctx.fillStyle = acc; ctx.beginPath(); ctx.arc(0, 0, 19, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
-    ctx.rotate(trail.heading - cam.rot); ctx.scale(0.68, 0.68);
+    ctx.globalAlpha = 0.18; ctx.fillStyle = acc; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.rotate(trail.heading - cam.rot); ctx.scale(0.46, 0.46);
     ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(16, 16); ctx.lineTo(0, 9); ctx.lineTo(-16, 16); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(13, 13); ctx.lineTo(0, 6); ctx.lineTo(-13, 13); ctx.closePath(); ctx.fillStyle = "#fff"; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(8.5, 8.5); ctx.lineTo(0, 3.5); ctx.lineTo(-8.5, 8.5); ctx.closePath(); ctx.fillStyle = acc; ctx.fill();
     ctx.restore();
@@ -4280,6 +4324,7 @@ function buildSettings(){
   }
   mg.appendChild(row("Ausrichtung", "Auch über den Kompass umschaltbar", seg("orient", [["heading","Fahrtrichtung"],["north","Norden"]])));
   mg.appendChild(row("Karten-Bildrate", "Sparsam = weniger Last für die Grafikkarte, falls Forza ruckelt", seg("mapFps", [[60,"Flüssig"],[30,"Sparsam"]])));
+  mg.appendChild(row("Pfeil auf der Straße halten", "Gleicht kleine Abweichungen der Kartenausrichtung aus, damit der Pfeil nicht neben der Straße fährt", seg("carSnap", [[true,"An"],[false,"Aus"]])));
   mg.appendChild(row("3D-Navi-Ansicht", "Karte beim Folgen schräg wie im Navi", seg("tilt", [[true,"An"],[false,"Aus"]])));
   mg.appendChild(row("Auto-Zoom", "Zoomt bei hohem Tempo heraus", seg("autozoom", [[true,"An"],[false,"Aus"]])));
   mg.appendChild(row("Gefahrene Strecke", "Kurz = nur die letzten ca. 450 m als Spur", seg("trailShow", [["off","Aus"],["short","Kurz"],["all","Alles"]])));
