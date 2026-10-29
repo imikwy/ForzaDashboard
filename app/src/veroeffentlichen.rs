@@ -143,9 +143,10 @@ mod tests {
         assert!(sh(&a, &["status", "--porcelain"]).trim().is_empty());
         // nichts Neues -> nichts zu veröffentlichen
         assert_eq!(publish(&sa.cur().unwrap(), &a, "", "A", false)["ok"], false);
-        // Massenlöschung wird blockiert
-        let all: Vec<Value> = start.active().unwrap().ents.iter().filter(|e| e["k"] == "e").take(600)
-            .map(|e| json!({"id": e["id"], "k": "e", "d": 1})).collect();
+        // Massenlöschung wird blockiert (mehr als 5 % der Startkarte, egal wie groß sie inzwischen ist)
+        let ents = &start.active().unwrap().ents;
+        let all: Vec<Value> = ents.iter().filter(|e| e["d"] != 1).take((ents.len() * 6 / 100).max(250))
+            .map(|e| json!({"id": e["id"], "k": e["k"], "d": 1})).collect();
         sa.cur().unwrap().submit(&all, None);
         let r = publish(&sa.cur().unwrap(), &a, "", "A", false);
         assert_eq!(r["ok"], false);

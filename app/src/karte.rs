@@ -419,7 +419,8 @@ mod tests {
     fn startkarte_ist_gueltig() {
         let buf = gunzip_bytes(START_MAP, 256 << 20).unwrap();
         let (man, ents) = check_release(START_MAN, &buf).unwrap();
-        assert_eq!(man["version"], 1);
+        // die Release-Pipeline baut die neueste Kartenversion als Startkarte ein – also nicht nur Version 1
+        assert!(man["version"].as_u64().is_some_and(|v| v >= 1), "{man}");
         assert_eq!(man["basis"].as_str().unwrap(), base_hash());
         assert!(ents.len() > 10000);
     }
