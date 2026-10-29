@@ -217,7 +217,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #map.drag{cursor:grabbing}
 .glass{background:rgba(30,32,36,.74);backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 30px rgba(0,0,0,.35)}
 #map{transition:transform .55s cubic-bezier(.3,.7,.3,1)}
-.mapcard.navi #map{left:-22%;width:144%;top:-80%;height:182%;transform:perspective(1100px) rotateX(50deg) scale(1.15);transform-origin:50% 87%}
+.mapcard.navi #map{left:-22%;width:144%;top:-80%;height:182%;transform:perspective(var(--navp,1100px)) rotateX(50deg) scale(1.15);transform-origin:50% 87%}
 .navfade{position:absolute;inset:0 0 auto;height:46%;background:linear-gradient(#0d1116 22%,rgba(13,17,22,.6) 55%,rgba(13,17,22,0));pointer-events:none;opacity:0;transition:opacity .5s}
 .mapcard.navi .navfade{opacity:1}
 .mapcard.navi .scale{display:none}
@@ -1257,7 +1257,8 @@ window.addEventListener("beforeunload", () => persist(false));
 const cv = $("map"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1;
 const cam = {mode:"follow", cx:0, cy:0, rot:0, s:1, ts:1, init:false};
-function resize(){ DPR = Math.min(window.devicePixelRatio || 1, $("mapcard").classList.contains("navi") ? 1 : 1.5); W = cv.offsetWidth; H = cv.offsetHeight; cv.width = Math.max(1, Math.round(W * DPR)); cv.height = Math.max(1, Math.round(H * DPR)); }
+// Navi-Ansicht: Perspektive wächst mit der Kartenhöhe, sonst sieht man bei großen Fenstern die Ränder der gekippten Ebene
+function resize(){ const mch = $("mapcard").clientHeight; if (mch) $("mapcard").style.setProperty("--navp", Math.max(1100, Math.round(mch * 1.48)) + "px"); DPR = Math.min(window.devicePixelRatio || 1, $("mapcard").classList.contains("navi") ? 1 : 1.5); W = cv.offsetWidth; H = cv.offsetHeight; cv.width = Math.max(1, Math.round(W * DPR)); cv.height = Math.max(1, Math.round(H * DPR)); }
 new ResizeObserver(resize).observe(cv);
 // Position zwischen zwei Datenpaketen fortschreiben -> Karte und Pfeil bewegen sich gleichmäßig
 const PRED = {x:0, z:0, t:0, vx:0, vz:0};
