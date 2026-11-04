@@ -3,6 +3,7 @@
 // zusätzlich im WLAN für Handy/Tablet bereit. Ein Symbol unten rechts in der Taskleiste hält es am Laufen.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod apps;
 mod bruecke;
 mod dienst;
 mod kanal;
@@ -12,6 +13,8 @@ mod media;
 mod mqtt;
 mod settings;
 mod sitzung;
+mod sozial;
+mod spotify;
 mod state;
 mod telemetry;
 mod updates;
@@ -35,7 +38,7 @@ use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
 // Format JJJJ-MM-TT.N. BAU_VER zählt ForzaDashboard-bauen.bat hoch; Releases auf GitHub setzen FD_VERSION beim Bauen.
-const BAU_VER: &str = "2026-10-28.13";
+const BAU_VER: &str = "2026-11-05.3";
 pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => BAU_VER };
 // hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
 pub const REPO: &str = "imikwy/ForzaDashboard";
@@ -43,6 +46,7 @@ pub const REPO: &str = "imikwy/ForzaDashboard";
 // F11 / Esc und der Vollbild-Knopf des Dashboards schalten das Fenster selbst in den Vollbildmodus
 const FULLSCREEN_JS: &str = r#"(function(){
   if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+  window.FD_EXE = true;   // Dashboard läuft im Programmfenster (Spotify/YouTube möglich)
   // Fehler im Dashboard-Fenster landen in ForzaDashboard-log.txt
   const _fetch = window.fetch.bind(window);
   const log = m => { try { _fetch("/log?m=" + encodeURIComponent(String(m).slice(0, 500)), {cache:"no-store"}).catch(() => {}); } catch (e) {} };
@@ -51,7 +55,10 @@ const FULLSCREEN_JS: &str = r#"(function(){
   window.fetch = (u, o) => _fetch(u, o).catch(err => { log("fetch " + u + ": " + err); throw err; });
   let fs = false;
   const call = a => fetch("/window?fs=" + a, {cache:"no-store"}).then(r => r.json()).then(o => { fs = !!o.fs; }).catch(() => {});
-  call("get");
+  // Zustand beim Start abfragen; schlägt das fehl (Seite lädt noch), nochmal versuchen – sonst schaltet der Knopf falsch
+  const get = n => _fetch("/window?fs=get", {cache:"no-store"}).then(r => r.json()).then(o => { fs = !!o.fs; }).catch(() => { if (n < 20) setTimeout(() => get(n + 1), 500); });
+  get(0);
+  window.FD_FS_TOGGLE = () => call("toggle");   // Vollbild-Knopf im Dashboard: fragt nicht den (evtl. alten) Zustand ab
   try {
     Object.defineProperty(Document.prototype, "fullscreenElement", {configurable:true, get(){ return fs ? document.documentElement : null; }});
     Element.prototype.requestFullscreen = function(){ fs = true; return call("on"); };
@@ -229,7 +236,7 @@ async fn udp_loop(s: Arc<Shared>, sock: UdpSocket) {
 }
 
 // ---------------- Fenster ----------------
-fn webview_dir() -> PathBuf {
+pub(crate) fn webview_dir() -> PathBuf {
     let base = std::env::var("LOCALAPPDATA").map(PathBuf::from).unwrap_or_else(|_| std::env::temp_dir());
     base.join("ForzaDashboard").join("webview")
 }
@@ -281,11 +288,31 @@ pub fn open_window(app: &AppHandle, s: &Arc<Shared>) {
     if first_run { let _ = w.center(); let _ = w.set_fullscreen(true); }
     let _ = w.show();
     let _ = w.set_focus();
+    let (nf, top) = { let c = s.cfg.lock().unwrap(); (c.kein_fokus, c.immer_oben) };
+    fenster_stil(&w, nf, top);
     // Fenster zu = ForzaDashboard ganz beenden (verschwindet auch aus dem Infobereich)
     let s2 = s.clone();
     w.on_window_event(move |e| {
         if let WindowEvent::CloseRequested { .. } = e { quit(&s2); }
     });
+}
+
+// Fenster, das beim Anklicken nicht aktiviert wird: Forza behält den Fokus und geht nicht ins Pausemenü.
+// (Tastatureingaben landen dann weiter im Spiel – deshalb abschaltbar.) Dazu optional immer im Vordergrund.
+pub fn fenster_stil(w: &tauri::WebviewWindow, kein_fokus: bool, immer_oben: bool) {
+    let _ = w.set_always_on_top(immer_oben);
+    #[cfg(windows)]
+    if let Ok(h) = w.hwnd() {
+        use windows::Win32::Foundation::HWND;
+        use windows::Win32::UI::WindowsAndMessaging::{GetWindowLongPtrW, SetWindowLongPtrW, GWL_EXSTYLE, WS_EX_NOACTIVATE};
+        let hwnd = HWND(h.0 as _);
+        unsafe {
+            let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+            let bit = WS_EX_NOACTIVATE.0 as isize;
+            let neu = if kein_fokus { ex | bit } else { ex & !bit };
+            if neu != ex { SetWindowLongPtrW(hwnd, GWL_EXSTYLE, neu); }
+        }
+    }
 }
 
 // ---------------- Symbol unten rechts ----------------

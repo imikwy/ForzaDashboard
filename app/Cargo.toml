@@ -12,7 +12,8 @@ path = "src/main.rs"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon", "custom-protocol"] }
+# unstable: mehrere Webseiten in einem Fenster (Spotify/YouTube im Dashboard)
+tauri = { version = "2", features = ["tray-icon", "custom-protocol", "unstable"] }
 tauri-plugin-single-instance = "2"
 tauri-plugin-window-state = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "net", "time", "sync", "macros", "io-util"] }
@@ -39,6 +40,8 @@ hmac = "0.12"
 ureq = { version = "2", default-features = false, features = ["native-tls", "gzip"] }
 windows = { version = "0.61", features = [
   "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_UI_HiDpi",
   "Win32_Media_Audio",
   "Win32_System_Com",
   "Win32_System_Com_StructuredStorage",

@@ -26,24 +26,28 @@ pub fn setup(s: &Arc<Shared>) {
     let w = Arc::downgrade(s);
     let lob = Lobbys::new(&s.net, &s.sid, &s.root, Arc::new(move |d: &str, o: &Value| { if let Some(s) = w.upgrade() { flr_on_roads(&s, d, o); } }));
     let _ = s.lobbys.set(lob);
+    let _ = s.sozial.set(crate::sozial::Sozial::new(&s.net, &s.sid, &s.root));
 }
 
 pub fn start(s: &Arc<Shared>) {
     s.net.start();
     s.lobbys().start();
+    let online = { let c = s.cfg.lock().unwrap(); c.online && c.fr_on };
+    s.sozial().start(online);
     s.sitz().resume();
     bruecke::start(&s.net, &s.root);
     let s1 = s.clone();
     tauri::async_runtime::spawn(async move {
-        let mut t = tokio::time::interval(Duration::from_millis(500));
+        let mut t = tokio::time::interval(Duration::from_millis(250));   // 4×/s: Freunde bewegen sich flüssiger
         let mut n = 0u64;
         loop {
             t.tick().await;
             n += 1;
             let p = *s1.my_pos.lock().unwrap();
             s1.lobbys().pub_pos(p, &s1.name(), s1.fr_on());
+            s1.sozial().tick(p, &s1.name(), s1.fr_on());
             friends_tick(&s1);
-            if n % 30 == 3 {
+            if n % 60 == 3 {
                 let s2 = s1.clone();
                 let _ = tokio::task::spawn_blocking(move || pub_roads(&s2, false)).await;
             }
@@ -58,11 +62,16 @@ pub fn pub_roads(s: &Shared, force: bool) {
 
 fn friends_tick(s: &Shared) {
     let on = s.fr_on();
-    let list = if on { s.lobbys().friend_list() } else { vec![] };
+    // Freunde aus den Kolonnen, dazu Online-Spieler (wer schon in einer Kolonne ist, steht nur einmal drin)
+    let mut list = if on { s.lobbys().friend_list() } else { vec![] };
+    if on {
+        let ids: std::collections::HashSet<String> = list.iter().filter_map(|f| f["id"].as_str().map(String::from)).collect();
+        list.extend(s.sozial().welt_list().into_iter().filter(|f| !ids.contains(f["id"].as_str().unwrap_or(""))));
+    }
     let lr = s.flr.lock().unwrap().list.len();
     let upd = crate::updates::state(s)["text"].clone();
     s.emit(Some("fr"), json!({"on": on, "ok": s.net_ok(), "name": s.name(), "group": s.lobbys().names(), "lobbys": s.lobbys().list(),
-        "list": list, "lr": lr, "upd": upd}).to_string());
+        "list": list, "gwp": s.lobbys().group_wps(), "me": s.sid, "soz": s.sozial().state(), "lr": lr, "upd": upd}).to_string());
 }
 
 // ---------------- Ereignisse an die Dashboards ----------------

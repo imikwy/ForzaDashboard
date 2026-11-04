@@ -43,6 +43,8 @@ pub struct Lobbys {
     last_pub: Mutex<u64>,
     lr_sent: Mutex<HashMap<String, String>>,
     on_roads: OnRoads,
+    // Gruppen-Wegpunkt je Lobby (der zuletzt gesetzte gilt; bleibt beim Vermittler liegen für später Kommende)
+    gwp: Mutex<HashMap<String, Value>>,
 }
 
 impl Lobbys {
@@ -52,7 +54,7 @@ impl Lobbys {
             .into_iter().filter(|l| valid_code(&l.code)).collect();
         Arc::new(Lobbys {
             net: net.clone(), dev: dev.to_string(), file, liste: Mutex::new(liste), kanaele: Mutex::new(HashMap::new()),
-            friends: Mutex::new(HashMap::new()), last_pub: Mutex::new(0), lr_sent: Mutex::new(HashMap::new()), on_roads,
+            friends: Mutex::new(HashMap::new()), last_pub: Mutex::new(0), lr_sent: Mutex::new(HashMap::new()), on_roads, gwp: Mutex::new(HashMap::new()),
         })
     }
 
@@ -87,7 +89,10 @@ impl Lobbys {
 
     fn on_msg(&self, code: &str, o: Value, sub: &str) {
         let d = o["d"].as_str().unwrap_or("");
-        if d.is_empty() || d == self.dev { return; }
+        if d.is_empty() { return; }
+        // Gruppen-Wegpunkt auch vom eigenen Gerät annehmen (liegt nach einem Neustart beim Vermittler)
+        if o["y"] == "wp" { self.on_wp(code, &o); return; }
+        if d == self.dev { return; }
         match o["y"].as_str().unwrap_or("") {
             "pos" => {
                 // ohne Koordinaten: online, aber gerade nicht im Spiel unterwegs (nur in der Lobby-Liste, nicht auf der Karte)
@@ -116,7 +121,47 @@ impl Lobbys {
         }
     }
 
-    // eigene Position: 2×/s beim Fahren, sonst alle 5 s ein Lebenszeichen
+    fn on_wp(&self, code: &str, o: &Value) {
+        let t = o["t"].as_u64().unwrap_or(0);
+        let mut g = self.gwp.lock().unwrap();
+        if g.get(code).and_then(|p| p["t"].as_u64()).is_some_and(|alt| alt > t) { return; }
+        if o["clear"].as_u64() == Some(1) { g.insert(code.to_string(), json!({"t": t, "clear": 1})); return; }
+        let (Some(x), Some(z)) = (o["x"].as_f64().filter(|v| v.is_finite()), o["z"].as_f64().filter(|v| v.is_finite())) else { return };
+        g.insert(code.to_string(), json!({"t": t, "d": o["d"], "n": take_chars(o["n"].as_str().unwrap_or("Freund"), 24), "x": x, "z": z, "wn": take_chars(o["wn"].as_str().unwrap_or(""), 40)}));
+    }
+
+    // Gruppen-Wegpunkt an alle offenen Lobbys (bleibt liegen, damit auch später Kommende ihn sehen)
+    pub fn send_wp(&self, b: &Value, name: &str) -> bool {
+        let (Some(x), Some(z)) = (b["x"].as_f64().filter(|v| v.is_finite()), b["z"].as_f64().filter(|v| v.is_finite())) else { return false };
+        let m = json!({"y": "wp", "d": self.dev, "n": name, "x": (x * 10.0).round() / 10.0, "z": (z * 10.0).round() / 10.0, "wn": take_chars(b["n"].as_str().unwrap_or(""), 40), "t": now_ms()});
+        self.wp_all(&m)
+    }
+
+    pub fn clear_wp(&self) -> bool {
+        self.wp_all(&json!({"y": "wp", "d": self.dev, "clear": 1, "t": now_ms()}))
+    }
+
+    fn wp_all(&self, m: &Value) -> bool {
+        let codes: Vec<String> = self.kanaele.lock().unwrap().keys().cloned().collect();
+        if codes.is_empty() { return false; }
+        for c in &codes { self.on_wp(c, m); }
+        let ks = self.kanaele.lock().unwrap();
+        for k in ks.values() { k.send_to(m, "wp", true); }
+        true
+    }
+
+    // aktuelle Gruppen-Wegpunkte der offenen Lobbys (höchstens 6 Stunden alt)
+    pub fn group_wps(&self) -> Vec<Value> {
+        let now = now_ms();
+        let open: Vec<String> = self.kanaele.lock().unwrap().keys().cloned().collect();
+        let names: HashMap<String, String> = self.liste.lock().unwrap().iter().map(|l| (l.code.clone(), l.name.clone())).collect();
+        self.gwp.lock().unwrap().iter()
+            .filter(|(c, w)| open.contains(c) && w["clear"].is_null() && now.saturating_sub(w["t"].as_u64().unwrap_or(0)) < 6 * 3600 * 1000)
+            .map(|(c, w)| { let mut w = w.clone(); w["ln"] = json!(names.get(c).cloned().unwrap_or_default()); w["me"] = json!(w["d"] == self.dev); w })
+            .collect()
+    }
+
+    // eigene Position: 4×/s beim Fahren, sonst alle 5 s ein Lebenszeichen
     pub fn pub_pos(&self, p: Option<MyPos>, name: &str, on: bool) {
         let now = now_ms();
         self.friends.lock().unwrap().retain(|_, f| now.saturating_sub(f.f.seen) <= 12000);
@@ -233,6 +278,12 @@ impl Lobbys {
         }
         self.save();
         true
+    }
+
+    // Name und normalisierter Code einer Lobby (für Einladungen)
+    pub fn find(&self, code: &str) -> Option<(String, String)> {
+        let c = norm_code(code);
+        self.liste.lock().unwrap().iter().find(|l| l.code == c).map(|l| (l.name.clone(), l.code.clone()))
     }
 
     pub fn names(&self) -> String {

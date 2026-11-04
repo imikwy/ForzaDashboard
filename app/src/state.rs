@@ -4,6 +4,7 @@ use crate::lobby::Lobbys;
 use crate::mqtt::Net;
 use crate::settings::{self, Settings};
 use crate::sitzung::Sitzungen;
+use crate::sozial::Sozial;
 use crate::{media, updates};
 use serde_json::{Map, Value};
 use std::path::PathBuf;
@@ -70,6 +71,8 @@ pub struct Shared {
     pub lokal: Mutex<Map<String, Value>>,
     pub sitz: OnceLock<Sitzungen>,
     pub lobbys: OnceLock<Arc<Lobbys>>,
+    pub sozial: OnceLock<Arc<Sozial>>,
+    pub spotify: Mutex<crate::spotify::Sp>,
     pub upd: Mutex<updates::Upd>,
     pub pub_cap: Mutex<(u64, Value)>,
 }
@@ -113,6 +116,8 @@ impl Shared {
             lokal: Mutex::new(lokal),
             sitz: OnceLock::new(),
             lobbys: OnceLock::new(),
+            sozial: OnceLock::new(),
+            spotify: Mutex::new(Default::default()),
             upd: Mutex::new(updates::Upd::default()),
             pub_cap: Mutex::new((0, Value::Null)),
         }
@@ -136,6 +141,10 @@ impl Shared {
 
     pub fn lobbys(&self) -> &Arc<Lobbys> {
         self.lobbys.get().expect("Lobbys")
+    }
+
+    pub fn sozial(&self) -> &Arc<Sozial> {
+        self.sozial.get().expect("Sozial")
     }
 
     pub fn name(&self) -> String {

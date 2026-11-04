@@ -45,6 +45,14 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/marks", get(|| async { json_str("[]".into()) }))
         .route("/quit", get(quit))
         .route("/window", get(window))
+        .route("/app", get(app_ctl))
+        // Spotify (Web-API): Anmeldung, Einstellungen, Weiterleitung der API-Anfragen
+        .route("/spotify/status", get(|State(s): S| async move { j(crate::spotify::status(&s)) }))
+        .route("/spotify/config", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(crate::spotify::set_client(&s, b["id"].as_str().unwrap_or(""))) }))
+        .route("/spotify/login", get(|State(s): S| async move { j(crate::spotify::login_url(&s)) }))
+        .route("/spotify/logout", post(|State(s): S| async move { crate::spotify::logout(&s); j(json!({"ok": true})) }))
+        .route("/spotify/callback", get(sp_callback))
+        .route("/spotify/api/{*path}", axum::routing::any(sp_api))
         .route("/log", get(|ConnectInfo(addr): Addr, Query(q): Q| async move {
             if addr.ip().is_loopback() { if let Some(m) = q.get("m") { crate::util::log(format!("Fenster: {}", take_chars(m, 500))); } }
             json_str("{}".into())
@@ -54,8 +62,35 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/lobby", get(|State(s): S| async move { j(json!({"liste": s.lobbys().list(), "name": s.name(), "on": s.fr_on(), "ok": s.net_ok()})) }))
         .route("/lobby/neu", post(|State(s): S, b: Bytes| async move { let b = body(&b); let r = s.lobbys().create(b["name"].as_str().unwrap_or(""), &s.name()); lobby_resp(&s, r) }))
         .route("/lobby/beitreten", post(|State(s): S, b: Bytes| async move { let b = body(&b); let r = s.lobbys().join(b["code"].as_str().unwrap_or("")); lobby_resp(&s, r) }))
-        .route("/lobby/verlassen", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.lobbys().leave(b["code"].as_str().unwrap_or("")); lobby_resp(&s, json!({"ok": ok})) }))
-        .route("/lobby/an", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.lobbys().set_on(b["code"].as_str().unwrap_or(""), b["an"].as_bool().unwrap_or(false)); lobby_resp(&s, json!({"ok": ok})) }))
+        .route("/lobby/verlassen", post(|State(s): S, b: Bytes| async move { let b = body(&b); let code = b["code"].as_str().unwrap_or(""); s.sozial().einladungen_zurueck(&crate::util::norm_code(code)); let ok = s.lobbys().leave(code); lobby_resp(&s, json!({"ok": ok})) }))
+        .route("/lobby/an", post(|State(s): S, b: Bytes| async move { let b = body(&b); let code = b["code"].as_str().unwrap_or(""); let an = b["an"].as_bool().unwrap_or(false); if !an { s.sozial().einladungen_zurueck(&crate::util::norm_code(code)); } let ok = s.lobbys().set_on(code, an); lobby_resp(&s, json!({"ok": ok})) }))
+        // Freunde, Einladungen, Online-Modus
+        .route("/sozial", get(|State(s): S| async move { j(s.sozial().state()) }))
+        .route("/sozial/anfrage", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.sozial().anfrage(b["id"].as_str().unwrap_or(""), b["n"].as_str().unwrap_or("Fahrer"), &s.name()); j(json!({"ok": ok, "soz": s.sozial().state()})) }))
+        .route("/sozial/annehmen", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.sozial().annehmen(b["id"].as_str().unwrap_or(""), &s.name()); j(json!({"ok": ok, "soz": s.sozial().state()})) }))
+        .route("/sozial/ablehnen", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.sozial().ablehnen(b["id"].as_str().unwrap_or("")); j(json!({"ok": ok, "soz": s.sozial().state()})) }))
+        .route("/sozial/zurueckziehen", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.sozial().zurueckziehen(b["id"].as_str().unwrap_or("")); j(json!({"ok": ok, "soz": s.sozial().state()})) }))
+        .route("/sozial/entfernen", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.sozial().entfernen(b["id"].as_str().unwrap_or("")); j(json!({"ok": ok, "soz": s.sozial().state()})) }))
+        .route("/sozial/einladen", post(|State(s): S, b: Bytes| async move {
+            let b = body(&b);
+            let Some((ln, code)) = s.lobbys().find(b["code"].as_str().unwrap_or("")) else { return j(json!({"ok": false, "why": "Erst eine Kolonne starten"})) };
+            let ok = s.sozial().einladen(b["id"].as_str().unwrap_or(""), &code, &ln, &s.name());
+            j(json!({"ok": ok, "soz": s.sozial().state()}))
+        }))
+        .route("/sozial/einladung", post(|State(s): S, b: Bytes| async move {
+            let b = body(&b);
+            let code = s.sozial().einladung(b["id"].as_str().unwrap_or(""), b["an"].as_bool().unwrap_or(false));
+            let r = match code { Some(c) => s.lobbys().join(&c), None => json!({"ok": b["an"].as_bool() != Some(true), "why": "Die Einladung ist abgelaufen"}) };
+            lobby_resp(&s, r)
+        }))
+        .route("/sozial/welt", post(|State(s): S, b: Bytes| async move {
+            let on = body(&b)["on"].as_bool().unwrap_or(false);
+            s.cfg.lock().unwrap().online = on; s.set_setting("online_modus", if on { "ja" } else { "nein" });
+            s.sozial().set_welt(on && s.fr_on());
+            j(json!({"ok": true, "soz": s.sozial().state()}))
+        }))
+        .route("/lobby/wegpunkt", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.lobbys().send_wp(&b, &s.name()); j(json!({"ok": ok})) }))
+        .route("/lobby/wegpunkt/weg", post(|State(s): S| async move { let ok = s.lobbys().clear_wp(); j(json!({"ok": ok})) }))
         .route("/lobby/name", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.lobbys().rename(b["code"].as_str().unwrap_or(""), b["name"].as_str().unwrap_or("")); lobby_resp(&s, json!({"ok": ok})) }))
         // gelernte Straßen
         .route("/learned/version", get(|State(s): S| async move { j(json!({"v": s.lver.load(Ordering::Relaxed)})) }))
@@ -260,15 +295,46 @@ async fn quit(State(s): S, ConnectInfo(addr): Addr) -> Response {
 }
 
 // F11 / Esc / Vollbild-Knopf im Dashboard-Fenster (nur vom PC selbst)
+// Rückkehr von der Spotify-Anmeldung (läuft im eingebetteten Fenster)
+async fn sp_callback(State(s): S, Query(q): Q) -> Response {
+    let (code, state, err) = (q.get("code").cloned().unwrap_or_default(), q.get("state").cloned().unwrap_or_default(), q.get("error").cloned());
+    let r = if let Some(e) = err { Err(format!("Anmeldung abgebrochen ({e})")) } else { tokio::task::spawn_blocking(move || crate::spotify::callback(&s, &code, &state)).await.unwrap_or(Err("Fehler".into())) };
+    let (title, text) = match &r { Ok(()) => ("Angemeldet", "Du bist mit Spotify verbunden. Das Dashboard schließt dieses Fenster gleich.".to_string()), Err(e) => ("Nicht angemeldet", e.clone()) };
+    let esc = |t: &str| t.replace('&', "&amp;").replace('<', "&lt;");
+    let page = format!("<!doctype html><meta charset=utf-8><body style=\"margin:0;height:100vh;display:grid;place-items:center;background:#121212;color:#fff;font:600 16px Segoe UI,sans-serif;text-align:center\"><div><div style=\"font-size:44px;margin-bottom:10px\">{}</div><h2 style=\"margin:0 0 8px\">{}</h2><p style=\"color:#b3b3b3;max-width:420px\">{}</p></div>", if r.is_ok() { "✓" } else { "!" }, title, esc(&text));
+    ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], page).into_response()
+}
+
+async fn sp_api(State(s): S, method: axum::http::Method, Path(path): Path<String>, axum::extract::RawQuery(q): axum::extract::RawQuery, b: Bytes) -> Response {
+    let m = method.as_str().to_string();
+    let (st, text) = tokio::task::spawn_blocking(move || crate::spotify::api(&s, &m, &path, q.as_deref().unwrap_or(""), &b)).await.unwrap_or((502, String::new()));
+    (StatusCode::from_u16(st).unwrap_or(StatusCode::BAD_GATEWAY), [(header::CONTENT_TYPE, "application/json")], text).into_response()
+}
+
+// Spotify/YouTube im Programmfenster anzeigen, verstecken, bedienen (nur vom PC selbst)
+async fn app_ctl(State(s): S, ConnectInfo(addr): Addr, Query(q): Q) -> Response {
+    if !addr.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); }
+    let Some(app) = s.app.get().cloned() else { return j(json!({"ok": false})) };
+    let id = q.get("id").cloned().unwrap_or_default();
+    let r = tokio::task::spawn_blocking(move || crate::apps::steuern(&app, &id, &q)).await.unwrap_or(json!({"ok": false}));
+    j(r)
+}
+
 async fn window(State(s): S, ConnectInfo(addr): Addr, Query(q): Q) -> Response {
     if !addr.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); }
     let mut fs = false;
+    let onoff = |k: &str, cur: bool| match q.get(k).map(String::as_str) { Some("toggle") => !cur, Some("on") => true, Some("off") => false, _ => cur };
+    let (nf0, top0) = { let c = s.cfg.lock().unwrap(); (c.kein_fokus, c.immer_oben) };
+    let (nf, top) = (onoff("nofocus", nf0), onoff("top", top0));
+    if nf != nf0 { s.cfg.lock().unwrap().kein_fokus = nf; s.set_setting("spiel_fokus_behalten", if nf { "ja" } else { "nein" }); }
+    if top != top0 { s.cfg.lock().unwrap().immer_oben = top; s.set_setting("immer_im_vordergrund", if top { "ja" } else { "nein" }); }
     if let Some(w) = s.app.get().and_then(|a| a.get_webview_window("main")) {
         let cur = w.is_fullscreen().unwrap_or(false);
-        fs = match q.get("fs").map(String::as_str) { Some("toggle") => !cur, Some("on") => true, Some("off") => false, _ => cur };
+        fs = onoff("fs", cur);
         if fs != cur { let _ = w.set_fullscreen(fs); }
+        if nf != nf0 || top != top0 { crate::fenster_stil(&w, nf, top); }
     }
-    j(json!({"fs": fs}))
+    j(json!({"fs": fs, "nofocus": nf, "top": top}))
 }
 
 fn clean(v: &str, max: usize) -> String {

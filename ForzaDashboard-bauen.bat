@@ -27,8 +27,8 @@ copy /y app\target\release\ForzaDashboard.exe ForzaDashboard.exe >nul
 REM Test-Oberflächen im Datenordner entfernen, sonst überdecken sie die eingebaute neue Version
 del /q "%APPDATA%\ForzaDashboard\dashboard.html" >nul 2>&1
 del /q "%~dp0dashboard.html" >nul 2>&1
-REM Installation auf dem Desktop (falls vorhanden) gleich mit aktualisieren und von dort starten
-set "ZIEL=%USERPROFILE%\Desktop\ForzaDashboard"
+REM Installation daneben (projekt carplay\ForzaDashboard, falls vorhanden) gleich mit aktualisieren und von dort starten
+set "ZIEL=%~dp0..\ForzaDashboard"
 set "START=%~dp0ForzaDashboard.exe"
 if exist "%ZIEL%\ForzaDashboard.exe" (
   copy /y app\target\release\ForzaDashboard.exe "%ZIEL%\ForzaDashboard.exe" >nul
