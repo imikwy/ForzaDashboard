@@ -38,7 +38,7 @@ use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
 // Format JJJJ-MM-TT.N. BAU_VER zählt ForzaDashboard-bauen.bat hoch; Releases auf GitHub setzen FD_VERSION beim Bauen.
-const BAU_VER: &str = "2026-11-05.3";
+const BAU_VER: &str = "2026-11-05.4";
 pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => BAU_VER };
 // hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
 pub const REPO: &str = "imikwy/ForzaDashboard";
@@ -366,6 +366,7 @@ fn build_tray(app: &AppHandle, s: &Arc<Shared>) -> tauri::Result<()> {
 
 // ---------------- Beenden / Neustart ----------------
 pub fn quit(s: &Arc<Shared>) {
+    #[cfg(windows)] crate::media::unduck_now();   // Musik nicht leise zurücklassen
     // bei den anderen abmelden (Sitzung, Lobbys); das Journal ist ohnehin schon auf der Platte
     if let Some(c) = s.sitz().cur() { c.stop(); }
     s.lobbys().stop();

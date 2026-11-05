@@ -66,7 +66,42 @@ fn spotify_window(cache: &mut HashMap<u32, bool>) -> (bool, String) {
 }
 
 // Lautstärke der Spotify-App lesen (delta = None) oder ändern; None, wenn Spotify keinen Ton-Kanal hat
-pub fn spotify_volume(delta: Option<f32>) -> Option<f64> {
+pub fn spotify_volume(delta: Option<f32>) -> Option<f64> { spotify_volume_ex(delta, None) }
+// Lautstärke fest setzen (0..1)
+pub fn spotify_volume_to(v: f32) -> Option<f64> { spotify_volume_ex(None, Some(v)) }
+
+// Musik leiser während einer Navi-Ansage („Ducking“): Spotify auf einen Teil der Lautstärke, danach zurück.
+// Sicherheitsnetz: spätestens nach der angegebenen Zeit (oder beim Beenden) kommt die alte Lautstärke zurück.
+static DUCK: std::sync::Mutex<Option<(f32, u64)>> = std::sync::Mutex::new(None);
+pub fn duck(factor: f32, max_ms: u64) {
+    let now = crate::util::now_ms();
+    let mut d = DUCK.lock().unwrap();
+    if let Some((_, until)) = d.as_mut() { *until = (*until).max(now + max_ms); return; }
+    let Some(orig) = spotify_volume(None) else { return };
+    let orig = orig as f32;
+    spotify_volume_to((orig * factor).clamp(0.0, 1.0));
+    *d = Some((orig, now + max_ms));
+    drop(d);
+    std::thread::spawn(|| loop {
+        std::thread::sleep(std::time::Duration::from_millis(150));
+        let mut d = DUCK.lock().unwrap();
+        match *d {
+            Some((orig, until)) if crate::util::now_ms() >= until => { spotify_volume_to(orig); *d = None; return; }
+            None => return,
+            _ => {}
+        }
+    });
+}
+// Ansage vorbei: in Kürze (sanft nach 250 ms) zurück auf die alte Lautstärke
+pub fn unduck() {
+    if let Some((_, until)) = DUCK.lock().unwrap().as_mut() { *until = (*until).min(crate::util::now_ms() + 250); }
+}
+// sofort zurück (beim Beenden)
+pub fn unduck_now() {
+    if let Some((orig, _)) = DUCK.lock().unwrap().take() { spotify_volume_to(orig); }
+}
+
+fn spotify_volume_ex(delta: Option<f32>, set: Option<f32>) -> Option<f64> {
     let mut cache = HashMap::new();
     unsafe {
         let _ = CoInitializeEx(None, COINIT_MULTITHREADED);
@@ -86,6 +121,10 @@ pub fn spotify_volume(delta: Option<f32>) -> Option<f64> {
         let mut v = vols.first()?.GetMasterVolume().ok()?;
         if let Some(d) = delta {
             v = (v + d).clamp(0.0, 1.0);
+            for x in &vols { let _ = x.SetMasterVolume(v, std::ptr::null()); }
+        }
+        if let Some(t) = set {
+            v = t.clamp(0.0, 1.0);
             for x in &vols { let _ = x.SetMasterVolume(v, std::ptr::null()); }
         }
         Some((v as f64 * 1000.0).round() / 1000.0)

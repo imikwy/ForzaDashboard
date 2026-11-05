@@ -41,6 +41,14 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/events", get(events))
         .route("/info", get(info))
         .route("/media", get(media_get))
+        // Navi-Ansage: Musik kurz leiser (f = Anteil der Lautstärke, ms = längstens), danach zurück
+        .route("/media/duck", get(|Query(q): Q| async move {
+            let f = q.get("f").and_then(|v| v.parse::<f32>().ok()).unwrap_or(0.5).clamp(0.15, 1.0);
+            let ms = q.get("ms").and_then(|v| v.parse::<u64>().ok()).unwrap_or(8000).clamp(500, 20000);
+            tauri::async_runtime::spawn_blocking(move || media::duck(f, ms));
+            j(json!({"ok": true}))
+        }))
+        .route("/media/unduck", get(|| async { tauri::async_runtime::spawn_blocking(media::unduck); j(json!({"ok": true})) }))
         .route("/media/{cmd}", get(media_cmd))
         .route("/marks", get(|| async { json_str("[]".into()) }))
         .route("/quit", get(quit))
