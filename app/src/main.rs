@@ -6,17 +6,21 @@
 mod apps;
 mod bruecke;
 mod dienst;
+mod lenkrad;
+mod mods;
 mod kanal;
 mod karte;
 mod lobby;
 mod media;
 mod mqtt;
+mod overlay;
 mod settings;
 mod sitzung;
 mod sozial;
 mod spotify;
 mod state;
 mod telemetry;
+mod tuning;
 mod updates;
 mod util;
 mod veroeffentlichen;
@@ -38,7 +42,7 @@ use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
 // Format JJJJ-MM-TT.N. BAU_VER zählt ForzaDashboard-bauen.bat hoch; Releases auf GitHub setzen FD_VERSION beim Bauen.
-const BAU_VER: &str = "2026-11-05.4";
+const BAU_VER: &str = "2026-11-08.10";
 pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => BAU_VER };
 // hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
 pub const REPO: &str = "imikwy/ForzaDashboard";
@@ -96,7 +100,11 @@ fn main() {
     let mut builder = tauri::Builder::default();
     // zum Testen mehrerer "PCs" auf einem Rechner (eigener Datenordner per FD_ROOT): kein Einzel-Start-Schutz
     if std::env::var("FD_ZWEITE_INSTANZ").is_err() {
-        builder = builder.plugin(tauri_plugin_single_instance::init(move |app, _args, _cwd| open_window(app, &s_single)));
+        builder = builder.plugin(tauri_plugin_single_instance::init(move |app, args, _cwd| {
+            // Nexus „Mod Manager Download“: nxm://-Link an die laufende exe
+            if let Some(u) = args.iter().find(|a| a.starts_with("nxm://")) { mods::handle_nxm(s_single.clone(), u); }
+            open_window(app, &s_single)
+        }));
     }
     let app = builder
         .plugin(tauri_plugin_window_state::Builder::default().with_state_flags(state_flags()).build())
@@ -205,6 +213,9 @@ async fn start(s: Arc<Shared>) -> Result<(), String> {
     log(format!("Im Spiel: 127.0.0.1 Port {port} · Dashboard: http://localhost:{web_port}"));
 
     dienst::start(&s);
+    tuning::init(&s);   // Tuning-Börse (geteilte Tuning-Codes)
+    lenkrad::start(s.clone());   // Lenkrad-/Gamepad-Tasten fürs Dashboard (auch im Hintergrund)
+    if let Some(u) = std::env::args().find(|a| a.starts_with("nxm://")) { mods::handle_nxm(s.clone(), &u); }   // per nxm-Link gestartet
     updates::spawn(s.clone());
     let sm = s.clone();
     tauri::async_runtime::spawn(async move {

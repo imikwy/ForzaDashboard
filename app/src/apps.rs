@@ -13,6 +13,7 @@ fn start_url(id: &str) -> Option<&'static str> {
     match id {
         "spotify" => Some("https://open.spotify.com/"),
         "youtube" => Some("https://www.youtube.com/"),
+        "discord" => Some("https://discord.com/app"),
         _ => None,
     }
 }
@@ -23,6 +24,7 @@ fn allowed(id: &str, url: &str) -> bool {
     match id {
         "spotify" => host == "open.spotify.com" || host == "accounts.spotify.com",
         "youtube" => host == "www.youtube.com" || host == "m.youtube.com" || host == "youtube.com",
+        "discord" => host == "discord.com" || host == "www.discord.com" || host == "ptb.discord.com" || host == "canary.discord.com",
         _ => false,
     }
 }

@@ -27,6 +27,8 @@ type Addr = ConnectInfo<SocketAddr>;
 static HTML: &str = include_str!("../../src/dashboard.html");
 static VORLAGEN: &[u8] = include_bytes!("../../src/fh6-vorlagen.js");
 static FH6_KARTE: &[u8] = include_bytes!("../../src/fh6-karte.js");
+// Tuning: FH6-Autos (Forza-Wiki, CC BY-SA) und Builds mit Tuning-Code (ForzaFire)
+static TUNING_DATEN: &[u8] = include_bytes!("../../src/tuning-daten.json");
 
 pub fn html_ok() -> bool {
     HTML.contains("const APP_VER") && HTML.contains("fh6-karte.js") && VORLAGEN.len() > 100_000 && FH6_KARTE.len() > 100_000
@@ -38,6 +40,7 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/index.html", get(index))
         .route("/fh6-vorlagen.js", get(|h: HeaderMap| async move { asset(&h, VORLAGEN, 0) }))
         .route("/fh6-karte.js", get(|h: HeaderMap| async move { asset(&h, FH6_KARTE, 1) }))
+        .route("/tuning-daten.json", get(|h: HeaderMap| async move { asset(&h, TUNING_DATEN, 2) }))
         .route("/events", get(events))
         .route("/info", get(info))
         .route("/media", get(media_get))
@@ -48,6 +51,35 @@ pub fn router(s: Arc<Shared>) -> Router {
             tauri::async_runtime::spawn_blocking(move || media::duck(f, ms));
             j(json!({"ok": true}))
         }))
+        // Mods (Nexus, nur FH6): Stöbern für alle, Ändern nur vom PC selbst
+        .route("/mods/status", get(|State(s): S| async move { j(tokio::task::spawn_blocking(move || crate::mods::status(&s)).await.unwrap_or(json!({}))) }))
+        .route("/mods/list", get(|State(s): S, Query(q): Q| async move { let k = q.get("kind").cloned().unwrap_or_default(); j(tokio::task::spawn_blocking(move || crate::mods::list(&s, &k)).await.unwrap_or(json!({}))) }))
+        .route("/mods/detail", get(|State(s): S, Query(q): Q| async move { let id = q.get("id").and_then(|v| v.parse().ok()).unwrap_or(0); j(tokio::task::spawn_blocking(move || crate::mods::detail(&s, id)).await.unwrap_or(json!({}))) }))
+        .route("/mods/key", post(|State(s): S, ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let b = body(&b); let k = b["key"].as_str().unwrap_or("").to_string(); j(tokio::task::spawn_blocking(move || crate::mods::set_key(&s, &k)).await.unwrap_or(json!({}))) }))
+        .route("/mods/dir", post(|State(s): S, ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let b = body(&b); j(crate::mods::set_dir(&s, b["dir"].as_str().unwrap_or(""))) }))
+        .route("/mods/install", get(|State(s): S, ConnectInfo(a): Addr, Query(q): Q| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let n = |k: &str| q.get(k).and_then(|v| v.parse::<u64>().ok()).unwrap_or(0); crate::mods::install(s.clone(), n("mod"), n("file"), None); j(json!({"ok": true})) }))
+        .route("/mods/uninstall", get(|State(s): S, ConnectInfo(a): Addr, Query(q): Q| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let id = q.get("mod").and_then(|v| v.parse().ok()).unwrap_or(0); j(tokio::task::spawn_blocking(move || crate::mods::uninstall(&s, id)).await.unwrap_or(json!({}))) }))
+        .route("/mods/register", get(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::mods::register_nxm(&s)) }))
+        .route("/mods/local", get(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(tokio::task::spawn_blocking(move || crate::mods::local(&s)).await.unwrap_or(json!({}))) }))
+        .route("/mods/toggle", get(|State(s): S, ConnectInfo(a): Addr, Query(q): Q| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let k = q.get("key").cloned().unwrap_or_default(); let on = q.get("on").map(|v| v == "1").unwrap_or(false); j(tokio::task::spawn_blocking(move || crate::mods::toggle(&s, &k, on)).await.unwrap_or(json!({}))) }))
+        .route("/mods/remove", get(|State(s): S, ConnectInfo(a): Addr, Query(q): Q| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let k = q.get("key").cloned().unwrap_or_default(); j(tokio::task::spawn_blocking(move || crate::mods::remove(&s, &k)).await.unwrap_or(json!({}))) }))
+        .route("/game/start", get(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(tokio::task::spawn_blocking(move || crate::mods::start_game(&s)).await.unwrap_or(json!({}))) }))
+        .route("/tunes", get(|State(s): S| async move { j(tokio::task::spawn_blocking(move || crate::tuning::list(&s)).await.unwrap_or(json!({}))) }))
+        .route("/tunes/add", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(tokio::task::spawn_blocking(move || crate::tuning::add(&s, &b)).await.unwrap_or(json!({}))) }))
+        .route("/tunes/del", post(|b: Bytes| async move { let b = body(&b); j(crate::tuning::del(b["id"].as_str().unwrap_or(""))) }))
+        .route("/tunes/like", post(|b: Bytes| async move { let b = body(&b); j(crate::tuning::like(b["key"].as_str().unwrap_or(""), b["on"].as_bool().unwrap_or(false))) }))
+        .route("/tunes/comment", post(|b: Bytes| async move { let b = body(&b); j(crate::tuning::comment(b["key"].as_str().unwrap_or(""), b["x"].as_str().unwrap_or(""))) }))
+        .route("/tunes/uncomment", post(|b: Bytes| async move { let b = body(&b); j(crate::tuning::uncomment(b["id"].as_str().unwrap_or(""))) }))
+        .route("/tunes/photo", get(|Query(q): Q| async move { tune_photo(q.get("k").map(String::as_str).unwrap_or("")) }))
+        .route("/overlay", get(overlay_page))
+        .route("/ov/state", get(|State(s): S| async move { let on = s.app.get().map(crate::overlay::is_on).unwrap_or(false); j(json!({"on": on})) }))
+        .route("/ov/last", get(|| async move { j(crate::overlay::last()) }))
+        .route("/ov/toggle", get(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let Some(app) = s.app.get().cloned() else { return j(json!({"ok": false})) }; let on = tokio::task::spawn_blocking(move || crate::overlay::toggle(&app, &s)).await.unwrap_or(false); j(json!({"ok": true, "on": on})) }))
+        .route("/ov/layout", get(|State(s): S| async move { j(crate::overlay::layout(&s)) }).post(|State(s): S, ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(json!({"ok": crate::overlay::set_layout(&s, body(&b))})) }))
+        .route("/overlay/vorschau.jpg", get(|| async move { ([(header::CONTENT_TYPE, "image/jpeg"), (header::CACHE_CONTROL, "max-age=86400")], OVERLAY_VORSCHAU).into_response() }))
+        .route("/ov/map", get(|| async move { let b = crate::overlay::map(); if b.is_empty() { return (StatusCode::NOT_FOUND, "").into_response(); } ([(header::CONTENT_TYPE, "image/webp"), (header::CACHE_CONTROL, "no-store")], b).into_response() }).post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(json!({"ok": crate::overlay::set_map(&b)})) }))
+        .route("/ov/push", post(|State(s): S, ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } crate::overlay::push(&s, body(&b)); j(json!({"ok": true})) }))
+        .route("/mods/open", get(|ConnectInfo(a): Addr, Query(q): Q| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(json!({"ok": crate::mods::open_page(q.get("url").map(String::as_str).unwrap_or(""))})) }))
         .route("/media/unduck", get(|| async { tauri::async_runtime::spawn_blocking(media::unduck); j(json!({"ok": true})) }))
         .route("/media/{cmd}", get(media_cmd))
         .route("/marks", get(|| async { json_str("[]".into()) }))
@@ -199,7 +231,7 @@ async fn blocking(s: Arc<Shared>, f: impl FnOnce(Arc<Shared>) -> Value + Send + 
 
 // große Kartenbilder: einmal komprimiert, danach aus dem Zwischenspeicher des Browsers
 fn asset(h: &HeaderMap, data: &'static [u8], slot: usize) -> Response {
-    static GZ: [OnceLock<Vec<u8>>; 2] = [OnceLock::new(), OnceLock::new()];
+    static GZ: [OnceLock<Vec<u8>>; 3] = [OnceLock::new(), OnceLock::new(), OnceLock::new()];
     let tag = format!("\"{}-{}\"", APP_VER, data.len());
     if h.get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok()) == Some(tag.as_str()) { return StatusCode::NOT_MODIFIED.into_response(); }
     let gz = h.get(header::ACCEPT_ENCODING).and_then(|v| v.to_str().ok()).is_some_and(|v| v.contains("gzip"));
@@ -210,6 +242,25 @@ fn asset(h: &HeaderMap, data: &'static [u8], slot: usize) -> Response {
     } else {
         (base, data).into_response()
     }
+}
+
+// Foto eines Tuning-Beitrags (liegt als data:-URL vor) als Bild ausliefern
+fn tune_photo(k: &str) -> Response {
+    use base64::Engine;
+    let Some(d) = crate::tuning::photo(k) else { return (StatusCode::NOT_FOUND, "").into_response() };
+    let Some((head, b64)) = d.split_once(",") else { return (StatusCode::NOT_FOUND, "").into_response() };
+    let ct = if head.contains("webp") { "image/webp" } else { "image/jpeg" };
+    match base64::engine::general_purpose::STANDARD.decode(b64) {
+        Ok(b) => ([(header::CONTENT_TYPE, ct), (header::CACHE_CONTROL, "max-age=600")], b).into_response(),
+        Err(_) => (StatusCode::NOT_FOUND, "").into_response(),
+    }
+}
+static OVERLAY_VORSCHAU: &[u8] = include_bytes!("../../src/overlay-vorschau.jpg");
+static OVERLAY_HTML: &str = include_str!("../../src/overlay.html");
+async fn overlay_page(State(s): S) -> Response {
+    // eine overlay.html im Datenordner hat Vorrang (zum Ausprobieren ohne neu zu bauen)
+    let body = std::fs::read_to_string(s.file("overlay.html")).unwrap_or_else(|_| OVERLAY_HTML.to_string());
+    ([(header::CONTENT_TYPE, "text/html; charset=utf-8"), (header::CACHE_CONTROL, "no-store")], body).into_response()
 }
 
 async fn index(State(s): S) -> Response {
