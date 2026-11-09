@@ -42,7 +42,7 @@ use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
 // Format JJJJ-MM-TT.N. BAU_VER zählt ForzaDashboard-bauen.bat hoch; Releases auf GitHub setzen FD_VERSION beim Bauen.
-const BAU_VER: &str = "2026-11-08.10";
+const BAU_VER: &str = "2026-11-09.10";
 pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => BAU_VER };
 // hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
 pub const REPO: &str = "imikwy/ForzaDashboard";
@@ -290,6 +290,7 @@ pub fn open_window(app: &AppHandle, s: &Arc<Shared>) {
         .min_inner_size(480.0, 320.0)
         .data_directory(dir)
         .initialization_script(FULLSCREEN_JS)
+        .disable_drag_drop_handler()   // Mod-Dateien direkt auf die Seite ziehen können
         .visible(false)
         .build();
     let w = match built {

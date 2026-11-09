@@ -105,7 +105,11 @@ unsafe fn handle(lp: windows::Win32::Foundation::LPARAM) {
     let pm = prev.get_or_insert_with(HashMap::new);
     let old = pm.insert(key, pressed.clone()).unwrap_or_default();
     drop(prev);
+    // „held“: alle gerade gedrückten Tasten (für Kombinationen wie „Taste A halten + B“); „padup“: losgelassen
     for b in pressed.iter().filter(|b| !old.contains(b)) {
-        if let Some(s) = STATE.get() { s.emit(Some("pad"), json!({"dev": id, "name": name, "btn": b}).to_string()); }
+        if let Some(s) = STATE.get() { s.emit(Some("pad"), json!({"dev": id, "name": name, "btn": b, "held": pressed}).to_string()); }
+    }
+    for b in old.iter().filter(|b| !pressed.contains(b)) {
+        if let Some(s) = STATE.get() { s.emit(Some("padup"), json!({"dev": id, "btn": b}).to_string()); }
     }
 }

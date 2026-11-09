@@ -98,7 +98,7 @@ impl Lobbys {
                 // ohne Koordinaten: online, aber gerade nicht im Spiel unterwegs (nur in der Lobby-Liste, nicht auf der Karte)
                 let (x, z) = (o["x"].as_f64(), o["z"].as_f64());
                 let num = |k: &str| o[k].as_f64().filter(|f| f.is_finite()).unwrap_or(0.0);
-                let f = Friend { n: take_chars(o["n"].as_str().unwrap_or("Freund"), 24), x: x.unwrap_or(0.0), z: z.unwrap_or(0.0), h: num("h"), v: num("v"), c: num("c") as i64, g: if num("g") != 0.0 { 1 } else { 0 }, seen: now_ms() };
+                let f = Friend { n: take_chars(o["n"].as_str().unwrap_or("Freund"), 24), x: x.unwrap_or(0.0), z: z.unwrap_or(0.0), h: num("h"), v: num("v"), c: num("c") as i64, g: if num("g") != 0.0 { 1 } else { 0 }, seen: now_ms(), b: crate::state::blink_of(&o) };
                 let mut fr = self.friends.lock().unwrap();
                 let e = fr.entry(d.to_string()).or_insert_with(|| LFriend { f: f.clone(), lobbys: BTreeSet::new(), pos: false });
                 e.f = f;
@@ -182,6 +182,7 @@ impl Lobbys {
                 None => json!({"y": "pos", "d": self.dev, "n": name}),
             };
             if l.owner { m["ln"] = json!(l.name); m["own"] = json!(1); }
+            if fresh { let b = crate::state::blink_now(); if !b.is_empty() { m["b"] = json!(b); } }
             k.send(&m);
         }
     }
@@ -301,7 +302,7 @@ impl Lobbys {
         let now = now_ms();
         self.friends.lock().unwrap().iter().filter(|(_, f)| f.pos).map(|(id, f)| {
             let f = &f.f;
-            json!({"id": id, "n": f.n, "x": f.x, "z": f.z, "h": f.h, "v": f.v, "c": f.c, "g": f.g, "age": now.saturating_sub(f.seen)})
+            json!({"id": id, "n": f.n, "x": f.x, "z": f.z, "h": f.h, "v": f.v, "c": f.c, "g": f.g, "b": f.b, "age": now.saturating_sub(f.seen)})
         }).collect()
     }
 }

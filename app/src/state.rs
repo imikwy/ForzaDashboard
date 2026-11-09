@@ -18,6 +18,23 @@ pub struct Ev {
     pub data: Arc<str>,
 }
 
+// eigener Blinker, vom Dashboard gemeldet: (Zeit in ms << 2) | Art (0 aus, 1 links, 2 rechts, 3 Warnblinker).
+// Wird nicht erneuert (Dashboard zu), gilt er nach 4 s als aus.
+pub static BLINK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub fn blink_set(m: &str) {
+    let k = match m { "l" => 1, "r" => 2, "h" => 3, _ => 0 };
+    BLINK.store((crate::util::now_ms() << 2) | k, std::sync::atomic::Ordering::Relaxed);
+}
+pub fn blink_now() -> &'static str {
+    let v = BLINK.load(std::sync::atomic::Ordering::Relaxed);
+    if crate::util::now_ms().saturating_sub(v >> 2) > 4000 { return ""; }
+    match v & 3 { 1 => "l", 2 => "r", 3 => "h", _ => "" }
+}
+// Blinker eines anderen aus seiner Nachricht (nur bekannte Werte)
+pub fn blink_of(o: &serde_json::Value) -> String {
+    match o["b"].as_str() { Some(b @ ("l" | "r" | "h")) => b.to_string(), _ => String::new() }
+}
+
 #[derive(Clone, Copy)]
 pub struct MyPos {
     pub x: f64,
@@ -38,6 +55,7 @@ pub struct Friend {
     pub c: i64,
     pub g: u8,
     pub seen: u64,
+    pub b: String,
 }
 
 // gelernte Straßen der Freunde (bleiben auf diesem PC, gehören nicht zur Karte)

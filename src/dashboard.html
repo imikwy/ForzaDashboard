@@ -489,6 +489,42 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .scats button[data-cat="overlay"]{--sc:#5e5ce6}
 .ovedit{position:relative;height:0;padding-top:calc(56.25% + 108px);border-radius:18px;overflow:hidden;background:#16181d;margin:10px 0 4px;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
 .ovedit iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+/* Lenkrad-Tasten im iOS-Stil */
+.whint{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:14px 14px 4px}
+.whint div{background:var(--surface3);border-radius:14px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.whint i{font-style:normal;font:800 15px var(--font-num);height:30px;min-width:30px;padding:0 8px;border-radius:9px;display:grid;place-items:center;background:var(--accent);color:#fff}
+.whint b{font-size:13px;font-weight:700}
+.whint small{font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.3}
+.wh4{margin:22px 4px 8px !important}
+.whr{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 14px;cursor:pointer;position:relative}
+.whr + .whr::before{content:"";position:absolute;left:58px;right:0;top:0;height:1px;background:var(--surface3)}
+.whr:hover{background:color-mix(in srgb,var(--surface3) 45%,transparent)}
+.whi{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.whi:not(.wapp) svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.whi.wapp svg{width:20px;height:20px}
+.whr .plus{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--surface3);color:var(--accent);font-size:22px;font-weight:500;flex:none}
+.whr.add .wt{color:var(--accent)}
+.whpick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:6px 14px 14px}
+.whpick button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 2px;border-radius:12px}
+.whpick button:hover{background:var(--surface3)}
+.whpick button.used{opacity:.4}
+.whpick .gico{width:42px;height:42px;border-radius:12px}
+.whpick .gico svg{width:24px;height:24px}
+.whpick small{font-size:11.5px;font-weight:600;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.whr .wt{flex:1;font-size:15px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.whr .wv{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13.5px;font-weight:600;white-space:nowrap}
+.whr .wv em{font-style:normal;font:700 12px var(--font-num);padding:3px 7px;border-radius:7px;background:var(--surface3);color:var(--text)}
+.whr .wv u{text-decoration:none;font-size:12px;color:var(--muted)}
+.whr .wx{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--surface3);color:var(--muted);font-size:11px;font-weight:800;margin-left:2px}
+.whr .wx:hover{background:#ff453a;color:#fff}
+.whr .chev{width:8px;height:13px;flex:none;stroke:var(--muted);stroke-width:2.2;fill:none;opacity:.6}
+.whr.learn .wv{color:var(--accent);animation:padw 1s ease-in-out infinite}
+.whr.learn{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+/* ReShade-Menütaste im Mod-Manager */
+.mdkey{display:flex;align-items:center;gap:10px;padding:9px 14px 11px 72px;font-size:13.5px;font-weight:600}
+.mdkey span{flex:1;color:var(--muted)}
+.mdkey kbd{font:700 13px var(--font-num);padding:4px 10px;border-radius:8px;background:var(--surface3);box-shadow:inset 0 -2px 0 rgba(0,0,0,.25);color:var(--text)}
+.mdkey.learn kbd{background:var(--accent);color:#fff;animation:padw 1s ease-in-out infinite}
 .padkey{font:700 13px var(--font-num);padding:6px 10px;border-radius:10px;background:var(--surface2);color:var(--text);white-space:nowrap}
 .padkey.wait{background:var(--accent);color:#fff;animation:padw 1s ease-in-out infinite}
 @keyframes padw{50%{opacity:.55}}
@@ -656,6 +692,13 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .G .hud .hs.over b{color:#ff6259}
 .G .hud .hg{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);font-family:var(--font-ui);font-size:24px;font-weight:700;flex:none}
 .G .hud .hg.shift{background:#ff453a}
+.hbl{display:flex;gap:2px;flex:none}
+.hbl[hidden]{display:none}
+.hbl button{width:34px;height:46px;border-radius:14px;display:grid;place-items:center;color:rgba(255,255,255,.22);transition:color .15s}
+.hbl button:hover{color:rgba(255,255,255,.45)}
+.hbl button svg{width:24px;height:24px}
+.hbl button.on{animation:blk .9s steps(1) infinite}
+@keyframes blk{0%{color:#30d158;filter:drop-shadow(0 0 6px rgba(48,209,88,.8))}50%{color:rgba(255,255,255,.22);filter:none}}
 .G .hrw{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
 .G .hrh{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted)}
 .G .hrh b{color:#fff;font-size:15px;font-weight:600}
@@ -1175,6 +1218,29 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .mdnote{color:var(--dim);font-size:13px;line-height:1.5;margin:14px 4px;font-weight:500}
 .mdnote b{color:var(--muted)}
 .mdlist{display:flex;flex-direction:column;gap:10px}
+.mdbar .btn{height:36px}
+.mdimp{background:var(--mdc2);border-radius:22px;padding:16px 18px;margin:0 0 14px;display:flex;flex-direction:column;gap:12px;max-width:760px}
+.mdimp .mdch h3{font-size:18px}
+.mdimpn{display:flex;align-items:center;gap:12px}
+.mdimpn span{font-size:13px;color:var(--muted);font-weight:600;width:60px}
+.mdimpn .edin{flex:1;width:auto}
+.mdimpv{display:flex;flex-direction:column;gap:6px}
+.mdimpv small,.mdimpt small{font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.mdimpv button{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:14px;background:var(--mdc);text-align:left;box-shadow:inset 0 0 0 1.5px transparent;transition:box-shadow .2s,background .2s}
+.mdimpv button.on{box-shadow:inset 0 0 0 1.5px var(--accent);background:var(--accent-soft)}
+.mdimpv b{font-size:14.5px}
+.mdimpv span{font-size:12.5px;color:var(--dim);font-weight:600}
+.mdimpt{display:flex;flex-direction:column;gap:4px}
+.mdimpt div{display:flex;justify-content:space-between;gap:10px;font-size:13.5px}
+.mdimpt code{font:600 13px ui-monospace,Consolas,monospace;color:var(--text)}
+.mdimpt span{color:var(--dim);font-weight:600}
+.mdimpw{font-size:13px;color:#ffb340;line-height:1.45}
+.mdimps{font-size:12.5px;color:var(--dim);line-height:1.45}
+.mddrop{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:46px 24px;border-radius:22px;border:2px dashed var(--line);cursor:pointer;color:var(--muted);transition:background .2s,border-color .2s}
+.mddrop:hover{background:var(--mdc)}
+.mddrop b{font-size:17px;color:var(--text)}
+.mddrop span{font-size:13.5px;max-width:440px;line-height:1.45}
+.gmods.mddrag{box-shadow:inset 0 0 0 3px var(--accent)}
 .mdm{border-radius:20px;background:var(--mdc);overflow:hidden;transition:background .2s,opacity .2s}
 .mdm.off{opacity:.62}
 .mdmh{display:flex;align-items:center;gap:14px;padding:10px 12px 10px 10px;cursor:pointer}
@@ -1474,6 +1540,7 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
       <div class="garr glass" id="garr"><span><b id="gArrT">–</b>Ankunft</span><span><b id="gArrM">–</b>Min.</span><span><b id="gArrK">–</b><i id="gArrU">km</i></span><button id="gArrX" aria-label="Navigation beenden">✕</button></div>
       <div class="hud glass">
         <div class="gsign" id="gsign" hidden></div>
+        <div class="hbl" id="hbl" hidden><button data-bl="l" aria-label="Blinker links"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 12 11 4.5V9h9.5v6H11v4.5z"/></svg></button><button data-bl="r" aria-label="Blinker rechts"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12 13 4.5V9H3.5v6H13v4.5z"/></svg></button></div>
         <div class="hs"><b id="hspd">0</b><small id="hunit">km/h</small></div>
         <div class="hg" id="hgear">N</div>
         <div class="hrw"><div class="hrh"><span><b id="hrpmN">0</b> U/min</span><span id="hrpmMax"></span></div><div class="hr"><i id="hrpm"></i></div></div>
@@ -1583,13 +1650,13 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
     </nav>
     <div class="spages">
       <section data-cat="look"><h4>Design</h4><div class="group" id="designGroup"></div><h4>Farben und Schrift</h4><div class="group" id="lookGroup"></div><h4>Kacheln</h4><div class="group"><div class="wlist" id="wlist"></div></div></section>
-      <section data-cat="drive"><h4 id="limH" hidden>Tempolimit-Schilder</h4><div class="group" id="limGroup" hidden></div><h4>Einheiten</h4><div class="group" id="unitGroup"></div></section>
+      <section data-cat="drive"><h4 id="limH" hidden>Tempolimit-Schilder</h4><div class="group" id="limGroup" hidden></div><h4>Einheiten</h4><div class="group" id="unitGroup"></div><h4>Assistenten</h4><div class="group" id="assistGroup"></div></section>
       <section data-cat="tiles"><h4>Anzeigen</h4><div class="group" id="tilesGroup"></div></section>
       <section data-cat="map"><h4>Kartenansicht</h4><div class="group" id="mapGroup"></div></section>
       <section data-cat="nav"><h4>Navi-Stimme</h4><div class="group" id="navGroup"></div></section>
       <section data-cat="roads"><h4>Straßen und Kartendaten</h4><div class="group" id="roadGroup"></div></section>
       <section data-cat="friends"><h4>Freunde</h4><div class="group" id="frGroup"></div></section>
-      <section data-cat="wheel"><h4>Lenkrad-Tasten</h4><div class="group" id="wheelGroup"></div></section>
+      <section data-cat="wheel"><h4>Lenkrad-Tasten</h4><div id="wheelGroup"></div></section>
       <section data-cat="overlay"><h4>Overlay im Spiel</h4><div class="group" id="ovGroup"></div></section>
       <section data-cat="info"><h4>Verbindung</h4><div class="group"><div class="info" id="verBox" style="padding-bottom:0"></div><div class="info" id="infoBox">Demo-Modus: Hier laufen Beispieldaten. Mit der ForzaDashboard.exe auf dem PC kommen die echten Daten aus Forza.</div></div></section>
     </div>
@@ -1604,7 +1671,7 @@ const $ = id => document.getElementById(id);
 const APP_VER = "2026-10-27.22";
 
 /* ======================= Einstellungen ======================= */
-const DEF = {home:null, binds:{}, lht:true, voiceMode:"off", voiceSex:"f", voiceVol:1, unit:"kmh", temp:"c", press:"bar", power:"ps", orient:"heading", autozoom:true, color:"speed", mirror:false,
+const DEF = {home:null, binds:{}, blinkOn:true, blinkOthers:true, blinkSnd:"modern", blinkVol:0.6, lht:true, voiceMode:"off", voiceSex:"f", voiceVol:1, unit:"kmh", temp:"c", press:"bar", power:"ps", orient:"heading", autozoom:true, color:"speed", mirror:false,
   save:true, zoom:1, mapDim:true, brandDash:false, trailShow:"off", learn:false, carSnap:true, tilt:true, lrSens:1.4, mapSrc:"both", accent:"#0a84ff", fs:1, corners:"round", tireMode:"temp", fuelMul:1, fuelCap:0, friends:true, fname:"",
   diag:false, mapTheme:"dark", design:"std", gMode:"dark", gWall:"welle", gBgBlur:0, gTrans:70, gTint:"klar", gOrder:null, limReg:"de", limDe:[50,100,0], limJp:[40,60,100], limWarn:5,
   w:{boost:true, pedals:true, tires:true, gforce:true, laps:true, music:true, home:true, weather:true, power:false, fuel:true, susp:false, attitude:false, graph:false, surface:false, car:false}};
@@ -1684,6 +1751,7 @@ function onData(d){
   // Overlay im Spiel: auch versorgen, wenn das Dashboard-Fenster hinter Forza liegt (dann zeichnet es selbst kaum noch)
   if (d.on && d.dash && window.OV && OV.on && performance.now() - (OV.tk || 0) > 250) { OV.tk = performance.now(); try { navBanner(OV.tk); } catch (e) {} }
   if (!d.on || !d.dash) return;
+  try { blTick(d); } catch (e) {}
   try { wetTick(d); } catch (e) {}
   const v = d.spd * 3.6;
   if (v > sess.top && v < 600) sess.top = v;
@@ -1738,6 +1806,7 @@ function connect(){
     es.addEventListener("sess", e => { try { sessUpdate(JSON.parse(e.data)); } catch (x) {} });
     es.addEventListener("kv", e => { try { SESS.karte = JSON.parse(e.data); } catch (x) {} });
     es.addEventListener("pad", e => { try { padPress(JSON.parse(e.data)); } catch (x) {} });
+    es.addEventListener("padup", e => { try { padUp(JSON.parse(e.data)); } catch (x) {} });
     es.addEventListener("mods", e => { try { modsProgress(JSON.parse(e.data)); } catch (x) {} });
     es.addEventListener("note", e => { try { toast(JSON.parse(e.data).t); } catch (x) {} });
     es.addEventListener("mp", e => { try { smOnPresence(JSON.parse(e.data)); } catch (x) {} });
@@ -1829,9 +1898,53 @@ function fuelCar(d){
     const cap = ev ? 80 : Math.max(45, Math.min(95, 40 + (d && d.cyl ? d.cyl : 4) * 4));
     c = FUEL.cars[id] = {ev, cap, lvl:cap, l100:ev ? 18 : 9};       // neues Auto: voller Tank (Größe wird nach dem Wiegen angepasst)
   }
+  if (!c.capSrc && d && d.car > 0) {
+    const t = tankModel(d.car);
+    if (t === 0) { c.ev = true; c.capSrc = "m"; }
+    else if (t > 0 && !c.ev) { const f = c.cap ? c.lvl / c.cap : 1; c.cap = t; c.lvl = f * t; c.capSrc = "m"; }
+    else c.capSrc = "w";   // unbekanntes Modell: weiter übers Gewicht
+  }
   return c;
 }
 function fuelCap(c){ return S.fuelCap > 0 && !c.ev ? S.fuelCap : c.cap; }
+// Tankgröße nach Fahrzeugmodell (ca. Herstellerangabe in Litern). Erste passende Regel gilt – Spezielles zuerst.
+// Passt nichts, wird wie bisher über das gemessene Gewicht geschätzt.
+const TANK_RULES = String.raw`Trophy Truck|Class 1\b|Class 10|Trick truck|Fastball|Hammerhead|T100 Baja|Ridgeline Baja=300;Polaris|Can-Am|RZR=40;Rally Raid|X-Raid|959 Prodrive=300;Ultra ?4|Brocky|Currie=110;Funco|Alumicraft|Penhall|Baja Bug|Class 5=80;Formula Drift|WTAC|Time Attack|Attacking The Clock|Hillclimb=40;GRC=40;WRC|M-Sport|ARX|Racing Puma|Golf Rallye|Peugeot 207 Super 2000=75;Sierra Cars|Ginetta G40|Mazda Furai|R8 LMS|AMG GT4|X-Bow=60;
+Peel P50=6;Isetta=13;Citroen 2CV=20;Hillman Imp=27;Reliant Supervan=27;Honda Beat|Honda S660=25;Honda N600|Honda Z GT=26;Autozam AZ-1|Subaru Vivio=30;Honda Acty|Minicab=35;Honda City|Toyota Sports 800|Honda S800=35;Wuling=45;Fiat (595|695|Panda)|Abarth (595|695)=35;Toyota Starlet=40;Nissan (Pao|Be-1|Figaro|S-Cargo)=40;
+Box Truck|Flatbed Truck=150;Bus \(=300;Unimog=145;6x6=150;Warthog=150;F-450=182;F-250=129;Raptor R|F-150 Raptor=136;F-150 XLT|F-150 Lariat=98;Ford F-150\b=136;SVT Lightning=132;Ram TRX=125;Dodge Ram=98;Silverado|C/K Pickup=91;Gladiator=83;Wrangler|Trailcat=70;Tacoma=80;4Runner=87;Land Cruiser Arctic=150;Land Cruiser=93;Toyota FJ40=60;Nissan Patrol=140;Nissan Safari=95;Pajero Evolution=75;Pajero=88;Defender=90;Range Rover=105;Bentayga|Urus|DBX=85;Cayenne=90;Macan=75;Purosangue=100;Trackhawk|Durango=93;X5 M|X6 M=85;X-Class=80;G6[35] AMG=100;Bronco Raptor=79;Bronco R=100;El Camino|Syclone|Typhoon|GMC Jimmy=76;Maloo|HSV GTS|Pursuit Ute=73;Transit=80;Type 2|Caddy=55;Cadillac XTS=72;
+Koenigsegg (Agera|One|CCGT)=82;Regera=77;Jesko=72;Gemera=75;Zonda=95;Huayra=85;Venom=70;
+Ferrari LaFerrari|FXX K|FXX-K=86;Ferrari Enzo|Ferrari FXX=110;Ferrari F40=120;Ferrari F50=105;F12tdf|812 Superfast=92;488|F8 Tributo|J50=78;458=86;SF90=68;296 GTB=65;Roma|Portofino=80;F430=95;F355=82;512 TR=100;250 GTO=130;250 GT Lusso=114;275 GTB=94;Dino=70;Ferrari GTO=120;599=105;Monza SP2=86;Ferrari F80=78;
+20(2[0-9]) Lamborghini Countach=90;Lamborghini Countach=120;Aventador|Sesto|Veneno|Sian|Essenza=90;Huracan=83;Diablo=100;Miura=90;Espada=93;Gallardo=90;Revuelto|Temerario=75;
+McLaren F1=90;McLaren P1=64;McLaren Artura=66;McLaren=72;
+Porsche 918=70;Carrera GT=92;Porsche 959=85;2004 Porsche 911 GT3=89;Porsche 911 GT1=80;Porsche 911 Turbo\b=80;Porsche 911=64;944=80;968=74;928=86;GT4 RS=64;718 Cayman=54;Mission R|Taycan=0;
+Aston Martin DB5=86;DB7=89;DB11|DBS=78;Aston Martin Vantage=73;Vulcan=102;Valkyrie|Valhalla=65;
+Mercedes-Benz 300 SL\b=130;CLK GTR=100;SL 65|SL63|SLC43=70;C63=66;A45=56;E63=80;AMG GT 63=80;AMG GT (R|Black)=75;Mercedes-AMG GT=65;Merced.*One=55;190E=70;AMG Hammer=70;
+BMW M1=116;BMW M3 E36=65;BMW M3=60;BMW M4=60;BMW M5 E28|BMW M5 E39=70;2018 BMW M5|BMW M5 CS=68;BMW M5=80;BMW M8=68;2002 Turbo=46;850CSi=90;Z4=52;BMW i8=42;BMW M2=52;
+Audi Sport Quattro=90;Audi S1\b=50;RS4|RS5=62;RS6|RS7=75;RS3=55;TT RS=60;Audi R8=80;
+Niss?an GT-R|Skyline GT-R LM=74;1971 Nissan Skyline 2000 GT-R|Skyline 2000=100;Skyline=65;Fairlady 432=60;Fairlady Z|Nissan 370Z|Nissan Z\b|Z Nismo=72;Silvia|240SX|240RS=65;Nissan 510=45;Pulsar=50;Stagea=65;Gloria=70;R390=90;Datsun 2000=43;240Z=60;
+Toyota 2000 GT=60;Supra (RZ|2.0)|Supra MKIV|J&J.*Supra=70;GR Supra=52;Celica=60;MR2 SC=41;MR2=54;Sprinter|Corolla|GR Yaris|GT86|GR86|86 Stories|Sera=50;Camry=60;Crown Taxi=65;JPN Taxi=50;Prius=43;Chaser|Soarer=70;Altezza=60;GR GT Prototype=70;Scallop=50;
+Civic RS=38;Civic|CRX=47;NSX Type S=59;NSX=70;S2000=50;Integra=50;Prelude=60;Honda e\b=0;
+Mazda RX-7=76;RX-8=61;MX-5 Miata\b|1994 Mazda MX-5=45;MX-5=45;RX-3=60;Eunos Cosmo=90;Mazda Cosmo=70;Mazdaspeed|Mazda 3=60;787B=80;
+Impreza|WRX STI ARX=60;Subaru WRX\b=63;Subaru WRX=60;BRZ=50;Legacy=64;SVX=70;BRAT=50;
+Lancer Evolution=55;Eclipse=64;Mitsubishi GTO=75;Galant=60;Starion=75;
+1966 Ford GT40|Ford GT40=140;2005 Ford GT=68;Ford GT\b=57;Mustang=61;Shelby GT350R=61;Focus (RS|ST)=52;Fiesta ST=42;Escort RS=65;Escort Mk2=54;Sierra RS500=60;RS200=110;Capri=58;Thunderbird=80;Falcon=75;Crown Victoria=72;Ford Coupe=53;Ford Phoenix=70;Supervan=80;
+Corvette=70;Camaro=72;Chevelle|Impala|Bel Air=76;Nova|Monte Carlo=70;150 Utility=60;
+Challenger|Charger|Viper|Dart|Super Bee=70;Barracuda|Cuda=68;Plymouth Fury=76;Firebird|Trans Am=80;Regal GNX=68;Cobra=68;Lincoln=90;CTS-V=68;ATS-V|CT4-V=61;CT5-V=66;
+E-Type=64;XJ220=91;XJR-15=90;D-Type=160;XJ-S=90;XKR-S=70;C-X75=60;
+Lotus E(lise|xige)=40;Esprit=80;Emira=60;Evija=0;
+8C Competizione=88;Alfa Romeo 4C=40;Giulia GTA|Giulia\b=58;Giulietta=60;Alfa Romeo 155=63;33 Stradale=100;TZ2=90;
+Golf R|Golf GTI|Corrado|Scirocco=55;Golf GTi=50;Volkswagen Beetle=40;ID\. Buzz=0;
+Lancia Delta S4|037=90;Lancia Delta=57;Stratos=80;Renault 5 Turbo|Clio=50;Megane=60;Renault 8=38;Sport Spider=40;205 T16=60;205 Rallye=50;131 Abarth=80;Abarth 124=45;Mini=44;Metro 6R4=60;
+Pantera=80;DeLorean=51;MC12=115;MC20=60;Maserati Ghibli=80;TVR=60;Saleen=70;Noble=76;Lexus LFA=73;RC F=66;LC 500=82;Veloster N|i30 N=50;i20 N=40;Ioniq|Vision 74|Lucid|Rimac|Rivian|Hummer EV|BMW iX|Lightning|e-tron|Mini EV|Citroen Ami=0;
+Ariel=45;BAC Mono=37;Radical=50;Ultima=55;Exocet=40;Zenvo=65;Apollo=90;T\.50=65;Bentl?e?y=90;Acura RSX=50;300 SLR|330 P4|512 S\b|962 C|SE 048SP=120;Drift Truck=91;Porsche Carrera Coupe=64;Monaro=75;Torana=50;Volvo=60;Manta=70;Astra=52;Meyers Manx=40;Austin-Healey=55;Toyota Land=93;#\d+=90`;
+let TANK_RX = null;
+// Liefert Liter (0 = Elektro) oder null, wenn das Modell unbekannt ist
+function tankModel(id){
+  const c = carName(id); if (!c) return null;
+  if (!TANK_RX) TANK_RX = TANK_RULES.replace(/\n/g, "").split(";").filter(Boolean).map(r => { const i = r.lastIndexOf("="); return [new RegExp(r.slice(0, i), "i"), +r.slice(i + 1)]; });
+  for (const [rx, l] of TANK_RX) if (rx.test(c.full)) return l;
+  return null;
+}
 // Tankgröße aus dem Gewicht: kleine Autos ~45 L, Mittelklasse ~55–65 L, schwere SUVs/Pick-ups 80 L und mehr
 function tankFromMass(m){ return Math.round(Math.max(35, Math.min(120, 20 + m * 0.025)) / 5) * 5; }
 // Gewicht messen: beim Vollgas-Beschleunigen gilt Leistung = Masse × Beschleunigung × Tempo
@@ -1846,7 +1959,7 @@ function fuelMass(c, d){
     const a = c.ms.slice().sort((x, y) => x - y), med = a[a.length >> 1];
     c.mass = Math.round(med / 10) * 10;
     const cap = tankFromMass(c.mass);
-    if (Math.abs(cap - c.cap) >= 5) { const f = c.cap ? c.lvl / c.cap : 1; c.cap = cap; c.lvl = f * cap; }
+    if (c.capSrc !== "m" && Math.abs(cap - c.cap) >= 5) { const f = c.cap ? c.lvl / c.cap : 1; c.cap = cap; c.lvl = f * cap; }
   }
 }
 function nearFuelPoi(x, z){
@@ -1861,6 +1974,7 @@ function fuelTick(d){
   if (!(dt > 0) || dt > 0.25) dt = 0;
   if (d.fuel > 0.001 && d.fuel < 0.995) FUEL.real = true;          // Spiel liefert echten Tankstand
   if (dt) fuelMass(c, d);
+  if (d.pow > (c.pmax || 0) && d.pow < 2.5e6 && d.acc > 200) c.pmax = d.pow;
   if (FUEL.real) c.lvl = d.fuel * cap;
   else if (dt) {
     const pw = Math.max(0, d.pow || 0), mul = S.fuelMul || 1;
@@ -2136,7 +2250,7 @@ function perfUpdate(d){
   setText("pfTq", nf0.format(ok ? Math.max(0, d.tq) : 0));
   setText("pfBoost", (S.press === "psi" ? nf1 : nf2).format(ok ? Math.max(0, pressOf(d.boost)) : 0)); setText("pfBoostU", S.press);
   setText("pfCur", ok ? fmtLap(d.cur) : "–"); setText("pfLast", ok ? fmtLap(d.last) : "–"); setText("pfBest", ok ? fmtLap(d.best) : "–");
-  { const race = ok && (d.rt > 0 || d.lap > 0 || d.best > 0), pe = $("pfPos");
+  { const race = ok && d.pos > 0, pe = $("pfPos");
     if (pe) { const v = race && d.pos ? '<i>P</i>' + d.pos : "–"; if (pe.innerHTML !== v) pe.innerHTML = v; }
     setText("pfLap", race ? "Runde " + ((d.lap | 0) + 1) : "Kein Rennen"); setText("pfPosT", race && d.rt > 0 ? fmtLap(d.rt) + " gesamt" : race ? "" : "Platz erscheint im Rennen"); }
   setText("pfTop", nf0.format(mph ? sess.top / 1.609 : sess.top)); setText("pfTopU", mph ? "mph" : "km/h");
@@ -2269,6 +2383,7 @@ async function mdLocal(){
   if (!window.FD_EXE || MD.locBusy) return; MD.locBusy = true;
   const r = await mdJ("/mods/local").catch(() => null); MD.locBusy = false;
   MD.loc = r && r.ok ? r : (r || {ok:false, why:"Spielordner konnte nicht gelesen werden"});
+  if (MD.loc.ok && (MD.loc.mods || []).some(mdIsRs)) await mdRsKeyLoad();
   if (GR.view === "mods") modsRender();
   mdAutoMatch();
 }
@@ -2278,7 +2393,9 @@ async function mdAutoMatch(){
   let cache = {}; try { cache = JSON.parse(localStorage.getItem("fd.mdmatch") || "{}"); } catch (e) {}
   let changed = false;
   for (const g of MD.loc.mods) {
-    if (g.dash || (S.mdLink && S.mdLink[g.key])) continue;
+    // Dashboard-Mods und selbst importierte (haben schon einen Namen, z. B. ReShade, Autos) nicht bei Nexus nachschlagen –
+    // sonst landen sie bei fremden Mods, die zufällig dieselben Dateien mitbringen
+    if (g.dash || (S.mdLink && S.mdLink[g.key])) { delete MD.match[g.key]; continue; }
     const files = (g.files || []).filter(f => f.size > 0).sort((a, b) => b.size - a.size).slice(0, 4);
     if (!files.length) continue;
     const sig = g.key + "|" + files.map(f => f.size).join(",");
@@ -2297,7 +2414,7 @@ async function mdAutoMatch(){
   MD._matching = false;
   if (changed && GR.view === "mods") modsRender();
 }
-const mdLinkOf = g => g.dash ? g.mod : (S.mdLink && S.mdLink[g.key]) || MD.match[g.key] || 0;
+const mdLinkOf = g => g.dash && !g.imp ? g.mod : (S.mdLink && S.mdLink[g.key]) || (g.imp ? 0 : MD.match[g.key]) || 0;
 const mdInstIds = () => { const s = new Set(); ((MD.st && MD.st.installed) || []).forEach(m => s.add(m.mod)); ((MD.loc && MD.loc.mods) || []).forEach(g => { const id = mdLinkOf(g); if (id) s.add(id); }); return s; };
 async function modsDetail(id){
   id = id | 0; MD.det = {loading:true, id}; modsRender(); $("gmods").scrollTop = 0;
@@ -2368,6 +2485,21 @@ function mdBrowseHtml(inst){
   if (l.length > MD.show) h += '<button class="btn mdmore" data-md="more">' + nf0.format(l.length - MD.show) + ' weitere anzeigen</button>';
   return h;
 }
+// ReShade erkennen (eigene ReShade.ini im Spielordner) und Menütaste anzeigen/ändern
+const mdIsRs = g => (g.files || []).some(f => /^reshade\.ini$/i.test(f.rel || ""));
+const VKN = {8:"Rücktaste", 9:"Tab", 13:"Enter", 19:"Pause", 20:"Feststell", 27:"Esc", 32:"Leertaste", 33:"Bild ↑", 34:"Bild ↓", 35:"Ende", 36:"Pos1", 37:"←", 38:"↑", 39:"→", 40:"↓", 44:"Druck", 45:"Einfg", 46:"Entf", 144:"Num", 145:"Rollen", 186:"Ü", 187:"+", 188:",", 189:"-", 190:".", 191:"#", 192:"Ö", 219:"ß", 220:"^", 221:"´", 222:"Ä", 226:"<", 106:"Num *", 107:"Num +", 109:"Num -", 110:"Num ,", 111:"Num /"};
+const vkName = k => !k ? "–" : (k.ctrl ? "Strg + " : "") + (k.shift ? "Umschalt + " : "") + (k.alt ? "Alt + " : "") + (VKN[k.vk] || (k.vk >= 112 && k.vk <= 135 ? "F" + (k.vk - 111) : k.vk >= 96 && k.vk <= 105 ? "Num " + (k.vk - 96) : (k.vk >= 48 && k.vk <= 90) ? String.fromCharCode(k.vk) : "Taste " + k.vk));
+async function mdRsKeyLoad(){ const r = await fetch("/mods/reshade/key", {cache:"no-store"}).then(x => x.json()).catch(() => null); MD.rsKey = r && r.ok ? r : null; }
+window.addEventListener("keydown", async e => {
+  if (!MD.rsLearn) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  if (e.key === "Escape") { MD.rsLearn = false; modsRender(); return; }
+  if ([16, 17, 18, 91, 92].includes(e.keyCode)) return;   // nur Strg/Umschalt/Alt: auf die eigentliche Taste warten
+  MD.rsLearn = false;
+  const r = await fetch("/mods/reshade/key", {method:"POST", body:JSON.stringify({vk:e.keyCode, ctrl:e.ctrlKey, shift:e.shiftKey, alt:e.altKey})}).then(x => x.json()).catch(() => null);
+  if (r && r.ok) { MD.rsKey = r; toast("ReShade-Menü im Spiel: " + vkName(r)); } else toast((r && r.why) || "Taste konnte nicht gespeichert werden");
+  modsRender();
+}, true);
 const mdLocalName = g => { const id = g.key && mdLinkOf(g); const m = id && (MD.all || []).find(x => x.id === id); if (m) return m.n; if (g.name) return bb(g.name); const k = String(g.key || ""); return k.startsWith("mediapc/") ? k.slice(8) + " (mediapc)" : k; };
 function mdMineHtml(){
   const exe = !!window.FD_EXE, st = MD.st || {};
@@ -2376,18 +2508,19 @@ function mdMineHtml(){
   if (!MD.loc) return '<div class="mdempty"><span class="spin"></span>Spielordner wird durchsucht …</div>';
   if (!MD.loc.ok) return '<div class="mdempty">' + esc(MD.loc.why || "Spielordner konnte nicht gelesen werden") + '</div>';
   const list = MD.loc.mods || [];
-  let h = '<div class="mdbar"><span>' + list.length + (list.length === 1 ? ' Mod' : ' Mods') + ' im Spielordner · ' + list.filter(g => g.state === "aus").length + ' pausiert</span><button class="btn" data-md="rescan">Neu suchen</button></div>';
+  let h = mdImportHtml() + '<div class="mdbar"><span>' + list.length + (list.length === 1 ? ' Mod' : ' Mods') + ' im Spielordner · ' + list.filter(g => g.state === "aus").length + ' pausiert</span><button class="btn" data-md="rescan">Neu suchen</button><button class="btn pri" data-md="addfile">Mod hinzufügen</button></div>';
   if (!MD.loc.layout) h += '<div class="mdnote">Ohne Dateiliste des Spiels (z. B. Steam) erkennt das Dashboard nur Mods in <b>mediapc</b> und typische Mod-Dateien (ReShade, DLL-Loader). Ersetzte Originaldateien sieht es nicht.</div>';
-  if (!list.length) return h + '<div class="mdempty">Keine Mods gefunden – das Spiel ist im Originalzustand.</div>';
+  if (!list.length) return h + '<div class="mddrop" data-md="addfile"><b>Mod-Datei hierher ziehen</b><span>oder antippen zum Auswählen – ZIP, 7z, RAR oder das ReShade-Setup. Das Dashboard legt die Dateien automatisch an die richtige Stelle im Spiel.</span></div>';
   h += '<div class="mdlist">' + list.map(g => {
     const id = mdLinkOf(g), m = id && (MD.all || []).find(x => x.id === id), off = g.state === "aus", nf = (g.files || []).length;
-    const pic = (m && m.p) || g.pic || "", src = g.dash ? "Über das Dashboard installiert" : id ? ((S.mdLink && S.mdLink[g.key]) ? "Zugeordnet" : "Automatisch erkannt") : "Von Hand installiert";
+    const pic = (m && m.p) || g.pic || "", src = g.imp ? "Aus Datei hinzugefügt" + (g.version ? " · " + g.version : "") : g.dash ? "Über das Dashboard installiert" : id ? ((S.mdLink && S.mdLink[g.key]) ? "Zugeordnet" : "Automatisch erkannt") : "Von Hand installiert";
     const k = esc(g.key);
     return '<div class="mdm' + (off ? ' off' : '') + '"><div class="mdmh" data-md="fold" data-key="' + k + '">' + (pic ? '<img src="' + esc(pic) + '" alt="" loading="lazy">' : mdIco(m ? m.k : "mine", m ? null : "#636366")) +
       '<div class="t"><b>' + esc(mdLocalName(g)) + '</b><small>' + (off ? '<span class="paus">Pausiert</span> · ' : '') + esc(src) + ' · ' + nf + (nf === 1 ? ' Datei' : ' Dateien') + ' · ' + mdKB((g.size || 0) / 1024) + '</small></div>' +
       '<span class="sw' + (off ? '' : ' on') + '" data-md="tog" data-key="' + k + '" role="switch" aria-checked="' + !off + '" title="' + (off ? 'Aktivieren' : 'Pausieren') + '"></span>' +
       '<button class="ib dang" data-md="del" data-key="' + k + '" title="Löschen" aria-label="Löschen">' + MD_SVG.trash + '</button></div>' +
-      (MD.open[g.key] ? '<div class="mdmf"><div class="acts">' + (id ? '<button class="itx" data-mod="' + id + '">Mod-Seite ansehen</button><button class="itx" data-link="' + id + '">Nexus' + MD_SVG.ext + '</button>' : '') + (!g.dash ? '<button class="itx" data-md="assign" data-key="' + k + '">' + (id ? 'Andere Mod zuordnen' : 'Nexus-Mod zuordnen') + '</button>' : '') + (!g.dash && S.mdLink && S.mdLink[g.key] ? '<button class="itx" data-md="unlink" data-key="' + k + '">Zuordnung lösen</button>' : '') + '</div>' +
+      (mdIsRs(g) && !off && MD.rsKey ? '<div class="mdkey' + (MD.rsLearn ? ' learn' : '') + '"><span>ReShade-Menü im Spiel öffnen mit</span><kbd>' + (MD.rsLearn ? 'Taste drücken …' : esc(vkName(MD.rsKey))) + '</kbd><button class="itx" data-md="rskey">' + (MD.rsLearn ? 'Abbrechen' : 'Ändern') + '</button></div>' : '') +
+      (MD.open[g.key] ? '<div class="mdmf"><div class="acts">' + (id ? '<button class="itx" data-mod="' + id + '">Mod-Seite ansehen</button><button class="itx" data-link="' + id + '">Nexus' + MD_SVG.ext + '</button>' : '') + ((!g.dash || g.imp) ? '<button class="itx" data-md="assign" data-key="' + k + '">' + (id ? 'Andere Mod zuordnen' : 'Nexus-Mod zuordnen') + '</button>' : '') + (g.imp && g.state !== "aus" ? '<button class="itx" data-md="rename" data-key="' + k + '">Umbenennen</button>' : '') + ((!g.dash || g.imp) && S.mdLink && S.mdLink[g.key] ? '<button class="itx" data-md="unlink" data-key="' + k + '">Zuordnung lösen</button>' : '') + '</div>' +
         (g.files || []).slice(0, 40).map(f => '<code>' + esc(f.rel) + '<em>' + mdKB((f.size || 0) / 1024) + '</em></code>').join("") + (nf > 40 ? '<code>… und ' + (nf - 40) + ' weitere</code>' : '') + '</div>' : '') + '</div>';
   }).join("") + '</div>';
   return h + '<div class="mdnote">Pausieren verschiebt die Dateien in den Datenordner des Dashboards – Aktivieren legt sie zurück. Löschen schiebt eigene Mods in den Papierkorb. Forza dabei bitte schließen.</div>';
@@ -2434,7 +2567,45 @@ function mdLightbox(u){
 let mdQT = 0;
 $("gmods").addEventListener("input", e => { if (e.target.id !== "mdQ") return; clearTimeout(mdQT); const v = e.target.value; mdQT = setTimeout(() => { MD.q = v; MD.show = 48; MD.det = null; if (MD.tab !== "browse") MD.tab = "browse"; modsRender(); }, 140); });
 $("gmods").addEventListener("scroll", () => { const el = $("gmods"); if (MD.det || MD.tab !== "browse" || !MD.all) return; if (el.scrollTop + el.clientHeight > el.scrollHeight - 500 && mdList().length > MD.show && !MD._more) { MD._more = true; MD.show += 48; modsRender(); MD._more = false; } }, {passive:true});
+// ---- Mod aus Datei hinzufügen: auswählen oder auf die Seite ziehen → Vorschau → installieren ----
+MD.imp = null; MD.impBusy = false; MD.impVar = "";
+// erlaubt: Archive und das ReShade-Setup (ReShade_Setup_….exe von reshade.me)
+const mdFileOk = n => /\.(zip|7z|rar)$/i.test(n) || /reshade.*\.exe$/i.test(n);
+function mdImportHtml(){
+  if (MD.impBusy) return '<div class="mdimp"><div class="mdempty" style="padding:18px"><span class="spin"></span>' + esc(MD.impBusy) + '</div></div>';
+  const p = MD.imp; if (!p) return "";
+  const vs = p.variants || [], v = vs.find(x => x.root === MD.impVar) || (vs.length === 1 ? vs[0] : null);
+  const grp = {}; if (v) for (const f of v.files) { const t = f.to.split("/"), k = t[0] === "mediapc" || t[0] === "media" ? t.slice(0, Math.min(2, t.length - 1)).join("\\") : "Spielordner"; grp[k] = (grp[k] || 0) + 1; }
+  const over = v ? v.files.filter(f => f.exists).length : 0;
+  return '<div class="mdimp"><div class="mdch"><h3>Mod hinzufügen</h3><button class="x" data-md="impx" aria-label="Abbrechen">' + MD_SVG.x + '</button></div>' +
+    '<label class="mdimpn"><span>Name</span><input class="edin" id="mdImpName" value="' + esc(p.name || "") + '" maxlength="80"></label>' +
+    (vs.length > 1 ? '<div class="mdimpv"><small>Diese Datei enthält ' + vs.length + ' Varianten – bitte eine wählen:</small>' + vs.map(x => '<button data-impv="' + esc(x.root) + '"' + (v && v.root === x.root ? ' class="on"' : '') + '><b>' + esc(x.name) + '</b><span>' + x.n + (x.n === 1 ? ' Datei' : ' Dateien') + ' · ' + mdKB(x.size / 1024) + '</span></button>').join("") + '</div>' : '') +
+    (v ? '<div class="mdimpt"><small>Wird installiert nach</small>' + Object.entries(grp).map(([k, n]) => '<div><code>' + esc(k) + '</code><span>' + n + (n === 1 ? ' Datei' : ' Dateien') + '</span></div>').join("") + '</div>' : '') +
+    (v && v.files.some(f => /^reshade-presets\//i.test(f.to)) ? '<p class="mdimps">ReShade-Preset: wird in <code>reshade-presets</code> abgelegt und gleich aktiviert. Fehlende Effekte lädt das Dashboard aus der offiziellen ReShade-Liste nach.' + (MD.st && MD.st.installed && MD.st.installed.some(m => /reshade/i.test(m.name || "")) ? '' : ' <b>ReShade selbst fehlt noch</b> – zieh dazu das ReShade-Setup von reshade.me hier rein.') + '</p>' : '') +
+    (p.rs ? '<p class="mdimps">ReShade wird für Forza eingerichtet (DirectX 12): <code>dxgi.dll</code> neben dem Spiel, Einstellungen und Standard-Effekte. Im Spiel öffnest du das ReShade-Menü mit <b>Pos1</b> – die Taste kannst du danach hier im Mod-Manager ändern. Das Setup selbst wird nicht ausgeführt.</p>' + (p.note ? '<p class="mdimpw">' + esc(p.note) + '</p>' : '') : '') +
+    (over ? '<p class="mdimpw">' + over + (over === 1 ? ' vorhandene Datei wird' : ' vorhandene Dateien werden') + ' ersetzt – das Original wird gesichert und beim Löschen der Mod zurückgelegt.</p>' : '') +
+    ((p.skipped || []).length ? '<p class="mdimps">' + p.skipped.length + (p.skipped.length === 1 ? ' Datei gehört nicht ins Spiel' : ' Dateien gehören nicht ins Spiel') + ' (z. B. ' + esc(p.skipped.slice(0, 2).map(x => x.split("/").pop()).join(", ")) + ') und wird ausgelassen.</p>' : '') +
+    '<div class="mdrow"><button class="btn pri" data-md="impgo"' + (v ? '' : ' disabled') + '>Installieren</button><button class="btn" data-md="impx">Abbrechen</button></div><p class="mdimps">Forza dabei bitte schließen. Auf eigene Gefahr – Mods können online zu Sperren führen.</p></div>';
+}
+async function mdImportFile(file){
+  if (!file) return;
+  if (!window.FD_EXE) { toast("Mods hinzufügen geht nur im ForzaDashboard-Programm am PC"); return; }
+  if (!mdFileOk(file.name)) { toast("Bitte eine ZIP-, 7z- oder RAR-Datei wählen – oder das ReShade-Setup"); return; }
+  MD.tab = "mine"; MD.det = null; MD.imp = null; MD.impBusy = "„" + file.name + "“ wird geprüft …"; modsRender(); $("gmods").scrollTop = 0;
+  const r = await fetch("/mods/import?name=" + encodeURIComponent(file.name), {method:"POST", body:file}).then(x => x.json()).catch(() => null);
+  MD.impBusy = false;
+  if (!r || !r.ok) { toast((r && r.why) || "Datei konnte nicht gelesen werden"); modsRender(); return; }
+  MD.imp = r; MD.impVar = r.variants.length === 1 ? r.variants[0].root : ""; modsRender();
+}
+const mdFilePick = () => { const i = document.createElement("input"); i.type = "file"; i.accept = ".zip,.7z,.rar,.exe"; i.onchange = () => mdImportFile(i.files[0]); i.click(); };
+// Datei auf die Mods-Seite ziehen (überall sonst nichts tun – sonst würde das Fenster die Datei öffnen)
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => { e.preventDefault(); if (GR.view !== "mods" && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0] && mdFileOk(e.dataTransfer.files[0].name)) { setView("mods"); mdImportFile(e.dataTransfer.files[0]); } });
+$("gmods").addEventListener("dragover", e => { if (e.dataTransfer && [...e.dataTransfer.types].includes("Files")) { e.preventDefault(); $("gmods").classList.add("mddrag"); } });
+$("gmods").addEventListener("dragleave", e => { if (e.target === $("gmods")) $("gmods").classList.remove("mddrag"); });
+$("gmods").addEventListener("drop", e => { e.preventDefault(); $("gmods").classList.remove("mddrag"); const fl = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (fl) mdImportFile(fl); });
 $("gmods").addEventListener("click", async e => {
+  const iv = e.target.closest("[data-impv]"); if (iv) { MD.impVar = iv.dataset.impv; const nm = $("mdImpName"); if (nm && MD.imp) MD.imp.name = nm.value; modsRender(); return; }
   const ln = e.target.closest("[data-link]"); if (ln) { e.stopPropagation(); mdOpenUrl(NX_URL(ln.dataset.link)); return; }
   const lb = e.target.closest("[data-lb]"); if (lb && lb.dataset.lb) { mdLightbox(lb.dataset.lb); return; }
   const t = e.target.closest("[data-tab]"); if (t) { MD.tab = t.dataset.tab; MD.det = null; $("gmods").scrollTop = 0; modsRender(); if (MD.tab === "mine") mdLocal(); return; }
@@ -2448,6 +2619,18 @@ $("gmods").addEventListener("click", async e => {
   }
   if (!b) return; const a = b.dataset.md, key = b.dataset.key;
   if (a === "back") { MD.det = null; modsRender(); }
+  else if (a === "addfile") mdFilePick();
+  else if (a === "impx") { if (MD.imp) fetch("/mods/import/cancel", {method:"POST", body:JSON.stringify({id:MD.imp.id})}).catch(() => {}); MD.imp = null; modsRender(); }
+  else if (a === "impgo") {
+    if (!MD.imp) return; const name = ($("mdImpName") || {}).value || MD.imp.name; b.disabled = true;
+    const pre = (MD.imp.variants || []).some(v => v.files.some(f => /^reshade-presets\//i.test(f.to)));
+    if (pre) { b.textContent = "Effekte werden geladen …"; }
+    const r = await mdJ("/mods/import/apply", {method:"POST", body:JSON.stringify({id:MD.imp.id, variant:MD.impVar, name})}).catch(() => null);
+    if (r && r.ok) { toast(r.note ? r.note : pre ? "„" + name + "“ ist aktiv – im Spiel übers ReShade-Menü anpassen" : "„" + name + "“ installiert – " + r.n + (r.n === 1 ? " Datei" : " Dateien")); MD.imp = null; MD.st = await mdJ("/mods/status").catch(() => MD.st); mdLocal(); }
+    else { b.disabled = false; toast((r && r.why) || "Installieren hat nicht geklappt"); }
+  }
+  else if (a === "rskey") { MD.rsLearn = !MD.rsLearn; if (MD.rsLearn) toast("Jetzt die neue Taste drücken (auch mit Strg/Umschalt/Alt) – Esc bricht ab"); modsRender(); }
+  else if (a === "rename") { const g = ((MD.loc && MD.loc.mods) || []).find(x => x.key === key); if (!g) return; const n = prompt("Neuer Name für die Mod:", mdLocalName(g)); if (!n || !n.trim()) return; await mdJ("/mods/rename", {method:"POST", body:JSON.stringify({mod:g.mod, name:n.trim()})}).catch(() => null); mdLocal(); }
   else if (a === "set") { MD.set = !MD.set; if (MD.set) $("gmods").scrollTop = 0; modsRender(); }
   else if (a === "warnx") { MD.warn = false; S.mdWarnN = (S.mdWarnN | 0) + 1; saveSettings(); modsRender(); }
   else if (a === "warnoff") { S.mdWarnOff = true; saveSettings(); toast("Hinweis ausgeblendet"); modsRender(); }
@@ -2793,39 +2976,245 @@ const PAD_ACT = {
   prev:["Vorheriger Titel", () => mediaCmd("prev")],
   volup:["Musik lauter", () => mediaCmd("volup")],
   voldown:["Musik leiser", () => mediaCmd("voldown")],
-  perf:["Performance-Ansicht an/aus", () => setView(GR.view === "perf" ? "dash" : "perf")],
-  map:["Karte / Übersicht", () => setView(GR.view === "map" ? "dash" : "map")],
   voice:["Navi-Stimme an/aus", () => { S.voiceMode = voiceOn() ? "off" : "on"; saveSettings(); voiceBtn(); toast(voiceOn() ? "Navi-Stimme an" : "Navi-Stimme aus"); }],
   home:["Nach Hause navigieren", () => homeGo()],
   overlay:["Overlay im Spiel an/aus", () => ovToggle()],
+  blinkL:["Blinker links", () => blPress("l")],
+  blinkR:["Blinker rechts", () => blPress("r")],
+  hazard:["Warnblinker", () => blSet(BL.m === "h" ? "" : "h")],
 };
-const PAD = {learn:null};
-const padName = b => !b ? "–" : (b.name || "Controller") + " · " + (b.btn > 1000 ? "Steuerkreuz " + ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"][b.btn - 1001] : "Taste " + b.btn);
-function padPress(p){
-  if (PAD.learn) {   // Zuweisen: diese Taste für die gewählte Aktion merken (gleiche Taste woanders entfernen)
-    const a = PAD.learn; PAD.learn = null; if (!S.binds) S.binds = {};
-    for (const k in S.binds) if (S.binds[k] && S.binds[k].dev === p.dev && S.binds[k].btn === p.btn) delete S.binds[k];
-    S.binds[a] = {dev:p.dev, name:p.name, btn:p.btn}; saveSettings(); toast(PAD_ACT[a][0] + ": " + padName(S.binds[a])); buildWheelSettings(); return;
-  }
-  // nur während der Fahrt: Spiel läuft (nicht pausiert, nicht im Menü) und Daten sind frisch
-  if (!(D && D.on && performance.now() - lastMsg < 1500)) return;
-  for (const a in (S.binds || {})) { const b = S.binds[a]; if (b && b.dev === p.dev && b.btn === p.btn && PAD_ACT[a]) { try { PAD_ACT[a][1](); } catch (e) {} } }
+// Belegung: einfach drücken, doppelt drücken (2× schnell) oder Kombination (eine Taste halten + andere drücken)
+// S.binds[aktion] = {dev, name, btn, how:"1"|"2"|"+", mod:<gehaltene Taste bei Kombi>}
+const PAD = {learn:null, lt:{}, wait:{}, modUsed:{}, lrn:null, rep:{}, newTab:null, down:{}};
+// ---- Tab-Hotkeys: beliebig viele, jeder öffnet einen frei gewählten Tab (nochmal drücken = zurück nach Home) ----
+// gespeichert als S.binds["tab_<id>"] = {…Geste…, tab:"youtube"}
+const TAB_TARGETS = ["home", "map", "perf", "spotify", "youtube", "discord", "friends", "mods", "tuning", "set"];
+const tabView = k => k === "home" ? "dash" : k === "tuning" ? "tune" : k;
+function tabOpen(k){
+  if (k === "set") { openSettings(); return; }
+  if (k !== "home" && GR.view === tabView(k)) { setView("dash"); return; }
+  try { gOpen(k); } catch (e) { setView(tabView(k)); }
 }
+// alte feste Belegungen „Karte“ und „Performance“ in Tab-Hotkeys umwandeln
+try { if (S.binds) for (const [old, k] of [["map", "map"], ["perf", "perf"]]) if (S.binds[old]) { S.binds["tab_" + old] = Object.assign({}, S.binds[old], {tab:k}); delete S.binds[old]; saveSettings(); } } catch (e) {}
+const bindLabel = a => { const b = S.binds && S.binds[a]; if (b && b.tab) return (G_APPS[b.tab] ? G_APPS[b.tab][0] : b.tab) + " öffnen"; return PAD_ACT[a] ? PAD_ACT[a][0] : a; };
+// Halten = wiederholen (immer schneller), z. B. Steuerkreuz rechts halten → Musik wird stetig lauter
+const PAD_REPEAT = new Set(["volup", "voldown"]);
+function padHold(k, acts, delay){
+  const r = acts.filter(a => PAD_REPEAT.has(a)); if (!r.length) return;
+  padStop(k);
+  let iv = 260;
+  const tick = () => { if (!PAD.down[k]) return; r.forEach(padFire); iv = Math.max(60, iv * 0.82); PAD.rep[k] = setTimeout(tick, iv); };
+  PAD.rep[k] = setTimeout(tick, delay === undefined ? 380 : delay);   // erst nach kurzem Halten loslegen – ein Antippen bleibt ein Schritt
+}
+function padStop(k){ if (PAD.rep[k]) { clearTimeout(PAD.rep[k]); PAD.rep[k] = 0; } }
+const PAD_DBL = 350;   // ms für einen Doppelklick
+const padBtn = b => b > 1000 ? "Steuerkreuz " + ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"][b - 1001] : "Taste " + b;
+const padName = b => !b ? "–" : (b.name || "Controller") + " · " + (b.how === "+" ? padBtn(b.mod) + " + " + padBtn(b.btn) : padBtn(b.btn) + (b.how === "2" ? " · 2×" : ""));
+const padHow = b => (b && b.how) || "1";
+const padActive = a => !(!S.blinkOn && /^(blink|hazard)/.test(a));
+const padFire = a => {
+  const b = S.binds && S.binds[a];
+  if (!(b && b.tab) && !PAD_ACT[a]) return;
+  if (!(D && D.on && performance.now() - lastMsg < 1500)) return;
+  try { if (b && b.tab) tabOpen(b.tab); else PAD_ACT[a][1](); } catch (e) {}
+};
+const padFind = (dev, btn, how, mod) => Object.keys(S.binds || {}).filter(a => { const b = S.binds[a]; return b && padActive(a) && b.dev === dev && b.btn === btn && padHow(b) === how && (how !== "+" || b.mod === mod); });
+const padIsMod = (dev, btn) => Object.values(S.binds || {}).some(b => b && b.dev === dev && b.how === "+" && b.mod === btn);
+function padLearnDone(b){
+  const a = PAD.learn; PAD.learn = null; PAD.lrn = null; if (!S.binds) S.binds = {};
+  // dieselbe Geste woanders entfernen
+  for (const k in S.binds) { const o = S.binds[k]; if (o && o.dev === b.dev && o.btn === b.btn && padHow(o) === b.how && (b.how !== "+" || o.mod === b.mod)) delete S.binds[k]; }
+  // neuer Tab-Hotkey: eigenen Platz anlegen (danach kommt automatisch wieder eine leere „Hinzufügen“-Zeile)
+  let key = a;
+  if (a === "tab_new") { key = "tab_" + Math.random().toString(36).slice(2, 7); b.tab = PAD.newTab; PAD.newTab = null; }
+  else if (S.binds[a] && S.binds[a].tab) b.tab = S.binds[a].tab;
+  S.binds[key] = b; saveSettings(); toast(bindLabel(key) + ": " + padName(b)); buildWheelSettings();
+}
+function padPress(p){
+  const k = p.dev + ":" + p.btn, now = performance.now(), others = (p.held || []).filter(x => x !== p.btn);
+  PAD.down[k] = now;
+  if (PAD.learn) {
+    // Zuweisen erkennt die Geste selbst: andere Taste gehalten = Kombi, zweimal schnell = Doppelklick, sonst einfach
+    if (others.length) { clearTimeout(PAD.lrn && PAD.lrn.t); padLearnDone({dev:p.dev, name:p.name, btn:p.btn, how:"+", mod:others[0]}); return; }
+    if (PAD.lrn && PAD.lrn.k === k && now - PAD.lrn.at < PAD_DBL) { clearTimeout(PAD.lrn.t); padLearnDone({dev:p.dev, name:p.name, btn:p.btn, how:"2"}); return; }
+    clearTimeout(PAD.lrn && PAD.lrn.t);
+    PAD.lrn = {k, at:now, t:setTimeout(() => padLearnDone({dev:p.dev, name:p.name, btn:p.btn, how:"1"}), PAD_DBL + 30)};
+    buildWheelSettings(); return;
+  }
+  // Kombination: eine gehaltene Taste + diese
+  let combo = false;
+  const fired = [];
+  for (const m of others) for (const a of padFind(p.dev, p.btn, "+", m)) { padFire(a); fired.push(a); combo = true; PAD.modUsed[p.dev + ":" + m] = true; }
+  if (combo) { padHold(k, fired); return; }
+  // Doppelklick
+  const dbl = padFind(p.dev, p.btn, "2"), single = padFind(p.dev, p.btn, "1"), mod = padIsMod(p.dev, p.btn);
+  if (dbl.length && now - (PAD.lt[k] || 0) < PAD_DBL) { PAD.lt[k] = 0; clearTimeout(PAD.wait[k]); PAD.wait[k] = 0; PAD.modUsed[k] = true; dbl.forEach(padFire); return; }   // beim Loslassen nichts mehr
+  PAD.lt[k] = now; PAD.modUsed[k] = false;
+  if (!single.length) return;
+  const rpt = single.some(a => PAD_REPEAT.has(a));
+  if (mod) {
+    // Taste ist auch Kombi-Taste: kurzer Druck zählt beim Loslassen. Wird sie aber allein gehalten (ohne zweite Taste),
+    // gilt das als Halten: „lauter/leiser“ legt nach 0,38 s los und wird immer schneller.
+    if (rpt) PAD.rep[k] = setTimeout(() => { if (PAD.down[k] && !PAD.modUsed[k]) { PAD.modUsed[k] = true; padHold(k, single, 0); } }, 380);
+    return;
+  }
+  if (dbl.length) { clearTimeout(PAD.wait[k]); PAD.wait[k] = setTimeout(() => { PAD.wait[k] = 0; single.forEach(padFire); if (PAD.down[k]) padHold(k, single, 150); }, PAD_DBL); return; }   // kurz warten, ob ein zweiter Druck kommt – noch gehalten = weiter
+  single.forEach(padFire); padHold(k, single);
+}
+function padUp(p){
+  const k = p.dev + ":" + p.btn;
+  PAD.down[k] = 0;
+  padStop(k);
+  if (PAD.learn || !padIsMod(p.dev, p.btn)) return;
+  if (PAD.modUsed[k]) { PAD.modUsed[k] = false; return; }
+  const single = padFind(p.dev, p.btn, "1"); if (!single.length) return;
+  if (padFind(p.dev, p.btn, "2").length) { clearTimeout(PAD.wait[k]); PAD.wait[k] = setTimeout(() => { PAD.wait[k] = 0; if (performance.now() - (PAD.lt[k] || 0) >= PAD_DBL - 20) single.forEach(padFire); }, PAD_DBL); return; }
+  single.forEach(padFire);
+}
+const WH_GROUPS = [
+  ["Musik", "#ff2d55", ["playpause", "next", "prev", "volup", "voldown"]],
+  ["Ansicht", "#5e5ce6", ["overlay"]],
+  ["Navigation", "#30d158", ["home", "voice"]],
+  ["Blinker", "#ff9f0a", ["blinkL", "blinkR", "hazard"]],
+];
+const WH_ICO = {playpause:'<path d="M7 5v14l11-7z"/>', next:'<path d="M6 5v14l9-7zM18 5v14"/>', prev:'<path d="M18 5v14l-9-7zM6 5v14"/>', volup:'<path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>', voldown:'<path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7"/>',
+  perf:'<path d="M4.5 17a8.5 8.5 0 1 1 15 0"/><path d="m12 13 4-4"/>', map:'<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>', overlay:'<rect x="3" y="5" width="18" height="13" rx="2.5"/><rect x="12" y="11" width="6" height="4" rx="1"/>',
+  home:'<path d="M3 11 12 4l9 7M5.5 9.5V20h13V9.5"/>', voice:'<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  blinkL:'<path d="M14 6l-6 6 6 6"/>', blinkR:'<path d="M10 6l6 6-6 6"/>', hazard:'<path d="M12 4 21 19H3z"/>'};
+// Belegung kurz: „Taste 5“ + „2×“ bzw. „Taste 3 + Taste 5“
+const padShort = b => !b ? '<u>Nicht belegt</u>' : b.how === "+" ? '<em>' + padBtn(b.mod).replace("Taste ", "") + '</em>+<em>' + padBtn(b.btn).replace("Taste ", "") + '</em>' : '<em>' + padBtn(b.btn).replace("Taste ", "") + '</em>' + (b.how === "2" ? '<u>2×</u>' : '');
 function buildWheelSettings(){
   const g = $("wheelGroup"); if (!g) return; g.innerHTML = "";
-  const info = document.createElement("div"); info.className = "info";
-  info.textContent = window.FD_EXE || live ? "„Zuweisen“ antippen, dann am Lenkrad oder Controller die gewünschte Taste drücken. Die Tasten wirken nur, solange Forza läuft und nicht pausiert ist – im Menü und in der Pause passiert nichts." : "Lenkrad-Tasten gibt es nur mit dem ForzaDashboard-Programm am PC.";
-  g.appendChild(info);
-  for (const a in PAD_ACT) {
-    const w = document.createElement("div"); w.style.cssText = "display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end";
-    const k = document.createElement("span"); k.className = "padkey" + (PAD.learn === a ? " wait" : ""); k.textContent = PAD.learn === a ? "Taste drücken …" : padName(S.binds && S.binds[a]);
-    const set = document.createElement("button"); set.className = "btn"; set.textContent = PAD.learn === a ? "Abbrechen" : "Zuweisen";
-    set.onclick = () => { PAD.learn = PAD.learn === a ? null : a; buildWheelSettings(); };
-    w.append(k, set);
-    if (S.binds && S.binds[a]) { const del = document.createElement("button"); del.className = "btn"; del.textContent = "Entfernen"; del.onclick = () => { delete S.binds[a]; saveSettings(); buildWheelSettings(); }; w.appendChild(del); }
-    g.appendChild(row(PAD_ACT[a][0], "", w));
+  if (!(window.FD_EXE || live)) { const x = document.createElement("div"); x.className = "group"; x.innerHTML = '<div class="info">Lenkrad-Tasten gibt es nur mit dem ForzaDashboard-Programm am PC.</div>'; g.appendChild(x); return; }
+  const intro = document.createElement("div"); intro.className = "group";
+  intro.innerHTML = '<div class="whint"><div><i>1×</i><b>Drücken</b><small>normale Taste</small></div><div><i>2×</i><b>Doppelklick</b><small>zweimal schnell</small></div><div><i>A+B</i><b>Kombination</b><small>A halten, B drücken</small></div></div>'
+    + '<div class="info" style="padding-top:10px">Aktion antippen, dann am Lenkrad die Geste machen – das Dashboard erkennt sie selbst. „Lauter“ und „Leiser“: Taste halten = stetig weiter, immer schneller. Wirkt nur, solange Forza läuft und nicht pausiert ist.</div>';
+  g.appendChild(intro);
+  // Tabs öffnen: eigene Zeile je Hotkey + immer eine leere „Hinzufügen“-Zeile
+  {
+    const h = document.createElement("h4"); h.className = "wh4"; h.textContent = "Tabs öffnen"; g.appendChild(h);
+    const grp = document.createElement("div"); grp.className = "group";
+    const keys = Object.keys(S.binds || {}).filter(a => S.binds[a] && S.binds[a].tab);
+    for (const a of keys) {
+      const b = S.binds[a], k = b.tab, learn = PAD.learn === a;
+      const r = document.createElement("button"); r.className = "whr" + (learn ? " learn" : "");
+      r.innerHTML = '<i class="whi wapp" style="background:' + (G_APPS[k] ? G_APPS[k][1] : "#636366") + '">' + (G_SVG[k] || "") + '</i><span class="wt">' + bindLabel(a) + '</span>'
+        + '<span class="wv">' + (learn ? (PAD.lrn ? "nochmal = Doppelklick …" : "Am Lenkrad drücken …") : padShort(b)) + '</span>' + (!learn ? '<span class="wx" title="Entfernen">✕</span>' : '') + '<svg class="chev" viewBox="0 0 8 13"><path d="m1.5 1.5 5 5-5 5"/></svg>';
+      r.onclick = e => { if (e.target.closest(".wx")) { delete S.binds[a]; saveSettings(); buildWheelSettings(); return; } clearTimeout(PAD.lrn && PAD.lrn.t); PAD.lrn = null; PAD.learn = learn ? null : a; buildWheelSettings(); };
+      grp.appendChild(r);
+    }
+    const nl = PAD.learn === "tab_new", open = PAD.newTab === "?" || nl;
+    const add = document.createElement("button"); add.className = "whr add" + (nl ? " learn" : "");
+    add.innerHTML = nl ? '<i class="whi wapp" style="background:' + G_APPS[PAD.newTab][1] + '">' + G_SVG[PAD.newTab] + '</i><span class="wt" style="color:inherit">' + G_APPS[PAD.newTab][0] + ' öffnen</span><span class="wv">' + (PAD.lrn ? "nochmal = Doppelklick …" : "Am Lenkrad drücken …") + '</span>'
+      : '<span class="plus">+</span><span class="wt">' + (keys.length ? "Weiteren Tab-Hotkey hinzufügen" : "Tab-Hotkey hinzufügen") + '</span><svg class="chev" viewBox="0 0 8 13" style="transform:rotate(' + (open ? 90 : 0) + 'deg)"><path d="m1.5 1.5 5 5-5 5"/></svg>';
+    add.onclick = () => { clearTimeout(PAD.lrn && PAD.lrn.t); PAD.lrn = null; if (nl) { PAD.learn = null; PAD.newTab = null; } else PAD.newTab = open ? null : "?"; buildWheelSettings(); };
+    grp.appendChild(add);
+    if (PAD.newTab === "?") {
+      const used = new Set(keys.map(a => S.binds[a].tab));
+      const pick = document.createElement("div"); pick.className = "whpick";
+      pick.innerHTML = TAB_TARGETS.filter(k => G_APPS[k] && G_SVG[k]).map(k => '<button data-tab="' + k + '"' + (used.has(k) ? ' class="used" title="Hat schon einen Hotkey"' : '') + '>' + gIco(k, "span") + '<small>' + G_APPS[k][0] + '</small></button>').join("");
+      pick.onclick = e => { const t = e.target.closest("[data-tab]"); if (!t) return; PAD.newTab = t.dataset.tab; PAD.learn = "tab_new"; buildWheelSettings(); };
+      grp.appendChild(pick);
+    }
+    g.appendChild(grp);
+  }
+  for (const [title, col, acts] of WH_GROUPS) {
+    const list = acts.filter(a => PAD_ACT[a] && padActive(a)); if (!list.length) continue;
+    const h = document.createElement("h4"); h.className = "wh4"; h.textContent = title; g.appendChild(h);
+    const grp = document.createElement("div"); grp.className = "group";
+    for (const a of list) {
+      const b = S.binds && S.binds[a], learn = PAD.learn === a;
+      const r = document.createElement("button"); r.className = "whr" + (learn ? " learn" : "");
+      r.innerHTML = '<i class="whi" style="background:' + col + '"><svg viewBox="0 0 24 24">' + (WH_ICO[a] || "") + '</svg></i><span class="wt">' + PAD_ACT[a][0] + '</span>'
+        + '<span class="wv">' + (learn ? (PAD.lrn ? "nochmal = Doppelklick …" : "Am Lenkrad drücken …") : padShort(b)) + '</span>'
+        + (b && !learn ? '<span class="wx" title="Entfernen">✕</span>' : '')
+        + '<svg class="chev" viewBox="0 0 8 13"><path d="m1.5 1.5 5 5-5 5"/></svg>';
+      r.onclick = e => {
+        if (e.target.closest(".wx")) { delete S.binds[a]; saveSettings(); buildWheelSettings(); return; }
+        clearTimeout(PAD.lrn && PAD.lrn.t); PAD.lrn = null; PAD.learn = learn ? null : a; buildWheelSettings();
+      };
+      grp.appendChild(r);
+    }
+    g.appendChild(grp);
   }
 }
+
+// ---- Blinker: links/rechts per Taste, beide zusammen = Warnblinker; schaltet sich nach dem Abbiegen selbst aus ----
+// Abbiegen erkannt an der Lenkung (deutlich eingeschlagen und wieder gerade) oder an der Fahrtrichtung (> 60° gedreht).
+const BL = {m:"", armed:false, t:{l:0, r:0}, yaw:null};
+function blRender(){
+  const h = $("hbl"); if (!h) return;
+  h.hidden = !S.blinkOn;
+  h.querySelectorAll("[data-bl]").forEach(b => b.classList.toggle("on", BL.m === "h" || BL.m === b.dataset.bl));
+}
+// Blinkerton, mit Web Audio erzeugt (keine Dateien): Modern = weiches Klicken, Warm = tiefer und runder, Hell = kurz und klar
+let BLA = null;
+function blAudio(){ try { if (!BLA) BLA = new (window.AudioContext || window.webkitAudioContext)(); if (BLA.state === "suspended") BLA.resume(); } catch (e) {} return BLA; }
+function blClick(kind, tock, at, bus){
+  const ctx = blAudio(); if (!ctx || !kind || kind === "aus") return;
+  const t = at || ctx.currentTime + 0.005, vol = Math.max(0, Math.min(1, S.blinkVol == null ? 0.6 : S.blinkVol));
+  const out = ctx.createGain(); out.gain.value = vol; out.connect(bus || ctx.destination);
+  const tone = (f, dur, g) => { const o = ctx.createOscillator(), e = ctx.createGain(); o.type = "sine"; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.7, t + dur); e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(g, t + 0.002); e.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(e); e.connect(out); o.start(t); o.stop(t + dur + 0.02); };
+  const noise = (f, q, dur, g) => { const n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3); const src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), e = ctx.createGain(); src.buffer = b; bp.type = "bandpass"; bp.frequency.value = f; bp.Q.value = q; e.gain.value = g; src.connect(bp); bp.connect(e); e.connect(out); src.start(t); };
+  if (kind === "warm") { tone(tock ? 760 : 980, 0.05, 0.42); tone(tock ? 1520 : 1960, 0.025, 0.08); }
+  else if (kind === "hell") { tone(tock ? 1900 : 2500, 0.022, 0.38); tone(tock ? 3800 : 5000, 0.012, 0.06); }
+  else tone(tock ? 1250 : 1700, 0.035, 0.45);   // modern
+}
+// Klicks über die Audio-Uhr im Voraus planen – bleibt im Takt, auch wenn das Fenster im Hintergrund gedrosselt wird
+function blSound(){
+  clearInterval(BL.snd); BL.snd = 0; BL.gen = (BL.gen || 0) + 1;
+  if (BL.bus) { try { BL.bus.disconnect(); } catch (e) {} BL.bus = null; }   // schon geplante Klicks verstummen sofort
+  if (!BL.m || !S.blinkSnd || S.blinkSnd === "aus") return;
+  const ctx = blAudio(); if (!ctx) return;
+  const bus = BL.bus = ctx.createGain(); bus.connect(ctx.destination);
+  const gen = BL.gen; let next = ctx.currentTime + 0.01, tock = false;
+  const plan = () => { if (gen !== BL.gen || !BL.m) return; if (next < ctx.currentTime) { const k = Math.ceil((ctx.currentTime - next) / 0.45); next += k * 0.45; if (k % 2) tock = !tock; } while (next < ctx.currentTime + 1.6) { blClick(S.blinkSnd, tock, next, bus); tock = !tock; next += 0.45; } };
+  plan(); BL.snd = setInterval(plan, 250);
+}
+function blSet(m){
+  if (!S.blinkOn) m = "";
+  if (BL.m === m) return;
+  BL.m = m; BL.armed = false; blSound(); BL.yaw = D && typeof D.yaw === "number" ? D.yaw : null;
+  blShare();
+  // alle Pfeile gleichzeitig neu takten
+  document.querySelectorAll("#hbl button").forEach(b => { b.style.animation = "none"; void b.offsetWidth; b.style.animation = ""; });
+  blRender(); try { ovKick(); } catch (e) {}
+}
+function blShare(){ if (window.FD_EXE) fetch("/blink?m=" + (BL.m || ""), {cache:"no-store"}).catch(() => {}); }
+setInterval(() => { if (BL.m) blShare(); }, 2000);
+function blPress(side){
+  const now = performance.now(), other = side === "l" ? "r" : "l"; BL.t[side] = now;
+  if (now - BL.t[other] < 450) { blSet("h"); return; }   // beide fast gleichzeitig: Warnblinker
+  if (BL.m === "h") { blSet(""); return; }
+  blSet(BL.m === side ? "" : side);
+}
+function blTick(d){
+  if (!BL.m || BL.m === "h") return;
+  const st = Math.abs((d.steer || 0) / 127);
+  if (st > 0.35) BL.armed = true; else if (BL.armed && st < 0.1) { blSet(""); return; }
+  if (BL.yaw !== null && typeof d.yaw === "number") { let dy = d.yaw - BL.yaw; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; if (Math.abs(dy) > 1.05) blSet(""); }
+}
+$("hbl").addEventListener("click", e => { const b = e.target.closest("[data-bl]"); if (b) blPress(b.dataset.bl); });
+// Einstellungen → Fahren → Assistenten
+function buildAssist(){
+  const g = $("assistGroup"); if (!g) return; g.innerHTML = "";
+  const tg = (k, after) => { const el = document.createElement("span"); el.className = "sw" + (S[k] ? " on" : ""); el.onclick = () => { S[k] = !S[k]; saveSettings(); el.classList.toggle("on", S[k]); after(); }; return el; };
+  g.appendChild(row("Blinker", "Anzeige im Dashboard und im Overlay, per Lenkradtaste. Beide Tasten zusammen = Warnblinker. Geht nach dem Abbiegen von selbst aus.", tg("blinkOn", () => { if (!S.blinkOn) blSet(""); blRender(); buildWheelSettings(); buildAssist(); try { ovKick(); } catch (e) {} })));
+  if (S.blinkOn) {
+    const sg = document.createElement("div"); sg.className = "seg";
+    if (S.blinkSnd === "klassisch" || S.blinkSnd === "retro") S.blinkSnd = "modern";
+    [["aus", "Aus"], ["modern", "Modern"], ["warm", "Warm"], ["hell", "Hell"]].forEach(([v, t]) => { const b = document.createElement("button"); b.textContent = t; if ((S.blinkSnd || "modern") === v) b.className = "on"; b.onclick = () => { S.blinkSnd = v; saveSettings(); sg.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); blSound(); if (v !== "aus") { blClick(v, false); setTimeout(() => blClick(v, true), 450); setTimeout(() => blClick(v, false), 900); setTimeout(() => blClick(v, true), 1350); } }; sg.appendChild(b); });
+    g.appendChild(row("Blinkerton", "Tick-Tack im Takt der Pfeile – antippen zum Probehören", sg));
+    const vr = document.createElement("input"); vr.type = "range"; vr.min = 0; vr.max = 100; vr.step = 5; vr.value = Math.round((S.blinkVol == null ? 0.6 : S.blinkVol) * 100); vr.style.width = "160px";
+    vr.oninput = () => { S.blinkVol = vr.value / 100; saveSettings(); };
+    vr.onchange = () => { const k = S.blinkSnd || "modern"; if (k !== "aus") { blClick(k, false); setTimeout(() => blClick(k, true), 450); } };
+    g.appendChild(row("Lautstärke Blinker", "", vr));
+  }
+  g.appendChild(row("Blinker der anderen", "Wer in deiner Gruppe (oder online) vor dir fährt und blinkt: orange an seinem Punkt auf der Karte und als kurzer Hinweis oben im Overlay. Geht nur bei Mitspielern, die auch ForzaDashboard nutzen.", tg("blinkOthers", () => { try { ovKick(); } catch (e) {} })));
+}
+setTimeout(blRender, 0);
+try { if (S.binds) for (const k of ["cruise", "cruiseUp", "cruiseDown"]) delete S.binds[k]; delete S.cruiseOn; } catch (e) {}
 
 function fuelFill(){ const c = fuelCar(D || {car:FUEL.car}); c.lvl = fuelCap(c); fuelSave(); }
 function fuelNav(){
@@ -2875,7 +3264,7 @@ const WIDGETS = {
       const mi = S.unit === "mph", km = c.l100 > 0 ? c.lvl / c.l100 * 100 : 0;
       setText("fuR", nf0.format(mi ? km / 1.609 : km) + (mi ? " mi" : " km"));
       setText("fuC", nf1.format(c.l100) + u + "/100 km");
-      setText("fuLl", c.mass || c.ev || S.fuelCap > 0 ? "Inhalt" : "Inhalt (Tank geschätzt)");
+      setText("fuLl", c.capSrc === "m" || c.mass || c.ev || S.fuelCap > 0 ? "Inhalt" : "Inhalt (Tank geschätzt)");
       setText("fuM", c.mass ? "≈ " + nf0.format(c.mass) + " kg" : "wird gemessen …");
       setText("fuSt", FUEL.refilling ? "tankt …" : f <= 0.001 ? "leer" : f < 0.1 ? "Reserve" : FUEL.real ? "Spielwert" : "");
       const btn = $("fuNav"), has = LR.pois.some(p => p.k === "fuel");
@@ -3024,13 +3413,14 @@ const WIDGETS = {
       const tsec = (sess.driveT || 0) / 1000; setText("ltime", Math.floor(tsec / 3600) ? Math.floor(tsec / 3600) + ":" + String(Math.floor(tsec / 60) % 60).padStart(2, "0") + " h" : Math.floor(tsec / 60) + ":" + String(Math.floor(tsec) % 60).padStart(2, "0") + " min");
       setText("lavg", tsec > 5 ? nf0.format(sess.dist / tsec * spdK()) + " " + unitTxt() : "–");
     }},
-  car:{name:"Fahrzeug", hint:"Klasse, Antrieb, Fahrlinie, Platzierung im Rennen",
+  car:{name:"Fahrzeug", hint:"Modell, Leistung, Klasse, Antrieb, Fahrlinie",
     opts:[{k:"mass", n:"Gewicht (gemessen)", def:true}],
-    html:() => '<h3>Fahrzeug</h3><div class="rows"><div class="lr cname"><span id="cYr">Modell</span><b id="cId">–</b></div><div class="lr">Klasse<b id="cCls">–</b></div><div class="lr">Antrieb<b id="cDr">–</b></div><div class="lr">Fahrlinie<b id="cLine">–</b></div>' + (O("car", "mass") ? '<div class="lr">Gewicht<b id="cMass">–</b></div>' : '') + '<div class="lr">Platzierung<b id="cPos">–</b></div>' + '</div>',
+    html:() => '<h3>Fahrzeug</h3><div class="rows"><div class="lr cname"><span id="cYr">Modell</span><b id="cId">–</b></div><div class="lr">Leistung<b id="cPs">–</b></div><div class="lr">Klasse<b id="cCls">–</b></div><div class="lr">Antrieb<b id="cDr">–</b></div><div class="lr">Fahrlinie<b id="cLine">–</b></div>' + (O("car", "mass") ? '<div class="lr">Gewicht<b id="cMass">–</b></div>' : '') + '</div>',
     update(d){
       { const c = carName(d.car); setText("cId", c ? c.name : d.car > 0 ? "Unbekannt (Nr. " + d.car + ")" : "–"); setText("cYr", c && c.year ? c.year : "Modell"); const e = $("cId"); if (e && e.title !== (c ? c.full : "")) e.title = c ? c.full + " · Nr. " + d.car : ""; } setText("cCls", (CLASSES[d.cls] || "–") + " " + (d.pi || ""));
       setText("cDr", (DRIVE[d.drive] || "–") + (d.cyl ? " · " + d.cyl + " Zyl." : ""));
-      { const race = d.rt > 0 || d.lap > 0 || d.best > 0; setText("cPos", race && d.pos ? "P" + d.pos + " · Runde " + ((d.lap | 0) + 1) : "–"); }
+      // Gesamtleistung: höchste gemessene Leistung dieses Autos (bei Vollgas) – steht nach dem ersten Ausdrehen fest
+      { const fc = FUEL.cars[String(d.car || 0)], p = fc && fc.pmax; setText("cPs", p > 20000 ? nf0.format(p / 735.5) + " PS" : "einmal Vollgas geben …"); }
       { const fc = FUEL.cars[String(d.car || 0)]; setText("cMass", fc && fc.mass ? "≈ " + nf0.format(fc.mass) + " kg" : "wird gemessen …"); }
       setText("cLine", typeof d.line === "number" ? (d.line > 5 ? "rechts " : d.line < -5 ? "links " : "mittig ") + nf0.format(Math.abs(d.line) / 1.27) + "%" : "–");
     }},
@@ -4442,7 +4832,7 @@ function frUpdate(o){
     seen.add(f.id);
     let e = FR.m.get(f.id);
     if (!e) { e = {id:f.id, h:f.h, col:frCol(f.id)}; FR.m.set(f.id, e); }
-    Object.assign(e, {n:f.n, tx:f.x, tz:f.z, th:f.h, v:f.v, g:f.g, w:f.w ? 1 : 0, t:now - (f.age || 0)});
+    Object.assign(e, {n:f.n, tx:f.x, tz:f.z, th:f.h, v:f.v, g:f.g, w:f.w ? 1 : 0, b:f.b || "", t:now - (f.age || 0)});
     FR.known[f.id] = {n:f.n, t:Date.now()};
   }
   for (const id of [...FR.m.keys()]) if (!seen.has(id)) FR.m.delete(id);
@@ -4485,6 +4875,7 @@ function drawFriends(axS, ayS, s){
     ctx.fillStyle = e.col; ctx.beginPath(); ctx.arc(0, 0, 10, 0, 7); ctx.fill();
     ctx.rotate(e.h + off - cam.rot);
     ctx.beginPath(); ctx.moveTo(0, -6.5); ctx.lineTo(5, 5); ctx.lineTo(0, 2.4); ctx.lineTo(-5, 5); ctx.closePath(); ctx.fillStyle = "#fff"; ctx.fill();
+    if (S.blinkOthers !== false && e.b && e.g) frBlinkArc(ctx, e.b, 17, 3.5);
     ctx.restore();
     ctx.globalAlpha = (e.g ? 1 : 0.6) * (small ? 0.75 : 1);
     ctx.font = (small ? "700 11px" : "800 12px") + " Manrope, Segoe UI, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
@@ -4494,6 +4885,40 @@ function drawFriends(axS, ayS, s){
     ctx.fillStyle = e.col; ctx.fillText(label, x, y - 20.5);
     ctx.globalAlpha = 1;
   }
+}
+// Blinker eines Mitspielers: orange Bögen links/rechts am Punkt (im gedrehten Bezug des Autos), im Takt
+function frBlinkArc(g, b, r, lw){
+  if (Date.now() % 900 >= 450) return;
+  g.save(); g.globalAlpha = 1; g.strokeStyle = "#ff9f0a"; g.lineWidth = lw; g.lineCap = "round"; g.shadowColor = "rgba(255,159,10,.8)"; g.shadowBlur = 8;
+  for (const [side, a] of [["l", Math.PI], ["r", 0]]) if (b === side || b === "h") { g.beginPath(); g.arc(0, 0, r, a - 0.65, a + 0.65); g.stroke(); }
+  g.restore();
+}
+// Wer fährt direkt vor mir (gleiche Richtung, bis 150 m) und blinkt? -> Hinweis im Overlay
+function frAhead(){
+  if (S.blinkOthers === false || !FR.list.length || !(D && D.dash) || !CAR.ok) return null;
+  try { frStep(performance.now()); } catch (e) {}
+  const m = mirror(), off = trail.yawOff === null ? 0 : trail.yawOff, h = trail.heading, fx = m * Math.sin(h), fz = Math.cos(h);
+  const mx = m * CAR.x, mz = -CAR.y;
+  let best = null;
+  for (const e of FR.list) {
+    if (!e.b || !e.g || !isFinite(e.x)) continue;
+    const dx = e.x - mx, dz = e.z - mz, fwd = dx * fx + dz * fz, lat = Math.abs(dx * fz - dz * fx);
+    let dh = e.h + off - h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
+    if (fwd < 3 || fwd > 150 || lat > 22 + fwd * 0.12 || Math.abs(dh) > 1) continue;
+    if (!best || fwd < best.d) best = {n:e.n, b:e.b, d:Math.round(fwd), col:e.col};
+  }
+  return best;
+}
+// Mitspieler in der Nähe für die Minikarte im Overlay
+function frNear(){
+  if (!FR.list.length || !(D && D.dash)) return null;
+  const off = trail.yawOff === null ? 0 : trail.yawOff, out = [];
+  for (const e of FR.list) {
+    if (!isFinite(e.x) || Math.hypot(e.x - D.px, e.z - D.pz) > 700) continue;
+    out.push({i:e.id, x:Math.round(e.x * 10) / 10, z:Math.round(e.z * 10) / 10, h:Math.round((e.h + off) * 100) / 100, c:e.col, b:S.blinkOthers !== false && e.g ? e.b || "" : "", g:e.g ? 1 : 0});
+    if (out.length >= 12) break;
+  }
+  return out.length ? out : null;
 }
 function friendHit(px, py){
   const [axS, ayS] = anchor(); let best = null;
@@ -5065,7 +5490,8 @@ var OV = {on:false, t:0, sent:""};
 const OVM = {c:null, t:0, id:0, busy:false, ready:null};
 function ovMap(now, R, pr){
   if (now - OVM.t < 800 || OVM.busy || !D || !D.dash) return; OVM.t = now;
-  const W = 800, H = 800, s = 1, m = mirror(), cx = m * D.px, cy = -D.pz;
+  // 1,5 Bildpunkte je Meter (schärfer), 1200 × 1200 = 800 m Ausschnitt – reicht auch bei Vollgas bis zum nächsten Bild
+  const W = 1200, H = 1200, s = 1.5, m = mirror(), cx = m * D.px, cy = -D.pz;
   if (!OVM.c) { OVM.c = document.createElement("canvas"); OVM.c.width = W; OVM.c.height = H; }
   const g = OVM.c.getContext("2d");
   try { renderStatic(g, {w:W, h:H, ax:W / 2, ay:H / 2, rot:0, s, cx, cy, bs:1 / DPR}); } catch (e) { return; }
@@ -5084,12 +5510,23 @@ function ovMap(now, R, pr){
     fetch("/ov/map", {method:"POST", body:bl}).then(() => { OVM.ready = {id, cx, cy, s, w:W, h:H, m}; OVM.busy = false; OV.t = 0; }).catch(() => { OVM.busy = false; });
   }, "image/webp", 0.8);
 }
+function ovKick(){ if (!OV.on) return; OV.t = 0; OV.sent = ""; ovPush(performance.now(), OV.li, OV.lr, OV.lp); }
 function ovPush(now, info, R, pr){
   if (!OV.on) return;
+  OV.li = info; OV.lr = R; OV.lp = pr;
   try { ovMap(now, R, pr); } catch (e) {}
   if (now - OV.t < 380) return; OV.t = now;
   const v = info ? Object.assign({}, info) : {k:null};
   if (OVM.ready) v.map = OVM.ready;
+  v.bl = S.blinkOn ? BL.m : ""; v.fe = {bl:!!S.blinkOn};
+  // Position genau wie im Dashboard: gelernter Straßen-Versatz und Ausrichtung des Autos (statt roher Spielposition)
+  try {
+    if (performance.now() - (CAR.t || 0) > 120) carUpdate();
+    if (CAR.ok) v.fix = {ox:Math.round(CAR.ox * 10) / 10, oz:Math.round(CAR.oz * 10) / 10, yo:trail.yawOff === null ? null : Math.round(trail.yawOff * 1000) / 1000};
+  } catch (e) {}
+  try { const fr = frNear(); if (fr) v.fr = fr; const ah = frAhead(); if (ah) v.ah = ah; } catch (e) {}
+  // markierte Orte in der Nähe (Parkplätze, Tankstellen …) für die Minikarte – immer der aktuelle Stand
+  try { if (LR.pois && LR.pois.length && D && D.dash) { const po = []; for (const p of LR.pois) { if (!isFinite(p.x) || Math.hypot(p.x - D.px, p.z - D.pz) > 900) continue; po.push({x:Math.round(p.x), z:Math.round(p.z), k:p.k}); if (po.length >= 30) break; } if (po.length) v.po = po; } } catch (e) {}
   const txt = JSON.stringify(v); if (OV.sent === txt) return; OV.sent = txt;
   fetch("/ov/push", {method:"POST", body:txt}).catch(() => {});
 }
@@ -6851,7 +7288,7 @@ function buildSettings(){
   ug.appendChild(row("Ladedruck", "", seg("press", [["bar","bar"],["psi","psi"]])));
   ug.appendChild(row("Leistung", "", seg("power", [["ps","PS"],["kw","kW"]])));
   ug.appendChild(row("Sprit-Verbrauch", "Forza hat keinen echten Tank – berechnet aus der Motorleistung", seg("fuelMul", [[1,"Realistisch"],[2,"Erhöht"],[4,"Hoch"]])));
-  ug.appendChild(row("Tankgröße", "Auto = nach Motor geschätzt", seg("fuelCap", [[0,"Auto"],[45,"45 L"],[60,"60 L"],[80,"80 L"]])));
+  ug.appendChild(row("Tankgröße", "Auto = nach Fahrzeugmodell erkannt (unbekannte Modelle über das Gewicht geschätzt)", seg("fuelCap", [[0,"Auto"],[45,"45 L"],[60,"60 L"],[80,"80 L"]])));
   buildFriendSettings();
   const mg = $("mapGroup"); mg.innerHTML = ""; const rg = $("roadGroup"); rg.innerHTML = "";
   if (live && SESS.karte) {
@@ -7355,6 +7792,7 @@ function settingsTidy(){
   move("Updates", "infoGroup");
   const ib = document.querySelector('#scats [data-cat="info"]'); if (ib && ib.lastChild && ib.lastChild.nodeType === 3) ib.lastChild.textContent = "Programm";
   const ih = document.querySelector('.spages>section[data-cat="info"]>h4'); if (ih) ih.textContent = "Programm";
+  try { buildAssist(); } catch (e) { console.error(e); }
   try { buildWheelSettings(); } catch (e) { console.error(e); }
   try { buildOverlaySettings(); } catch (e) { console.error(e); }
   settingsFilter();
