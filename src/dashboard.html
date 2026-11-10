@@ -6398,7 +6398,7 @@ function frCol(id){ let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 +
 function frUpdate(o){
   if (demo && o && o.group !== "Demo") o = Object.assign({}, o, {list:FR.demoList || []});
   if (o && o.group === "Demo") FR.demoList = o.list;
-  FR.on = !!o.on; FR.ok = !!o.ok; FR.name = o.name || ""; FR.group = o.group || ""; FR.upd = o.upd || ""; if (o.lobbys) FR.lobbys = o.lobbys;
+  FR.on = !!o.on; FR.ok = !!o.ok; FR.name = o.name || ""; FR.group = o.group || ""; FR.upd = o.upd || ""; try { updAsk(); } catch (x) {} if (o.lobbys) FR.lobbys = o.lobbys;
   const now = performance.now(), seen = new Set();
   for (const f of o.list || []) {
     seen.add(f.id);
@@ -9094,8 +9094,18 @@ function buildFriendSettings(){
   fg.appendChild(row("Gemeinsam lernen", "Eure gelernten Straßen werden in der Lobby geteilt. Fährst du eine Strecke, die ein Freund schon gefahren ist, wird sie sofort zur Straße", sh));
   const us = document.createElement("div"); us.className = "sbtns";
   const ut = document.createElement("small"); ut.style.cssText = "color:var(--muted);font-weight:600;text-align:right;max-width:240px"; ut.textContent = FR.upd || "Aktuell";
-  us.append(ut, btn("Jetzt prüfen", "", () => { if (live) fetch("/updates/pruefen", {method:"POST"}).then(() => toast("Suche nach Updates …")); }));
+  const upReady = /bereit/.test(FR.upd || "");
+  us.append(ut, upReady ? btn("Jetzt aktualisieren", "pri", updNow) : btn("Jetzt prüfen", "", () => { if (live) fetch("/updates/pruefen", {method:"POST"}).then(() => toast("Suche nach Updates …")); }));
   fg.appendChild(row("Updates", "Programm und Karte kommen automatisch von GitHub – nur signierte Versionen", us));
+}
+// Update sofort einspielen (Dashboard startet kurz neu)
+function updNow(){ if (!live) return; fetch("/updates/jetzt", {method:"POST"}).then(r => r.json()).then(j => toast(j && j.ok ? "Update wird installiert – das Dashboard startet gleich neu" : (j && j.why) || "Ging nicht")).catch(() => toast("ForzaDashboard antwortet nicht")); }
+// Update fertig geladen: einmal je Version fragen, ob es gleich installiert werden soll
+function updAsk(){
+  const m = /Update (\S+) bereit/.exec(FR.upd || ""); if (!m) return;
+  let seen = ""; try { seen = localStorage.getItem("fd.updask") || ""; } catch (e) {}
+  if (seen === m[1]) return; try { localStorage.setItem("fd.updask", m[1]); } catch (e) {}
+  cmSheet('<b>Neue Version ' + esc(m[1]) + ' ist da</b><p>Sie wird automatisch installiert, sobald du kurz stehst oder im Menü bist. Oder jetzt gleich – das Dashboard startet dafür einige Sekunden neu.</p>', [["Jetzt aktualisieren", "pri", updNow], ["Später", "", null]]);
 }
 function lobbyPost(path, body){ return sessPost(path, body).then(j => { if (j && j.liste) FR.lobbys = j.liste; if (j && j.ok === false && j.why) toast(j.why); buildFriendSettings(); return j; }).catch(() => toast("ForzaDashboard antwortet nicht")); }
 function copyText(t){

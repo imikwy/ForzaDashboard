@@ -48,8 +48,15 @@ pub fn repo(s: &Shared) -> String {
     if r.is_empty() { crate::REPO.to_string() } else { r }
 }
 
+// Downloads: kein Gesamt-Zeitlimit (bei langsamer Leitung dauert die exe länger als 60 s), nur bei Stillstand abbrechen
+fn dl_agent() -> ureq::Agent {
+    let mut b = ureq::AgentBuilder::new().timeout_connect(Duration::from_secs(20)).timeout_read(Duration::from_secs(45)).user_agent(&format!("ForzaDashboard/{APP_VER}"));
+    if let Ok(tls) = native_tls::TlsConnector::new() { b = b.tls_connector(Arc::new(tls)); }
+    b.build()
+}
+
 fn get(url: &str, max: u64) -> Result<Vec<u8>, String> {
-    let r = agent().get(url).set("Accept", "application/octet-stream").call().map_err(|e| e.to_string())?;
+    let r = dl_agent().get(url).set("Accept", "application/octet-stream").call().map_err(|e| e.to_string())?;
     let mut out = Vec::new();
     r.into_reader().take(max + 1).read_to_end(&mut out).map_err(|e| e.to_string())?;
     if out.len() as u64 > max { return Err("Download zu groß".into()); }
@@ -194,10 +201,13 @@ pub fn spawn(s: Arc<Shared>) {
             let s2 = s.clone();
             let _ = tokio::task::spawn_blocking(move || check(&s2, n == 0)).await;
             n += 1;
-            // fertig geladenes Programm-Update: erst installieren, wenn seit 60 s keine Daten vom Spiel kommen
-            for _ in 0..(EVERY / 5000) {
+            // fertig geladenes Programm-Update: installieren, sobald gerade nicht gefahren wird (seit 20 s Stillstand,
+            // Menü, Pause oder Spiel zu). Früher: erst wenn gar keine Daten mehr kamen – das passierte bei offenem Forza nie.
+            // Nach einem Fehler schon nach 3 Minuten erneut versuchen statt nach 20.
+            let wait = if s.upd.lock().unwrap().error.is_empty() { EVERY } else { 3 * 60_000 };
+            for _ in 0..(wait / 5000) {
                 tokio::time::sleep(Duration::from_secs(5)).await;
-                let idle = now_ms().saturating_sub(s.last_packet.load(Ordering::Relaxed)) > 60_000;
+                let idle = now_ms().saturating_sub(s.last_drive.load(Ordering::Relaxed)) > 20_000;
                 let ready = s.upd.lock().unwrap().ready.clone();
                 if let (true, Some((v, f))) = (idle, ready) {
                     if s.upd.lock().unwrap().installing { continue; }
@@ -208,6 +218,22 @@ pub fn spawn(s: Arc<Shared>) {
             }
         }
     });
+}
+
+// „Jetzt aktualisieren“: fertig geladenes Update sofort einspielen (sonst erst suchen)
+pub fn install_now(s: &Arc<Shared>) -> Value {
+    let ready = s.upd.lock().unwrap().ready.clone();
+    let Some((v, f)) = ready else {
+        s.upd.lock().unwrap().last = 0;
+        let s2 = s.clone();
+        std::thread::spawn(move || check(&s2, true));
+        return json!({"ok": false, "why": "Noch kein Update geladen – es wird gesucht und geladen, dann nochmal tippen"});
+    };
+    { let mut u = s.upd.lock().unwrap(); if u.installing { return json!({"ok": true}); } u.installing = true; }
+    let s2 = s.clone();
+    let ver = v.clone();
+    std::thread::spawn(move || install_and_restart(&s2, &v, &f));
+    json!({"ok": true, "ver": ver})
 }
 
 pub fn exe_path() -> PathBuf {
@@ -259,7 +285,8 @@ fn install_and_restart(s: &Arc<Shared>, ver: &str, f: &std::path::Path) {
             let mut u = s.upd.lock().unwrap();
             u.installing = false;
             u.ready = None;
-            u.error = format!("Update fehlgeschlagen: {e}");
+            let denied = e.contains("os error 5") || e.to_lowercase().contains("zugriff") || e.to_lowercase().contains("denied");
+            u.error = if denied { "Update fehlgeschlagen: keine Schreibrechte im Programmordner – ForzaDashboard bitte in einen normalen Ordner (z. B. Dokumente) verschieben".into() } else { format!("Update fehlgeschlagen: {e}") };
             log(&u.error);
         }
     }

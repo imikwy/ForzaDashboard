@@ -79,6 +79,8 @@ pub struct Shared {
     pub latest: Mutex<Option<Arc<str>>>,
     pub packets: AtomicU64,
     pub last_packet: AtomicU64,
+    // zuletzt wirklich gefahren (Spiel läuft, Auto rollt) – Forza schickt auch im Menü/Pause ständig Daten
+    pub last_drive: AtomicU64,
     pub last_len: AtomicUsize,
     pub tx: broadcast::Sender<Ev>,
     pub my_pos: Mutex<Option<MyPos>>,
@@ -126,6 +128,7 @@ impl Shared {
             latest: Mutex::new(None),
             packets: AtomicU64::new(0),
             last_packet: AtomicU64::new(0),
+            last_drive: AtomicU64::new(0),
             last_len: AtomicUsize::new(0),
             tx,
             my_pos: Mutex::new(None),

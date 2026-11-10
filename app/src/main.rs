@@ -243,6 +243,7 @@ async fn udp_loop(s: Arc<Shared>, sock: UdpSocket) {
         *s.latest.lock().unwrap() = Some(data.clone());
         s.packets.fetch_add(1, Ordering::Relaxed);
         s.last_packet.store(now_ms(), Ordering::Relaxed);
+        if p.on && p.spd.abs() > 1.5 { s.last_drive.store(now_ms(), Ordering::Relaxed); }
         s.last_len.store(n, Ordering::Relaxed);
         // sofort an die Dashboards schicken (kein Takt-Raster -> kein Ruckeln)
         let _ = s.tx.send(state::Ev { name: None, data });
