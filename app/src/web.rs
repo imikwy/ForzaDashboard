@@ -29,6 +29,7 @@ static VORLAGEN: &[u8] = include_bytes!("../../src/fh6-vorlagen.js");
 static FH6_KARTE: &[u8] = include_bytes!("../../src/fh6-karte.js");
 // Tuning: FH6-Autos (Forza-Wiki, CC BY-SA) und Builds mit Tuning-Code (ForzaFire)
 static TUNING_DATEN: &[u8] = include_bytes!("../../src/tuning-daten.json");
+static BEISPIELE: &[u8] = include_bytes!("../../src/community-beispiele.json");   // Beispiel-Beiträge der Community (nur lokal)
 
 pub fn html_ok() -> bool {
     HTML.contains("const APP_VER") && HTML.contains("fh6-karte.js") && VORLAGEN.len() > 100_000 && FH6_KARTE.len() > 100_000
@@ -41,6 +42,7 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/fh6-vorlagen.js", get(|h: HeaderMap| async move { asset(&h, VORLAGEN, 0) }))
         .route("/fh6-karte.js", get(|h: HeaderMap| async move { asset(&h, FH6_KARTE, 1) }))
         .route("/tuning-daten.json", get(|h: HeaderMap| async move { asset(&h, TUNING_DATEN, 2) }))
+        .route("/community-beispiele.json", get(|h: HeaderMap| async move { asset(&h, BEISPIELE, 3) }))
         .route("/events", get(events))
         .route("/info", get(info))
         .route("/media", get(media_get))
@@ -56,6 +58,8 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/mods/list", get(|State(s): S, Query(q): Q| async move { let k = q.get("kind").cloned().unwrap_or_default(); j(tokio::task::spawn_blocking(move || crate::mods::list(&s, &k)).await.unwrap_or(json!({}))) }))
         .route("/mods/detail", get(|State(s): S, Query(q): Q| async move { let id = q.get("id").and_then(|v| v.parse().ok()).unwrap_or(0); j(tokio::task::spawn_blocking(move || crate::mods::detail(&s, id)).await.unwrap_or(json!({}))) }))
         .route("/mods/key", post(|State(s): S, ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let b = body(&b); let k = b["key"].as_str().unwrap_or("").to_string(); j(tokio::task::spawn_blocking(move || crate::mods::set_key(&s, &k)).await.unwrap_or(json!({}))) }))
+        .route("/mods/pickdir", post(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(tokio::task::spawn_blocking(move || crate::mods::pick_dir(&s)).await.unwrap_or(json!({}))) }))
+        .route("/mods/autodir", post(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(tokio::task::spawn_blocking(move || crate::mods::auto_dir(&s)).await.unwrap_or(json!({}))) }))
         .route("/mods/dir", post(|State(s): S, ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let b = body(&b); j(crate::mods::set_dir(&s, b["dir"].as_str().unwrap_or(""))) }))
         .route("/mods/install", get(|State(s): S, ConnectInfo(a): Addr, Query(q): Q| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let n = |k: &str| q.get(k).and_then(|v| v.parse::<u64>().ok()).unwrap_or(0); crate::mods::install(s.clone(), n("mod"), n("file"), None); j(json!({"ok": true})) }))
         .route("/mods/uninstall", get(|State(s): S, ConnectInfo(a): Addr, Query(q): Q| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let id = q.get("mod").and_then(|v| v.parse().ok()).unwrap_or(0); j(tokio::task::spawn_blocking(move || crate::mods::uninstall(&s, id)).await.unwrap_or(json!({}))) }))
@@ -65,13 +69,38 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/mods/remove", get(|State(s): S, ConnectInfo(a): Addr, Query(q): Q| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let k = q.get("key").cloned().unwrap_or_default(); j(tokio::task::spawn_blocking(move || crate::mods::remove(&s, &k)).await.unwrap_or(json!({}))) }))
         .route("/game/start", get(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(tokio::task::spawn_blocking(move || crate::mods::start_game(&s)).await.unwrap_or(json!({}))) }))
         .route("/tunes", get(|State(s): S| async move { j(tokio::task::spawn_blocking(move || crate::tuning::list(&s)).await.unwrap_or(json!({}))) }))
-        .route("/tunes/add", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(tokio::task::spawn_blocking(move || crate::tuning::add(&s, &b)).await.unwrap_or(json!({}))) }))
+        .route("/tunes/add", post(|State(s): S, b: Bytes| async move { let b = body(&b); let r = tokio::task::spawn_blocking(move || { let r = crate::tuning::add(&s, &b); if r["ok"] == true { crate::profil::activity("post", b["title"].as_str().unwrap_or("Beitrag")); } r }).await.unwrap_or(json!({})); j(r) }))
         .route("/tunes/del", post(|b: Bytes| async move { let b = body(&b); j(crate::tuning::del(b["id"].as_str().unwrap_or(""))) }))
         .route("/tunes/like", post(|b: Bytes| async move { let b = body(&b); j(crate::tuning::like(b["key"].as_str().unwrap_or(""), b["on"].as_bool().unwrap_or(false))) }))
         .route("/tunes/comment", post(|b: Bytes| async move { let b = body(&b); j(crate::tuning::comment(b["key"].as_str().unwrap_or(""), b["x"].as_str().unwrap_or(""))) }))
         .route("/tunes/uncomment", post(|b: Bytes| async move { let b = body(&b); j(crate::tuning::uncomment(b["id"].as_str().unwrap_or(""))) }))
+        .route("/tunes/go", get(|ConnectInfo(a): Addr, Query(q): Q| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::tuning::go(q.get("key").map(String::as_str).unwrap_or(""), q.get("on").map(|v| v == "1").unwrap_or(false))) }))
         .route("/tunes/photo", get(|Query(q): Q| async move { tune_photo(q.get("k").map(String::as_str).unwrap_or("")) }))
         .route("/overlay", get(overlay_page))
+        // Spieler-Profile
+        // Admin (nur von diesem PC aus) und Straßen-Vorschläge
+        .route("/admin", get(|| async move { j(crate::admin::status()) }))
+        .route("/admin/login", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let b = body(&b); j(tokio::task::spawn_blocking(move || crate::admin::login(b["pw"].as_str().unwrap_or(""))).await.unwrap_or(json!({}))) }))
+        .route("/admin/logout", post(|ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::admin::logout()) }))
+        .route("/admin/passwort", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let b = body(&b); j(tokio::task::spawn_blocking(move || crate::admin::set_pw(b["neu"].as_str().unwrap_or(""), b["alt"].as_str().unwrap_or(""))).await.unwrap_or(json!({}))) }))
+        .route("/vorschlaege", get(|| async move { j(crate::admin::list()) }))
+        .route("/vorschlaege/get", get(|Query(q): Q| async move { j(crate::admin::get(q.get("k").map(String::as_str).unwrap_or(""))) }))
+        .route("/vorschlaege/neu", post(|State(s): S, ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let b = body(&b); blocking(s, move |s| crate::admin::neu(&s, &b)).await }))
+        .route("/vorschlaege/del", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::admin::del(body(&b)["vid"].as_str().unwrap_or(""))) }))
+        .route("/vorschlaege/entscheiden", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let b = body(&b); j(crate::admin::decide(b["k"].as_str().unwrap_or(""), b["st"].as_str().unwrap_or(""), b["why"].as_str().unwrap_or(""))) }))
+        .route("/profil", get(|| async move { j(crate::profil::me()) }))
+        .route("/profil/alle", get(|| async move { j(crate::profil::all()) }))
+        .route("/profil/get", get(|Query(q): Q| async move { j(crate::profil::get(q.get("id").map(String::as_str).unwrap_or(""))) }))
+        .route("/profil/check", get(|Query(q): Q| async move { j(crate::profil::check(q.get("u").map(String::as_str).unwrap_or(""))) }))
+        .route("/profil/bild", get(|Query(q): Q| async move { prof_img(q.get("id").map(String::as_str).unwrap_or("")) }))
+        .route("/profil/set", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::profil::set(&body(&b))) }))
+        .route("/profil/bild/set", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::profil::set_avatar(String::from_utf8_lossy(&b).trim())) }))
+        .route("/profil/drive", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::profil::drive(&body(&b))) }))
+        .route("/profil/extra", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::profil::set_extra(&body(&b))) }))
+        .route("/profil/hintergrund", get(|Query(q): Q| async move { prof_bg(q.get("id").map(String::as_str).unwrap_or("")) }))
+        .route("/profil/hintergrund/set", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::profil::set_background(String::from_utf8_lossy(&b).trim())) }))
+        .route("/profil/del", post(|ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::profil::remove()) }))
+        .route("/sys", get(|| async move { j(crate::system::last()) }))
         .route("/ov/state", get(|State(s): S| async move { let on = s.app.get().map(crate::overlay::is_on).unwrap_or(false); j(json!({"on": on})) }))
         .route("/ov/last", get(|| async move { j(crate::overlay::last()) }))
         .route("/ov/toggle", get(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let Some(app) = s.app.get().cloned() else { return j(json!({"ok": false})) }; let on = tokio::task::spawn_blocking(move || crate::overlay::toggle(&app, &s)).await.unwrap_or(false); j(json!({"ok": true, "on": on})) }))
@@ -109,8 +138,8 @@ pub fn router(s: Arc<Shared>) -> Router {
         // Freunde und Lobbys
         .route("/friends/config", get(friends_config))
         .route("/lobby", get(|State(s): S| async move { j(json!({"liste": s.lobbys().list(), "name": s.name(), "on": s.fr_on(), "ok": s.net_ok()})) }))
-        .route("/lobby/neu", post(|State(s): S, b: Bytes| async move { let b = body(&b); let r = s.lobbys().create(b["name"].as_str().unwrap_or(""), &s.name()); lobby_resp(&s, r) }))
-        .route("/lobby/beitreten", post(|State(s): S, b: Bytes| async move { let b = body(&b); let r = s.lobbys().join(b["code"].as_str().unwrap_or("")); lobby_resp(&s, r) }))
+        .route("/lobby/neu", post(|State(s): S, b: Bytes| async move { let b = body(&b); let r = s.lobbys().create(b["name"].as_str().unwrap_or(""), &s.name()); if r["ok"] == true { crate::profil::activity("kol", b["name"].as_str().unwrap_or("Kolonne")); } lobby_resp(&s, r) }))
+        .route("/lobby/beitreten", post(|State(s): S, b: Bytes| async move { let b = body(&b); let r = s.lobbys().join(b["code"].as_str().unwrap_or("")); if r["ok"] == true { if let Some((n, _)) = s.lobbys().find(b["code"].as_str().unwrap_or("")) { crate::profil::activity("kol", &n); } } lobby_resp(&s, r) }))
         .route("/lobby/verlassen", post(|State(s): S, b: Bytes| async move { let b = body(&b); let code = b["code"].as_str().unwrap_or(""); s.sozial().einladungen_zurueck(&crate::util::norm_code(code)); let ok = s.lobbys().leave(code); lobby_resp(&s, json!({"ok": ok})) }))
         .route("/lobby/an", post(|State(s): S, b: Bytes| async move { let b = body(&b); let code = b["code"].as_str().unwrap_or(""); let an = b["an"].as_bool().unwrap_or(false); if !an { s.sozial().einladungen_zurueck(&crate::util::norm_code(code)); } let ok = s.lobbys().set_on(code, an); lobby_resp(&s, json!({"ok": ok})) }))
         // Freunde, Einladungen, Online-Modus
@@ -139,6 +168,8 @@ pub fn router(s: Arc<Shared>) -> Router {
             j(json!({"ok": true, "soz": s.sozial().state()}))
         }))
         .route("/lobby/wegpunkt", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.lobbys().send_wp(&b, &s.name()); j(json!({"ok": ok})) }))
+        .route("/lobby/chat", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().send_chat(&b, &s.name())) }))
+        .route("/lobby/kick", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().vote(&b, &s.name())) }))
         .route("/lobby/wegpunkt/weg", post(|State(s): S| async move { let ok = s.lobbys().clear_wp(); j(json!({"ok": ok})) }))
         .route("/lobby/name", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.lobbys().rename(b["code"].as_str().unwrap_or(""), b["name"].as_str().unwrap_or("")); lobby_resp(&s, json!({"ok": ok})) }))
         // gelernte Straßen
@@ -166,8 +197,8 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/karte/export", get(karte_export))
         // Bearbeiten-Sitzung
         .route("/sitzung", get(|State(s): S| async move { blocking(s, |s| dienst::sess_info(&s)).await }))
-        .route("/sitzung/neu", post(|State(s): S, b: Bytes| async move { let b = body(&b); blocking(s, move |s| merge(s.sitz().create(b["title"].as_str().unwrap_or("")), dienst::sess_info(&s))).await }))
-        .route("/sitzung/beitreten", post(|State(s): S, b: Bytes| async move { let b = body(&b); blocking(s, move |s| merge(s.sitz().join(b["code"].as_str().unwrap_or("")), dienst::sess_info(&s))).await }))
+        .route("/sitzung/neu", post(|State(s): S, b: Bytes| async move { let b = body(&b); blocking(s, move |s| if !crate::admin::unlocked() { merge(json!({"ok": false, "needAdmin": true, "why": "Die offizielle Karte bearbeitet nur der Admin – als Spieler kannst du Verbesserungen vorschlagen"}), dienst::sess_info(&s)) } else { merge(s.sitz().create(b["title"].as_str().unwrap_or("")), dienst::sess_info(&s)) }).await }))
+        .route("/sitzung/beitreten", post(|State(s): S, b: Bytes| async move { let b = body(&b); blocking(s, move |s| if !crate::admin::unlocked() { merge(json!({"ok": false, "needAdmin": true, "why": "Die offizielle Karte bearbeitet nur der Admin – als Spieler kannst du Verbesserungen vorschlagen"}), dienst::sess_info(&s)) } else { merge(s.sitz().join(b["code"].as_str().unwrap_or("")), dienst::sess_info(&s)) }).await }))
         .route("/sitzung/verlassen", post(|State(s): S| async move { blocking(s, |s| { s.sitz().close(true); merge(json!({"ok": true}), dienst::sess_info(&s)) }).await }))
         .route("/sitzung/umstellen", post(|State(s): S| async move { blocking(s, |s| {
             let Some(c) = s.sitz().cur().filter(|c| c.is_host()) else { return json!({"ok": false, "why": "Nur der Host kann die Sitzung umstellen"}) };
@@ -195,6 +226,7 @@ pub fn router(s: Arc<Shared>) -> Router {
         }).await }))
         .route("/sitzung/veroeffentlichen", post(|State(s): S, b: Bytes| async move { let b = body(&b); blocking(s, move |s| {
             let Some(c) = s.sitz().cur().filter(|c| c.ready()) else { return json!({"ok": false, "why": "Keine Sitzung aktiv"}) };
+            if !crate::admin::unlocked() { return json!({"ok": false, "needAdmin": true, "why": "Die offizielle Karte bearbeitet nur der Admin – als Spieler kannst du Verbesserungen vorschlagen"}); }
             if b["vorschau"].as_bool().unwrap_or(false) { return veroeffentlichen::preview(&c, &s.karten, &s.repo_root()); }
             let r = veroeffentlichen::publish(&c, &s.repo_root(), b["notiz"].as_str().unwrap_or(""), &s.name(), b["massenloeschung"].as_bool().unwrap_or(false));
             if r["ok"] == true { c.send(json!({"y": "pub", "n": s.name()})); }
@@ -240,7 +272,7 @@ async fn blocking(s: Arc<Shared>, f: impl FnOnce(Arc<Shared>) -> Value + Send + 
 
 // große Kartenbilder: einmal komprimiert, danach aus dem Zwischenspeicher des Browsers
 fn asset(h: &HeaderMap, data: &'static [u8], slot: usize) -> Response {
-    static GZ: [OnceLock<Vec<u8>>; 3] = [OnceLock::new(), OnceLock::new(), OnceLock::new()];
+    static GZ: [OnceLock<Vec<u8>>; 4] = [OnceLock::new(), OnceLock::new(), OnceLock::new(), OnceLock::new()];
     let tag = format!("\"{}-{}\"", APP_VER, data.len());
     if h.get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok()) == Some(tag.as_str()) { return StatusCode::NOT_MODIFIED.into_response(); }
     let gz = h.get(header::ACCEPT_ENCODING).and_then(|v| v.to_str().ok()).is_some_and(|v| v.contains("gzip"));
@@ -253,7 +285,27 @@ fn asset(h: &HeaderMap, data: &'static [u8], slot: usize) -> Response {
     }
 }
 
+fn prof_bg(id: &str) -> Response {
+    use base64::Engine;
+    let Some(d) = crate::profil::background(id) else { return (StatusCode::NOT_FOUND, "").into_response() };
+    let Some((head, b64)) = d.split_once(",") else { return (StatusCode::NOT_FOUND, "").into_response() };
+    let ct = if head.contains("webp") { "image/webp" } else { "image/jpeg" };
+    match base64::engine::general_purpose::STANDARD.decode(b64) {
+        Ok(b) => ([(header::CONTENT_TYPE, ct), (header::CACHE_CONTROL, "max-age=60")], b).into_response(),
+        Err(_) => (StatusCode::NOT_FOUND, "").into_response(),
+    }
+}
 // Foto eines Tuning-Beitrags (liegt als data:-URL vor) als Bild ausliefern
+fn prof_img(id: &str) -> Response {
+    use base64::Engine;
+    let Some(d) = crate::profil::avatar(id) else { return (StatusCode::NOT_FOUND, "").into_response() };
+    let Some((head, b64)) = d.split_once(",") else { return (StatusCode::NOT_FOUND, "").into_response() };
+    let ct = if head.contains("webp") { "image/webp" } else { "image/jpeg" };
+    match base64::engine::general_purpose::STANDARD.decode(b64) {
+        Ok(b) => ([(header::CONTENT_TYPE, ct), (header::CACHE_CONTROL, "max-age=60")], b).into_response(),
+        Err(_) => (StatusCode::NOT_FOUND, "").into_response(),
+    }
+}
 fn tune_photo(k: &str) -> Response {
     use base64::Engine;
     let Some(d) = crate::tuning::photo(k) else { return (StatusCode::NOT_FOUND, "").into_response() };

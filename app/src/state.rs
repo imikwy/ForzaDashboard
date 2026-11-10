@@ -31,6 +31,9 @@ pub fn blink_now() -> &'static str {
     match v & 3 { 1 => "l", 2 => "r", 3 => "h", _ => "" }
 }
 // Blinker eines anderen aus seiner Nachricht (nur bekannte Werte)
+pub fn pid_of(o: &serde_json::Value) -> String {
+    o["pid"].as_str().filter(|p| p.len() == 16 && p.chars().all(|c| c.is_ascii_hexdigit())).unwrap_or("").to_string()
+}
 pub fn blink_of(o: &serde_json::Value) -> String {
     match o["b"].as_str() { Some(b @ ("l" | "r" | "h")) => b.to_string(), _ => String::new() }
 }
@@ -56,6 +59,7 @@ pub struct Friend {
     pub g: u8,
     pub seen: u64,
     pub b: String,
+    pub pid: String,
 }
 
 // gelernte Straßen der Freunde (bleiben auf diesem PC, gehören nicht zur Karte)

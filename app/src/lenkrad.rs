@@ -11,6 +11,8 @@ use std::sync::{Arc, Mutex, OnceLock};
 static STATE: OnceLock<Arc<Shared>> = OnceLock::new();
 static PREV: Mutex<Option<HashMap<isize, Vec<u16>>>> = Mutex::new(None);
 static INFO: Mutex<Option<HashMap<isize, (String, String, Vec<u8>)>>> = Mutex::new(None);
+// Tastatur: gerade gehaltene Tasten (Windows wiederholt gehaltene Tasten – nur der erste Druck zählt)
+static KEYS: Mutex<Vec<u16>> = Mutex::new(Vec::new());
 
 fn vendor(v: u32) -> &'static str {
     match v {
@@ -41,7 +43,8 @@ unsafe fn run() {
     RegisterClassW(&wc);
     let Ok(hwnd) = CreateWindowExW(WINDOW_EX_STYLE(0), w!("FDLenkrad"), w!(""), WINDOW_STYLE(0), 0, 0, 0, 0, Some(HWND_MESSAGE), None, Some(inst.into()), None) else { log("Lenkrad-Tasten: kein Empfangsfenster"); return };
     // Joystick (Lenkräder) und Gamepad, auch im Hintergrund
-    let devs = [0x04u16, 0x05, 0x08].map(|u| RAWINPUTDEVICE { usUsagePage: 0x01, usUsage: u, dwFlags: RIDEV_INPUTSINK | RIDEV_DEVNOTIFY, hwndTarget: hwnd });
+    // dazu die Tastatur (für alle ohne Lenkrad/Controller): Tasten kommen als btn 2000 + virtueller Tastencode
+    let devs = [0x04u16, 0x05, 0x08, 0x06].map(|u| RAWINPUTDEVICE { usUsagePage: 0x01, usUsage: u, dwFlags: RIDEV_INPUTSINK | RIDEV_DEVNOTIFY, hwndTarget: hwnd });
     if RegisterRawInputDevices(&devs, std::mem::size_of::<RAWINPUTDEVICE>() as u32).is_err() { log("Lenkrad-Tasten: Anmeldung bei Windows fehlgeschlagen"); return; }
     let mut msg = MSG::default();
     while GetMessageW(&mut msg, None, 0, 0).as_bool() { DispatchMessageW(&msg); }
@@ -64,6 +67,7 @@ unsafe fn handle(lp: windows::Win32::Foundation::LPARAM) {
     let mut buf = vec![0u8; size as usize];
     if GetRawInputData(h, RID_INPUT, Some(buf.as_mut_ptr() as _), &mut size, hs) != size { return; }
     let ri = &*(buf.as_ptr() as *const RAWINPUT);
+    if ri.header.dwType == windows::Win32::UI::Input::RIM_TYPEKEYBOARD.0 { key_event(ri.data.keyboard.VKey, ri.data.keyboard.Flags); return; }
     if ri.header.dwType != RIM_TYPEHID.0 { return; }
     let dev = ri.header.hDevice;
     let key = dev.0 as isize;
@@ -112,4 +116,32 @@ unsafe fn handle(lp: windows::Win32::Foundation::LPARAM) {
     for b in old.iter().filter(|b| !pressed.contains(b)) {
         if let Some(s) = STATE.get() { s.emit(Some("padup"), json!({"dev": id, "btn": b}).to_string()); }
     }
+}
+
+// Tastatur nur auswerten, wenn Forza oder das Dashboard vorne ist (sonst lösen z. B. Tippen im Browser oder Discord Aktionen aus)
+unsafe fn forza_vorne() -> bool {
+    use windows::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowTextW};
+    let h = GetForegroundWindow();
+    let mut buf = [0u16; 256];
+    let n = GetWindowTextW(h, &mut buf);
+    String::from_utf16_lossy(&buf[..n.max(0) as usize]).to_lowercase().contains("forza")
+}
+
+unsafe fn key_event(vk: u16, flags: u16) {
+    if vk == 0 || vk >= 0xFF { return; }
+    let up = flags & 1 != 0;   // RI_KEY_BREAK
+    let mut keys = KEYS.lock().unwrap();
+    if up {
+        if !keys.contains(&vk) { return; }
+        keys.retain(|k| *k != vk);
+        drop(keys);
+        if let Some(s) = STATE.get() { s.emit(Some("padup"), json!({"dev": "KBD", "btn": 2000 + vk as u32}).to_string()); }
+        return;
+    }
+    if keys.contains(&vk) { return; }
+    if !forza_vorne() { return; }
+    keys.push(vk);
+    let held: Vec<u32> = keys.iter().map(|k| 2000 + *k as u32).collect();
+    drop(keys);
+    if let Some(s) = STATE.get() { s.emit(Some("pad"), json!({"dev": "KBD", "name": "Tastatur", "btn": 2000 + vk as u32, "held": held}).to_string()); }
 }

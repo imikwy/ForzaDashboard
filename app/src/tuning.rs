@@ -43,7 +43,10 @@ fn clean(v: &Value) -> Option<Value> {
     let id = clean_id(v["id"].as_str().unwrap_or(""));
     let car = take_chars(v["car"].as_str().unwrap_or("").trim(), 70);
     let title = take_chars(v["title"].as_str().unwrap_or("").trim(), 60);
-    if id.is_empty() || car.is_empty() { return None; }
+    let k = match v["k"].as_str() { Some("event") => "event", Some("tune") => "tune", _ => "foto" };
+    if id.is_empty() || (car.is_empty() && k != "event") { return None; }
+    let fin = |x: &Value| x.as_f64().filter(|f| f.is_finite() && f.abs() < 1e6).map(|f| (f * 10.0).round() / 10.0);
+    let md = v["mod"]["id"].as_u64().filter(|i| *i > 0 && *i < 10_000_000).map(|i| json!({"id": i, "n": take_chars(v["mod"]["n"].as_str().unwrap_or("").trim(), 60)})).unwrap_or(Value::Null);
     let art = v["art"].as_str().filter(|a| ARTEN.contains(a)).unwrap_or("strasse");
     let pi: String = v["pi"].as_str().unwrap_or("").chars().filter(|c| c.is_ascii_alphanumeric() || *c == ' ').take(8).collect();
     let tags: Vec<Value> = v["tags"].as_array().map(|a| a.iter().filter_map(|x| x.as_str()).map(|x| take_chars(x.trim(), 18)).filter(|x| !x.is_empty()).take(6).map(|x| json!(x)).collect()).unwrap_or_default();
@@ -51,6 +54,7 @@ fn clean(v: &Value) -> Option<Value> {
         "id": id, "car": car, "ord": v["ord"].as_u64().filter(|o| *o < 100_000).unwrap_or(0), "title": title,
         "text": take_chars(v["text"].as_str().unwrap_or("").trim(), 800), "code": clean_code(v["code"].as_str().unwrap_or("")),
         "art": art, "pi": pi.trim(), "tags": tags, "t": v["t"].as_u64().unwrap_or(0), "ph": v["ph"].as_bool().unwrap_or(false),
+        "k": k, "at": if k == "event" { v["at"].as_u64().unwrap_or(0) } else { 0 }, "x": fin(&v["x"]), "z": fin(&v["z"]), "place": take_chars(v["place"].as_str().unwrap_or("").trim(), 50), "mod": md,
     }))
 }
 fn clean_cm(v: &Value) -> Option<Value> {
@@ -84,7 +88,9 @@ pub fn init(s: &Arc<Shared>) {
         let likes: Vec<Value> = o["likes"].as_array().map(|a| a.iter().filter_map(|x| x.as_str()).filter(|x| x.len() <= 40).take(500).map(|x| json!(x)).collect()).unwrap_or_default();
         let cm: Vec<Value> = o["cm"].as_array().map(|a| a.iter().take(200).filter_map(clean_cm).collect()).unwrap_or_default();
         let n = take_chars(o["n"].as_str().unwrap_or("Fahrer").trim(), 24);
-        tu.alle.lock().unwrap().insert(who.to_string(), json!({"n": n, "t": o["t"].as_u64().unwrap_or(0), "posts": posts, "likes": likes, "cm": cm}));
+        let go: Vec<Value> = o["go"].as_array().map(|a| a.iter().filter_map(|x| x.as_str()).filter(|x| x.len() <= 40).take(100).map(|x| json!(x)).collect()).unwrap_or_default();
+        let pid = crate::state::pid_of(&o);
+        tu.alle.lock().unwrap().insert(who.to_string(), json!({"n": n, "t": o["t"].as_u64().unwrap_or(0), "posts": posts, "likes": likes, "cm": cm, "go": go, "pid": pid}));
     }));
     *tu.k.lock().unwrap() = Some(k);
     // eigenen Stand ablegen: gleich, dann alle 20 Minuten (falls ein Vermittler neu gestartet ist)
@@ -105,9 +111,11 @@ impl Tuning {
         let posts = m["posts"].as_array().cloned().unwrap_or_default();
         let likes = m["likes"].as_array().cloned().unwrap_or_default();
         let cm = m["cm"].as_array().cloned().unwrap_or_default();
-        if posts.is_empty() && likes.is_empty() && cm.is_empty() { return; }
-        let n = self.name.lock().unwrap().clone();
-        let msg = json!({"y": "tunes", "n": if n.is_empty() { "Fahrer".to_string() } else { n }, "t": now_ms(), "posts": posts, "likes": likes, "cm": cm});
+        let go = m["go"].as_array().cloned().unwrap_or_default();
+        if posts.is_empty() && likes.is_empty() && cm.is_empty() && go.is_empty() { return; }
+        let n = crate::profil::my_name().unwrap_or_else(|| self.name.lock().unwrap().clone());
+        let mut msg = json!({"y": "tunes", "n": if n.is_empty() { "Fahrer".to_string() } else { n }, "t": now_ms(), "posts": posts, "likes": likes, "cm": cm, "go": go});
+        if let Some(pid) = crate::profil::my_id() { msg["pid"] = json!(pid); }
         let k = self.k.lock().unwrap();
         let Some(k) = k.as_ref() else { return };
         k.send_to(&msg, &format!("u/{}", self.me), true);
@@ -128,7 +136,11 @@ pub fn list(s: &Shared) -> Value {
     let mine = tu.mine.lock().unwrap().clone();
     let me_n = s.name();
     let mut alle = tu.alle.lock().unwrap().clone();
-    alle.insert(tu.me.clone(), json!({"n": me_n, "posts": mine["posts"], "likes": mine["likes"], "cm": mine["cm"]}));
+    let me_n = crate::profil::my_name().unwrap_or(me_n);
+    alle.insert(tu.me.clone(), json!({"n": me_n, "posts": mine["posts"], "likes": mine["likes"], "cm": mine["cm"], "go": mine["go"], "pid": crate::profil::my_id().unwrap_or_default()}));
+    let my_go: Vec<String> = mine["go"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default();
+    let mut goers: HashMap<String, Vec<Value>> = HashMap::new();
+    for (_, v) in &alle { for g in v["go"].as_array().into_iter().flatten() { if let Some(g) = g.as_str() { goers.entry(g.to_string()).or_default().push(json!({"n": v["n"], "pid": v["pid"]})); } } }
     let my_likes: Vec<String> = mine["likes"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default();
     let mut likes: HashMap<String, u64> = HashMap::new();
     let mut cms: HashMap<String, Vec<Value>> = HashMap::new();
@@ -150,7 +162,8 @@ pub fn list(s: &Shared) -> Value {
             let key = format!("{who}:{id}");
             let has = if own { tu.foto_file(id).exists() } else { bilder.contains_key(&key) };
             let mut x = p.clone();
-            x["key"] = json!(key); x["by"] = json!(n); x["mine"] = json!(own);
+            x["key"] = json!(key); x["by"] = json!(n); x["mine"] = json!(own); x["pid"] = v["pid"].clone();
+            let g = goers.get(&key).cloned().unwrap_or_default(); x["goers"] = json!(g.len()); x["gl"] = json!(g.into_iter().take(5).collect::<Vec<_>>()); x["going"] = json!(my_go.contains(&key));
             x["img"] = if has { json!(format!("/tunes/photo?k={key}")) } else { Value::Null };
             x["likes"] = json!(likes.get(&key).copied().unwrap_or(0)); x["liked"] = json!(my_likes.contains(&key));
             let mut c = cms.remove(&key).unwrap_or_default();
@@ -159,7 +172,11 @@ pub fn list(s: &Shared) -> Value {
             out.push(x);
         }
     }
-    json!({"ok": true, "net": tu.net.ok(), "posts": out, "players": alle.len()})
+    // Herzen für Mods (Schlüssel „mod:<id>“) – zählen über alle Spieler wie bei Beiträgen
+    let mut modl = serde_json::Map::new();
+    for (k, n) in &likes { if let Some(id) = k.strip_prefix("mod:") { modl.insert(id.to_string(), json!(n)); } }
+    let mod_mine: Vec<&str> = my_likes.iter().filter_map(|k| k.strip_prefix("mod:")).collect();
+    json!({"ok": true, "net": tu.net.ok(), "posts": out, "players": alle.len(), "modLikes": modl, "modMine": mod_mine})
 }
 
 pub fn photo(key: &str) -> Option<String> {
@@ -172,12 +189,16 @@ pub fn photo(key: &str) -> Option<String> {
 pub fn add(s: &Shared, v: &Value) -> Value {
     let Some(tu) = t() else { return json!({"ok": false, "why": "Nicht bereit"}) };
     let img = v["img"].as_str().unwrap_or("");
-    if !ok_img(img) { return json!({"ok": false, "why": "Bitte ein Foto deines Autos hinzufügen"}); }
+    let kind = v["k"].as_str().unwrap_or("foto");
+    if kind == "foto" && !ok_img(img) { return json!({"ok": false, "why": "Bitte ein Foto hinzufügen"}); }
+    if !img.is_empty() && !ok_img(img) { return json!({"ok": false, "why": "Das Foto ist zu groß"}); }
+    if kind == "event" && v["at"].as_u64().unwrap_or(0) < now_ms().saturating_sub(3_600_000) { return json!({"ok": false, "why": "Bitte eine Startzeit in der Zukunft wählen"}); }
+    if kind == "tune" && clean_code(v["code"].as_str().unwrap_or("")).is_empty() { return json!({"ok": false, "why": "Der Tuning-Code hat 9 Ziffern"}); }
     let code_in = v["code"].as_str().unwrap_or("");
     if !code_in.trim().is_empty() && clean_code(code_in).is_empty() { return json!({"ok": false, "why": "Der Tuning-Code hat 9 Ziffern"}); }
     let mut v = v.clone();
     let id = random_hex(5);
-    v["id"] = json!(id); v["t"] = json!(now_ms()); v["ph"] = json!(true);
+    v["id"] = json!(id); v["t"] = json!(now_ms()); v["ph"] = json!(!img.is_empty());
     let Some(p) = clean(&v) else { return json!({"ok": false, "why": "Bitte das Auto angeben"}) };
     if p["title"].as_str().unwrap_or("").is_empty() { return json!({"ok": false, "why": "Bitte einen Titel angeben"}); }
     {
@@ -187,10 +208,10 @@ pub fn add(s: &Shared, v: &Value) -> Value {
         if a.len() >= MAX_POSTS { return json!({"ok": false, "why": "Höchstens 20 eigene Beiträge – lösche erst einen alten"}); }
         a.insert(0, p);
     }
-    if std::fs::write(tu.foto_file(&id), img).is_err() { return json!({"ok": false, "why": "Foto konnte nicht gespeichert werden"}); }
+    if !img.is_empty() && std::fs::write(tu.foto_file(&id), img).is_err() { return json!({"ok": false, "why": "Foto konnte nicht gespeichert werden"}); }
     *tu.name.lock().unwrap() = s.name();
     tu.save();
-    if let Some(k) = tu.k.lock().unwrap().as_ref() { k.send_to(&json!({"y": "ph", "id": id, "img": img}), &format!("u/{}/p/{id}", tu.me), true); }
+    if !img.is_empty() { if let Some(k) = tu.k.lock().unwrap().as_ref() { k.send_to(&json!({"y": "ph", "id": id, "img": img}), &format!("u/{}/p/{id}", tu.me), true); } }
     tu.publish(false);
     log("Tuning-Beitrag geteilt");
     json!({"ok": true})
@@ -220,6 +241,22 @@ pub fn like(key: &str, on: bool) -> Value {
         let a = m["likes"].as_array_mut().unwrap();
         a.retain(|x| x.as_str() != Some(key));
         if on { a.push(json!(key)); if a.len() > 500 { a.remove(0); } }
+    }
+    tu.save();
+    tu.publish(false);
+    json!({"ok": true})
+}
+
+// an einem Event teilnehmen / absagen (für alle sichtbar)
+pub fn go(key: &str, on: bool) -> Value {
+    let Some(tu) = t() else { return json!({"ok": false}) };
+    if key.len() > 40 || !key.contains(':') { return json!({"ok": false}); }
+    {
+        let mut m = tu.mine.lock().unwrap();
+        if !m["go"].is_array() { m["go"] = json!([]); }
+        let a = m["go"].as_array_mut().unwrap();
+        a.retain(|x| x.as_str() != Some(key));
+        if on { a.push(json!(key)); if a.len() > 100 { a.remove(0); } }
     }
     tu.save();
     tu.publish(false);

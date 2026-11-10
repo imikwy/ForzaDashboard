@@ -237,7 +237,7 @@ impl Sozial {
             "pos" => {
                 let num = |k: &str| o[k].as_f64().filter(|f| f.is_finite()).unwrap_or(0.0);
                 let (Some(x), Some(z)) = (o["x"].as_f64(), o["z"].as_f64()) else { return };
-                self.spieler.lock().unwrap().insert(d.to_string(), Friend { n: take_chars(o["n"].as_str().unwrap_or("Fahrer"), 24), x, z, h: num("h"), v: num("v"), c: num("c") as i64, g: if num("g") != 0.0 { 1 } else { 0 }, seen: now_ms(), b: crate::state::blink_of(&o) });
+                self.spieler.lock().unwrap().insert(d.to_string(), Friend { n: take_chars(o["n"].as_str().unwrap_or("Fahrer"), 24), x, z, h: num("h"), v: num("v"), c: num("c") as i64, g: if num("g") != 0.0 { 1 } else { 0 }, seen: now_ms(), b: crate::state::blink_of(&o), pid: crate::state::pid_of(&o) });
             }
             "bye" => { self.spieler.lock().unwrap().remove(d); }
             _ => {}
@@ -272,7 +272,7 @@ impl Sozial {
         }
         let r = |v: f64, k: f64| (v * k).round() / k;
         let m = match p {
-            Some(p) if fresh => { let mut m = json!({"y": "pos", "d": self.dev, "n": name, "x": r(p.x, 10.0), "z": r(p.z, 10.0), "h": r(p.h, 1000.0), "v": r(p.v, 10.0), "c": p.c, "g": 1}); let b = crate::state::blink_now(); if !b.is_empty() { m["b"] = json!(b); } m }
+            Some(p) if fresh => { let mut m = json!({"y": "pos", "d": self.dev, "n": name, "x": r(p.x, 10.0), "z": r(p.z, 10.0), "h": r(p.h, 1000.0), "v": r(p.v, 10.0), "c": p.c, "g": 1}); let b = crate::state::blink_now(); if !b.is_empty() { m["b"] = json!(b); } if let Some(pid) = crate::profil::my_id() { m["pid"] = json!(pid); } m }
             _ => json!({"y": "hb", "d": self.dev, "n": name}),
         };
         k.send(&m);
@@ -281,7 +281,7 @@ impl Sozial {
     // Online-Spieler für die Karte (gleiches Format wie die Freunde aus den Kolonnen, dazu w = 1)
     pub fn welt_list(&self) -> Vec<Value> {
         let now = now_ms();
-        self.spieler.lock().unwrap().iter().map(|(id, f)| json!({"id": id, "n": f.n, "x": f.x, "z": f.z, "h": f.h, "v": f.v, "c": f.c, "g": f.g, "b": f.b, "age": now.saturating_sub(f.seen), "w": 1})).collect()
+        self.spieler.lock().unwrap().iter().map(|(id, f)| json!({"id": id, "n": f.n, "x": f.x, "z": f.z, "h": f.h, "v": f.v, "c": f.c, "g": f.g, "b": f.b, "pid": f.pid, "age": now.saturating_sub(f.seen), "w": 1})).collect()
     }
 
     pub fn state(&self) -> Value {

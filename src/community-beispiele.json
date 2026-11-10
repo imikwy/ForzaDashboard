@@ -1,0 +1,452 @@
+{
+ "hinweis": "Beispiel-Beiträge für die Community (nur lokal angezeigt). Fotos in 4K von Wikimedia Commons, Lizenzen siehe credit. Tuning-Codes sind Platzhalter.",
+ "posts": [
+  {
+   "key": "demo:ev5",
+   "k": "event",
+   "by": "lena.gt",
+   "title": "Nachtfahrt mit Fotostopps",
+   "text": "Entspannt durch die Neonstraßen, alle 15 Minuten ein Halt für Fotos. Kamera-Mods ausdrücklich erwünscht.",
+   "place": "Neonviertel",
+   "rel": {
+    "wd": 2,
+    "h": 23
+   },
+   "goers": 9,
+   "gl": [
+    "anna_rs",
+    "marco.v10"
+   ],
+   "art": "strasse",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Yasukuni-dori_Avenue_at_night_with_vehicles_and_colorful_neon_street_signs%2C_Shinjuku%2C_Tokyo%2C_Japan.jpg/3840px-Yasukuni-dori_Avenue_at_night_with_vehicles_and_colorful_neon_street_signs%2C_Shinjuku%2C_Tokyo%2C_Japan.jpg",
+   "credit": "Foto: Basile Morin, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 3072
+  },
+  {
+   "key": "demo:ev1",
+   "k": "event",
+   "by": "kenji_touge",
+   "title": "Touge-Abend am Pass",
+   "text": "Ruhige Ausfahrt über die Kehren, danach Treffen am oberen Parkplatz. Saubere Linie statt Vollgas – jeder ist willkommen.",
+   "place": "Kehren am Pass",
+   "rel": {
+    "wd": 6,
+    "h": 21
+   },
+   "goers": 7,
+   "gl": [
+    "anna_rs",
+    "lena.gt",
+    "jonas_rx"
+   ],
+   "art": "touge",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Irohazaka_%2852506196693%29.jpg/3840px-Irohazaka_%2852506196693%29.jpg",
+   "credit": "Foto: Raita Futo from Tokyo, Japan, CC BY 2.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2569
+  },
+  {
+   "key": "demo:ev6",
+   "k": "event",
+   "by": "lena.gt",
+   "title": "Regenrunde durch die Stadt",
+   "text": "Wenn es regnet, ist die Stadt am schönsten. Langsam fahren, Spiegelungen genießen, unterwegs an der großen Kreuzung halten.",
+   "place": "Bahnhofsviertel",
+   "rel": {
+    "wd": 4,
+    "h": 22
+   },
+   "goers": 6,
+   "gl": [
+    "takumi.86",
+    "subie_nori"
+   ],
+   "art": "strasse",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/Shinjuku_in_the_Rain_%286969744906%29.jpg/3840px-Shinjuku_in_the_Rain_%286969744906%29.jpg",
+   "credit": "Foto: Michael Day, CC BY 2.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2560
+  },
+  {
+   "key": "demo:ev3",
+   "k": "event",
+   "by": "nightrunner",
+   "title": "Großes Treffen am Autobahn-Parkplatz",
+   "text": "Der Klassiker: alle auf den großen Parkplatz, Autos zeigen, quatschen, danach in einer langen Kolonne los. Ab 16 Leuten gibt es fünffache EP.",
+   "place": "Parkplatz an der Autobahn",
+   "rel": {
+    "wd": 5,
+    "h": 22
+   },
+   "goers": 23,
+   "gl": [
+    "kenji_touge",
+    "anna_rs",
+    "subie_nori",
+    "marco.v10"
+   ],
+   "art": "strasse",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Daikoku_Parking_Area_-01.jpg/3840px-Daikoku_Parking_Area_-01.jpg",
+   "credit": "Foto: Aimaimyi, CC BY-SA 3.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 1079
+  },
+  {
+   "key": "demo:ev7",
+   "k": "event",
+   "by": "nightrunner",
+   "title": "Brückenfahrt bei Nacht",
+   "text": "Einmal über die große Brücke und zurück an der Uferstraße. Treffpunkt vor der Auffahrt.",
+   "place": "Vor der Brückenauffahrt",
+   "rel": {
+    "wd": 1,
+    "h": 22
+   },
+   "goers": 11,
+   "gl": [
+    "kenji_touge",
+    "lena.gt"
+   ],
+   "art": "strasse",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Rainbow_Bridge%2C_Tokyo_20201112.jpg/3840px-Rainbow_Bridge%2C_Tokyo_20201112.jpg",
+   "credit": "Foto: Suicasmo, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2560
+  },
+  {
+   "key": "demo:ev8",
+   "k": "event",
+   "by": "kenji_touge",
+   "title": "Stadtautobahn-Cruise",
+   "text": "Gemütlich in der Kolonne über die Hochstraßen, Abstand halten, rechtzeitig blinken. Perfekt für neue Fahrer.",
+   "place": "Auffahrt Innenstadt",
+   "rel": {
+    "wd": 0,
+    "h": 21
+   },
+   "goers": 14,
+   "gl": [
+    "anna_rs",
+    "takumi.86",
+    "kaito_na1"
+   ],
+   "art": "strasse",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/03/Route_5_%28Shuto_Expressway%29_night_2015_July.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "credit": "Foto: Morio, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 2560,
+   "ih": 3840
+  },
+  {
+   "key": "demo:ev2",
+   "k": "event",
+   "by": "nightrunner",
+   "title": "Car-Meet in der Stadt",
+   "text": "Treffpunkt im Zentrum, dann gemeinsame Runde durch die Stadt. Bringt eure schönsten Builds mit.",
+   "place": "Innenstadt",
+   "rel": {
+    "wd": 0,
+    "h": 18
+   },
+   "goers": 12,
+   "gl": [
+    "kenji_touge",
+    "anna_rs"
+   ],
+   "art": "strasse",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/GINZA_%28Unsplash%29.jpg/3840px-GINZA_%28Unsplash%29.jpg",
+   "credit": "Foto: Redd Angelo reddangelo16, CC0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2560
+  },
+  {
+   "key": "demo:ev4",
+   "k": "event",
+   "by": "kenji_touge",
+   "title": "Bergstrecke: Linien üben",
+   "text": "Wir fahren die Bergstraße mehrmals hoch und runter, langsam anfangen und die Linie verbessern. Ideal für Einsteiger.",
+   "place": "Bergstraße, unterer Parkplatz",
+   "rel": {
+    "wd": 3,
+    "h": 20
+   },
+   "goers": 5,
+   "gl": [
+    "takumi.86",
+    "lena.gt"
+   ],
+   "art": "touge",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Hakone_Turnpike_20140412-2.jpg/3840px-Hakone_Turnpike_20140412-2.jpg",
+   "credit": "Foto: PekePON, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2160
+  },
+  {
+   "key": "demo:p10",
+   "k": "foto",
+   "by": "lena.gt",
+   "title": "Blaue Stunde – fünf Minuten, dann war das Licht weg",
+   "car": "2023 Porsche 911 GT3 RS",
+   "likes": 52,
+   "mod": {
+    "id": 257,
+    "n": "Rich and Realistic – Visual Overhaul"
+   },
+   "art": "strasse",
+   "ago": 55,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Buildings_with_colorful_neon_street_signs_at_blue_hour%2C_Shinjuku%2C_Tokyo.jpg/3840px-Buildings_with_colorful_neon_street_signs_at_blue_hour%2C_Shinjuku%2C_Tokyo.jpg",
+   "credit": "Foto: Basile Morin, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 3072
+  },
+  {
+   "key": "demo:p1",
+   "k": "foto",
+   "by": "lena.gt",
+   "title": "Mit dem Rich-&-Realistic-Preset sieht der GT3 RS endlich aus wie in echt",
+   "car": "2023 Porsche 911 GT3 RS",
+   "likes": 31,
+   "mod": {
+    "id": 257,
+    "n": "Rich and Realistic – Visual Overhaul"
+   },
+   "art": "strasse",
+   "ago": 95,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Porsche_992_GT3_RS_DSC_9055.jpg/3840px-Porsche_992_GT3_RS_DSC_9055.jpg",
+   "credit": "Foto: Alexander Migl, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 1813
+  },
+  {
+   "key": "demo:p7",
+   "k": "foto",
+   "by": "takumi.86",
+   "title": "Lieferung erledigt – zurück vom Berg",
+   "car": "1985 Toyota Sprinter",
+   "likes": 44,
+   "art": "touge",
+   "ago": 130,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Toyota_E-AE86_Sprinter_Trueno_GT_APEX_%2822010314081%29.jpg/3840px-Toyota_E-AE86_Sprinter_Trueno_GT_APEX_%2822010314081%29.jpg",
+   "credit": "Foto: 先従隗始, CC0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2880
+  },
+  {
+   "key": "demo:p11",
+   "k": "foto",
+   "by": "marco.v10",
+   "title": "Aussicht nach dem Treffen",
+   "car": "2023 Lamborghini Huracán Tecnica",
+   "likes": 38,
+   "art": "strasse",
+   "ago": 180,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/75/Minato_City%2C_Tokyo%2C_Japan_%28Night%29.jpg/3840px-Minato_City%2C_Tokyo%2C_Japan_%28Night%29.jpg",
+   "credit": "Foto: David Kernan, CC BY 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2160
+  },
+  {
+   "key": "demo:p2",
+   "k": "foto",
+   "by": "anna_rs",
+   "title": "Endlich fertig: die R34 für die Touge-Abende",
+   "car": "2000 Nissan Skyline GT-R V-Spec II",
+   "likes": 24,
+   "art": "touge",
+   "ago": 240,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/Nissan_Skyline_GT-R_V-spec%2C_BAS_24%2C_Brussels_%28P1170369-RR%29.jpg/3840px-Nissan_Skyline_GT-R_V-spec%2C_BAS_24%2C_Brussels_%28P1170369-RR%29.jpg",
+   "credit": "Foto: Matti Blume, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2162
+  },
+  {
+   "key": "demo:p5",
+   "k": "foto",
+   "by": "subie_nori",
+   "title": "22B in Bestform",
+   "car": "1998 Subaru Impreza 22B",
+   "likes": 27,
+   "mod": {
+    "id": 257,
+    "n": "Rich and Realistic – Visual Overhaul"
+   },
+   "art": "rally",
+   "ago": 310,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7e/1998_Subaru_Impreza_22B_STi.jpg/3840px-1998_Subaru_Impreza_22B_STi.jpg",
+   "credit": "Foto: MrWalkr, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2363
+  },
+  {
+   "key": "demo:p12",
+   "k": "foto",
+   "by": "subie_nori",
+   "title": "Kurzer Halt im Elektronikviertel",
+   "car": "1998 Subaru Impreza 22B",
+   "likes": 19,
+   "art": "strasse",
+   "ago": 380,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Akihabara_Night.jpg/3840px-Akihabara_Night.jpg",
+   "credit": "Foto: ElHeineken, CC BY 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2560
+  },
+  {
+   "key": "demo:p8",
+   "k": "foto",
+   "by": "marco.v10",
+   "title": "Huracán Tecnica kurz vor Sonnenuntergang",
+   "car": "2023 Lamborghini Huracán Tecnica",
+   "likes": 21,
+   "art": "strasse",
+   "ago": 480,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Lamborghini_Hurac%C3%A1n_Tecnica_1X7A7430.jpg/3840px-Lamborghini_Hurac%C3%A1n_Tecnica_1X7A7430.jpg",
+   "credit": "Foto: Alexander-93, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 1628
+  },
+  {
+   "key": "demo:p13",
+   "k": "foto",
+   "by": "kaito_na1",
+   "title": "Hochhausschluchten bei Nacht",
+   "car": "1992 Honda NSX-R",
+   "likes": 33,
+   "art": "strasse",
+   "ago": 540,
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Buildings_at_night_around_Shibuya_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "credit": "Foto: Syced, CC0 (Wikimedia Commons)",
+   "iw": 3072,
+   "ih": 4080
+  },
+  {
+   "key": "demo:p4",
+   "k": "foto",
+   "by": "kaito_na1",
+   "title": "NSX nach drei Wochen Pause wieder auf der Straße",
+   "car": "1992 Honda NSX-R",
+   "likes": 18,
+   "art": "strasse",
+   "ago": 620,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/Honda_E-NA1_NSX_%2822022010314%29.jpg/3840px-Honda_E-NA1_NSX_%2822022010314%29.jpg",
+   "credit": "Foto: 先従隗始, CC0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2560
+  },
+  {
+   "key": "demo:p14",
+   "k": "foto",
+   "by": "nightrunner",
+   "title": "Nach dem Treffen – die Stadt schläft nie",
+   "car": "2002 Nissan Silvia Spec-R",
+   "likes": 26,
+   "art": "strasse",
+   "ago": 700,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Tokyo_20240812220230_%2854274993833%29.jpg/3840px-Tokyo_20240812220230_%2854274993833%29.jpg",
+   "credit": "Foto: inunami, CC BY 2.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2880
+  },
+  {
+   "key": "demo:p6",
+   "k": "foto",
+   "by": "tommi_fan",
+   "title": "Evo VI in der Sonderedition – frisch gekauft",
+   "car": "2001 Mitsubishi Lancer Evolution VI TME",
+   "likes": 12,
+   "art": "rally",
+   "ago": 760,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/2001_Mitsubishi_Lancer_Evolution_VI_Tommi_M%C3%A4kinen.jpg/3840px-2001_Mitsubishi_Lancer_Evolution_VI_Tommi_M%C3%A4kinen.jpg",
+   "credit": "Foto: TTTNIS, CC0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 1859
+  },
+  {
+   "key": "demo:p3",
+   "k": "foto",
+   "by": "jonas_rx",
+   "title": "RX-7 FD nach der Abendrunde",
+   "car": "1997 Mazda RX-7",
+   "likes": 9,
+   "art": "strasse",
+   "ago": 900,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Mazda_RX-7_FD3S%2C_front_right%2C_05-05-2024.jpg/3840px-Mazda_RX-7_FD3S%2C_front_right%2C_05-05-2024.jpg",
+   "credit": "Foto: Ethan Llamas, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2641
+  },
+  {
+   "key": "demo:p9",
+   "k": "foto",
+   "by": "old_school_ray",
+   "title": "Klassiker darf auch mal raus",
+   "car": "1968 Ford Mustang GT 2+2 Fastback",
+   "likes": 16,
+   "art": "strasse",
+   "ago": 1300,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/1967_Ford_Mustang_289_V8_Fastback_Coupe.jpg/3840px-1967_Ford_Mustang_289_V8_Fastback_Coupe.jpg",
+   "credit": "Foto: Coolalabright, CC BY 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2563
+  },
+  {
+   "key": "demo:t1",
+   "k": "tune",
+   "by": "jonas_rx",
+   "title": "Drift-Setup Supra A80",
+   "car": "1998 Toyota Supra RZ",
+   "pi": "A 800",
+   "code": "123456789",
+   "text": "Weich hinten, viel Lenkwinkel – für die Bergstraßen.",
+   "likes": 15,
+   "art": "drift",
+   "ago": 420,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/TOYOTA_SUPRA_%28A80%29_HONG_KONG_%282%29.jpg/3840px-TOYOTA_SUPRA_%28A80%29_HONG_KONG_%282%29.jpg",
+   "credit": "Foto: Dinkun Chen, CC BY-SA 4.0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2081
+  },
+  {
+   "key": "demo:t2",
+   "k": "tune",
+   "by": "anna_rs",
+   "title": "Grip-Setup Silvia S15",
+   "car": "2002 Nissan Silvia Spec-R",
+   "pi": "A 800",
+   "code": "987654321",
+   "text": "Straßenrennen, stabil beim Anbremsen.",
+   "likes": 19,
+   "art": "rennen",
+   "ago": 560,
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Moscow%2C_Nissan_Silvia_%28S15%29_spec-R%2C_May_2026_01.jpg/3840px-Moscow%2C_Nissan_Silvia_%28S15%29_spec-R%2C_May_2026_01.jpg",
+   "credit": "Foto: Retired electrician, CC0 (Wikimedia Commons)",
+   "iw": 3840,
+   "ih": 2530
+  },
+  {
+   "key": "demo:t3",
+   "k": "tune",
+   "by": "takumi.86",
+   "title": "Touge-Setup AE86",
+   "car": "1985 Toyota Sprinter",
+   "pi": "B 700",
+   "code": "456123789",
+   "text": "Leicht, ehrlich, perfekt für enge Kehren.",
+   "likes": 8,
+   "art": "touge",
+   "ago": 1000
+  },
+  {
+   "key": "demo:t4",
+   "k": "tune",
+   "by": "kaito_na1",
+   "title": "Allround-NSX für jede Strecke",
+   "car": "1992 Honda NSX-R",
+   "pi": "S1 900",
+   "code": "741852963",
+   "likes": 11,
+   "art": "rennen",
+   "ago": 1500
+  }
+ ]
+}

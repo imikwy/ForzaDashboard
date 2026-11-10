@@ -80,6 +80,39 @@ body.edit{background:#16181d}
 .blr i svg{width:22px;height:22px}
 .blr i.on{animation:blk .9s steps(1) infinite}
 .fade{animation:fd .45s ease}
+/* Hinweis oben: Event startet / Level erreicht */
+#note{position:absolute;left:50%;top:0;transform-origin:50% 0;z-index:6;pointer-events:none}
+#note .ahc{position:relative;inset:auto;display:flex;align-items:center;gap:12px;padding:8px 22px 8px 8px;border-radius:32px;white-space:nowrap}
+#note .ni{width:42px;height:42px;border-radius:21px;display:grid;place-items:center;background:#0a84ff;color:#fff;font-weight:750;font-size:17px;flex:none}
+#note .ni svg{width:20px;height:20px}
+#note b{display:block;font-size:16px;font-weight:700}
+#note small{display:block;font-size:12.5px;color:rgba(255,255,255,.65);margin-top:1px}
+#note.hid{opacity:0}
+/* PC-Leistung */
+.pcw{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;height:100%;align-content:center}
+.pcr{display:flex;flex-direction:column;gap:5px;min-width:0}
+.pcr div{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.pcr small{font-size:10.5px;color:rgba(255,255,255,.55);font-weight:700;letter-spacing:.04em}
+.pcr b{font-size:15px;font-weight:700;white-space:nowrap}
+.pcr i{display:block;height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.pcr u{display:block;height:100%;width:0;border-radius:3px;background:#30d158;transition:width .6s,background .6s}
+/* Kontrollleuchten: dezent grau, leuchten nur bei Bedarf */
+.lmp{display:flex;align-items:center;gap:13px}
+.lmp i{display:grid;place-items:center;color:rgba(255,255,255,.17);transition:color .25s,filter .25s}
+.lmp svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.lmp i.g{color:#30d158;filter:drop-shadow(0 0 4px rgba(48,209,88,.8))}
+.lmp i.y{color:#ffd60a;filter:drop-shadow(0 0 4px rgba(255,214,10,.75))}
+.lmp i.r{color:#ff453a;filter:drop-shadow(0 0 5px rgba(255,69,58,.85))}
+.lmp i.o{animation:lmpb .5s steps(1) infinite}
+@keyframes lmpb{0%{color:#ff9f0a;filter:drop-shadow(0 0 5px rgba(255,159,10,.9))}50%{color:rgba(255,255,255,.17);filter:none}}
+.cmbl{position:absolute;bottom:9px;height:30px;justify-content:space-around}
+.cmbl svg{width:22px;height:22px;stroke-width:2}
+/* Kontrollleuchten als eigenes Widget: größer, Hintergrund abschaltbar */
+.wd.nobg > .card{display:none}
+.wd.nobg .lmp i[class=""],.wd.nobg .lmp i:not([class]){color:rgba(255,255,255,.42);filter:drop-shadow(0 1px 3px rgba(0,0,0,.95))}
+.edit .wd.nobg{outline:1px dashed rgba(255,255,255,.25);outline-offset:2px;border-radius:14px}
+.lmw{justify-content:space-around;height:100%;padding:0 10px}
+.lmw svg{width:26px;height:26px;stroke-width:2}
 /* Widget „Blinker vor dir“: Blase, die auftaucht und beim Verschwinden zerplatzt */
 .wd{transition:opacity .35s}
 .wd.hid{opacity:0}
@@ -142,6 +175,17 @@ body.edit{background:#16181d}
 #menu .mg{font-size:12px;font-weight:650;color:rgba(255,255,255,.5);margin:10px 4px 6px}
 #menu .mt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
 #menu .mt button{font:inherit;border:0;border-radius:16px;background:rgba(255,255,255,.07);color:#fff;padding:10px 11px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;min-width:0;transition:background .15s,scale .15s}
+.chn{inset:10px 14px;display:flex;flex-direction:column;gap:6px}
+.cht{display:flex;justify-content:space-between;align-items:center}
+.cht>b{font-size:34px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.cht span{text-align:right}.cht small{display:block;font-size:10px;color:rgba(255,255,255,.55);font-weight:600}.cht span b{font-size:15px}
+.chb{height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden}.chb i{display:block;height:100%;width:0;transition:width .3s}
+.chc div{display:flex;justify-content:space-between;font-size:11.5px;color:rgba(255,255,255,.7)}
+.chc .bank b{color:#30d158}.chc .brk span,.chc .brk b{color:#ff453a}.chc .up b{color:#bf5af2}
+.chn.brk{animation:chbr .25s steps(1) 4}@keyframes chbr{0%{opacity:1}50%{opacity:.35}}
+#menu .mt button .dupb{display:block;font-style:normal;font-size:11px;font-weight:600;color:#ff9f0a;margin-top:2px}
+#ovwarn{position:fixed;left:50%;top:70px;translate:-50% -8px;z-index:99;padding:10px 16px;border-radius:14px;background:rgba(255,159,10,.95);color:#1c1c1e;font:600 14px/1.3 -apple-system,"Segoe UI",sans-serif;opacity:0;pointer-events:none;transition:opacity .25s,translate .25s;max-width:80vw;text-align:center}
+#ovwarn.on{opacity:1;translate:-50% 0}
 #menu .mt button:hover{background:rgba(255,255,255,.13)}
 #menu .mt button:active{scale:.97}
 #menu .mt i{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
@@ -208,6 +252,7 @@ body.edit{background:#16181d}
 #gx{width:1px;top:0;bottom:0}#gy{height:1px;left:0;right:0}
 </style></head><body>
 <div id="stage"></div>
+<div id="note" class="hid"><div class="ahb"><div class="ahc"><span class="ni"></span><div><b></b><small></small></div></div></div></div>
 <i class="guide" id="gx"></i><i class="guide" id="gy"></i>
 <div id="bar">
   <button class="pri n" data-a="add">+ Widget</button>
@@ -243,6 +288,8 @@ const BLK = '<div class="blk" data-blk><i data-b="l">' + AL + '</i><i data-b="r"
 const NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5" fill="#fff"/><circle cx="17.5" cy="16" r="2.5" fill="#fff"/></svg>';
 // ---- Daten (im Anpassen-Modus Beispielwerte) ----
 let T = null, tT = 0, NAV = null, MUS = null, IMG = null, IMGM = null, imgId = 0, t0 = performance.now();
+let SYS = null;   // PC-Leistung (vom Programm, jede Sekunde)
+if (EDIT) SYS = {cpu:23, gpu:87, ram:[11.4, 31.9], vram:[7.2, 12], gname:"Grafikkarte"};
 if (EDIT) { T = {on:1, dash:1, spd:24.2, gear:4, rpm:5400, rpmMax:7600, fuel:.62, px:0, pz:0, pow:241000, tq:410, boost:13.5, ax:2.9, az:4.1, dist:18400, acc:210, pos:0, lap:0, cur:0, best:0}; NAV = {k:"left", d:"250 m", t:"Links abbiegen", eta:"6 Min", arr:"", _t:Infinity, bl:"l", fe:{bl:true}}; MUS = {title:"Night Drive", artist:"Horizon Pulse", running:true}; }
 const D = {
   kmh:() => T ? Math.round(Math.abs(T.spd || 0) * 3.6) : 0,
@@ -281,6 +328,9 @@ const SV = {
   best:{n:"Beste Runde", s:"Beste", v:() => T ? t2(T.best) : "–"},
   dist:{n:"Gefahrene Strecke", s:"Strecke", v:() => T && T.dist > 0 ? de(T.dist / 1000, 1) + " km" : "–"},
 };
+const pcPct = k => SYS && typeof SYS[k] === "number" ? Math.round(SYS[k]) + " %" : "–";
+const pcMem = k => SYS && Array.isArray(SYS[k]) ? de(SYS[k][0], 1) + (SYS[k][1] ? "/" + Math.round(SYS[k][1]) : "") + " GB" : "–";
+Object.assign(SV, {cpu:{n:"Prozessor (CPU)", s:"CPU", v:() => pcPct("cpu")}, gpu:{n:"Grafikkarte (GPU)", s:"GPU", v:() => pcPct("gpu")}, ram:{n:"Arbeitsspeicher", s:"RAM", v:() => pcMem("ram")}, vram:{n:"Grafikspeicher", s:"VRAM", v:() => pcMem("vram")}});
 const STDEF = ["gear", "zeit", "dreh"], STMAX = 4;
 const stOf = w => (w && Array.isArray(w.st) && w.st.length ? w.st : STDEF).filter(k => SV[k]);
 const statHtml = w => { const it = stOf(w); return '<div class="stats n' + it.length + '">' + it.map(k => '<div class="st"><small data-sk="' + k + '">' + (SV[k].s || SV[k].n) + '</small><b data-sv="' + k + '">–</b></div>').join("") + '</div>'; };
@@ -296,32 +346,91 @@ const MOD = {
   eta:{n:"Ankunft", h:38, html:() => mi(IS('<path d="M6 21V4M6 4h11l-2 4 2 4H6"/>'), '<b data-f="ev">–</b><small data-f="ek">Ankunft</small>')},
   fuel:{n:"Tank", h:40, html:() => mi(IS('<path d="M5 20V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14M4 20h12M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V9l-3-3"/>'), '<b data-f="fv">–</b><div class="fbar"><u data-f="fb"></u></div>')},
   blink:{n:"Blinker", h:34, html:() => '<div class="blr" data-blw><i data-b="l">' + AL + '</i><i data-b="r">' + AR + '</i></div>'},
+  pc:{n:"PC-Leistung", h:44, html:() => statHtml({st:["cpu", "gpu", "vram"]})},
 };
 // Tropfen fürs Zerplatzen: rund um die Blase verteilt, fliegen nach außen
 const DROPS = Array.from({length:12}, (_, i) => { const a = i / 12 * 2 * Math.PI, c = Math.cos(a), si = Math.sin(a); return '<u style="left:' + (50 + 50 * c).toFixed(1) + '%;top:' + (50 + 50 * si).toFixed(1) + '%;--dx:' + Math.round(c * 34) + 'px;--dy:' + Math.round(si * 22) + 'px"></u>'; }).join("");
+// echte Symbole: Motorkontrolle, Traktionskontrolle, Abblendlicht, Tank
+const LAMP_SVG = {
+  mkl:'<svg viewBox="0 0 24 24"><path d="M4 10v6M4 13h2.5M6.5 9.5h2l1.5-2h4l1.5 2h2.5l1.5 2h1.5v4h-1.5l-1.5 2H9.5l-3-2v-6z"/><path d="M10 7.5V5.5M8 5.5h4"/></svg>',
+  tc:'<svg viewBox="0 0 24 24"><path d="M6.5 12.5 8 8.5h8l1.5 4"/><path d="M5.5 12.5h13v3h-13z"/><path d="M7 15.5v1.5M17 15.5v1.5"/><path d="M6 20.5c1.2-1.4 2.4 1.4 3.6 0M14.4 20.5c1.2-1.4 2.4 1.4 3.6 0"/></svg>',
+  li:'<svg viewBox="0 0 24 24"><path d="M12.5 6c-4.5 0-7 2.7-7 6s2.5 6 7 6c.8 0 1.5-.6 1.5-1.4V7.4c0-.8-.7-1.4-1.5-1.4z"/><path d="M16.5 8.5l4.5 1.5M16.5 12l4.5 1.5M16.5 15.5l4.5 1.5"/></svg>',
+  fuel:'<svg viewBox="0 0 24 24"><path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M5 10h9M14 8h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V9l-3-3"/></svg>',
+};
+const LAMPS = ["mkl", "tc", "li", "fuel"];
+const lampHtml = cls => '<div class="lmp ' + (cls || "") + '">' + LAMPS.map(k => '<i data-lamp="' + k + '" title="' + {mkl:"Motorkontrolle", tc:"Traktionskontrolle", li:"Licht", fuel:"Tank"}[k] + '">' + LAMP_SVG[k] + '</i>').join("") + '</div>';
+// Zustand: TC blinkt bei durchdrehenden Antriebsrädern, MKL blinkt beim Verschalten/Begrenzer und leuchtet bei Schaden,
+// Tank gelb/rot bei wenig Sprit, Licht grün (per Lenkradtaste mitgeschaltet – Forza meldet das Licht nicht)
+const LS = {tc:-1e9, mkl:-1e9, lim:0, gear:0, gT:0};
+function lampTick(d){
+  const now = performance.now();
+  if (!d || !d.on) return;
+  const sr = Array.isArray(d.slipR) ? d.slipR : [], idx = d.drive === 0 ? [0, 1] : d.drive === 1 ? [2, 3] : [0, 1, 2, 3];
+  const slip = Math.max(0, ...idx.map(i => Math.abs(sr[i] || 0)));
+  if (slip > 1.05 && (d.acc || 0) > 60 && Math.abs(d.spd || 0) > 2) LS.tc = now;
+  const r = d.rpmMax > 0 ? d.rpm / d.rpmMax : 0;
+  if (r >= .985) { if (!LS.lim) LS.lim = now; else if (now - LS.lim > 700) LS.mkl = now; } else LS.lim = 0;   // lange im Begrenzer
+  if (d.gear > 0 && d.gear < 11 && d.gear !== LS.gear) { if (d.gear < LS.gear) LS.gT = now; LS.gear = d.gear; }
+  if (LS.gT && now - LS.gT < 350 && r > .97) { LS.mkl = now; LS.gT = 0; }   // runtergeschaltet und überdreht = verschaltet
+}
+function lampFill(root){
+  const els = root.querySelectorAll("[data-lamp]"); if (!els.length) return;
+  const now = performance.now(), lm = EDIT ? {fu:.62, dm:0, li:false} : NAV && NAV.lm && now - NAV._t < 3000 ? NAV.lm : null;
+  const st = {
+    mkl: now - LS.mkl < 2500 ? "o" : lm && lm.dm >= 45 ? "r" : lm && lm.dm >= 15 ? "y" : "",
+    tc: now - LS.tc < 450 ? "o" : "",
+    li: lm && lm.li ? "g" : "",
+    fuel: lm && typeof lm.fu === "number" ? (lm.fu < .07 ? "r" : lm.fu < .15 ? "y" : "") : "",
+  };
+  els.forEach(e => { const c = st[e.dataset.lamp] || ""; if (e.className !== c) e.className = c; });
+}
 const MAPW = {s:150, m:190, l:240}, COLW = 214, MAXAPPS = 4;
 const ACC = ["#0a84ff", "#30d158", "#ff9f0a", "#ff375f", "#bf5af2", "#8e8e93"];
-const cfgOf = w => Object.assign({map:"l", ms:"m", apps:["nav", "music", "stats"]}, w.cfg || {});
+const cfgOf = w => Object.assign({map:"l", ms:"m", apps:["nav", "music", "stats"], lamps:"1"}, w.cfg || {});
 function dims(w){
   const ty = TYPES[w.t];
   if (w.t === "stats") { const n = stOf(w).length; return {w:20 + n * 92 + (n - 1) * 6, h:ty.h}; }
   if (w.t !== "combo") return {w:ty.w, h:ty.h};
   const c = cfgOf(w), apps = c.apps.filter(a => MOD[a]), mw = c.map === "n" ? 0 : MAPW[c.ms] || 190;
   const colH = apps.reduce((a, k) => a + MOD[k].h, 0) + Math.max(0, apps.length - 1) * 21 + 6;
-  return {w:mw ? (apps.length ? 24 + mw + 14 + COLW : 24 + mw) : 24 + COLW + 8, h:24 + Math.max(apps.length ? colH : 0, mw ? Math.round(mw * .95) : 0, 40)};
+  return {w:mw ? (apps.length ? 24 + mw + 14 + COLW : 24 + mw) : 24 + COLW + 8, h:24 + Math.max(apps.length ? colH : 0, mw ? Math.round(mw * .95) : 0, 40) + (c.lamps !== "0" ? 34 : 0)};
+}
+// eigenes Tempo-Widget da? Dann zeigen Karte/Kombi das Tempo nicht noch einmal
+const spdW = () => { try { return L.w.some(x => x.t === "speed"); } catch (e) { return false; } };
+// Wo steht ein Widget-Inhalt schon? (für die Doppelt-Warnung beim Hinzufügen)
+function ovWhere(t){
+  const out = [];
+  try {
+    for (const x of L.w) {
+      if (x.t === t) out.push("schon im Overlay");
+      if (x.t === "combo") { const c = cfgOf(x); if (c.apps.includes(t)) out.push("im Kombi"); if (t === "map" && c.map !== "n") out.push("Karte im Kombi"); if (t === "lamps" && c.lamps !== "0") out.push("unter der Kombi-Karte"); }
+      if (x.t === "stack" && (x.items || []).includes(t)) out.push("im Stapel");
+    }
+  } catch (e) {}
+  return [...new Set(out)];
+}
+function ovWarn(txt){
+  let n = $("ovwarn"); if (!n) { n = document.createElement("div"); n.id = "ovwarn"; document.body.appendChild(n); }
+  n.textContent = txt; n.classList.add("on"); clearTimeout(ovWarn.t); ovWarn.t = setTimeout(() => n.classList.remove("on"), 3800);
 }
 const TYPES = {
   combo:{n:"Kombi", d:"Karte + Apps nach Wahl", w:442, h:205, html:w => {
     const c = cfgOf(w || {}), apps = c.apps.filter(a => MOD[a]), mw = c.map === "n" ? 0 : MAPW[c.ms] || 190;
     // Tempo bzw. Blinker als App? Dann nicht noch einmal auf der Karte
-    const map = mw ? '<div class="map" style="width:' + mw + 'px"><canvas data-map></canvas>' + (apps.includes("blink") ? "" : BLK) + (apps.includes("speed") ? "" : '<div class="bub"><b data-f="kmh">0</b><small>km/h</small></div>') + '</div>' : "";
+    const map = mw ? '<div class="map" style="width:' + mw + 'px"><canvas data-map></canvas>' + (apps.includes("blink") ? "" : BLK) + (apps.includes("speed") || spdW() ? "" : '<div class="bub"><b data-f="kmh">0</b><small>km/h</small></div>') + '</div>' : "";
     const col = apps.length ? '<div class="col' + (apps.length === 1 ? " one" : "") + '">' + apps.map(k => '<div class="mod">' + MOD[k].html(w) + '</div>').join('<div class="gp"></div>') + '</div>' : "";
-    return '<div class="pad cmb' + (c.map === "r" ? " r" : "") + '">' + map + col + '</div>';
+    const lm = c.lamps !== "0";
+    // Kontrollleuchten direkt unter der Karte (ohne Karte: über die ganze Breite)
+    const lpos = !mw ? "left:16px;right:16px" : (c.map === "r" ? "right:12px" : "left:12px") + ";width:" + mw + "px";
+    return '<div class="pad cmb' + (c.map === "r" ? " r" : "") + '"' + (lm ? ' style="bottom:46px"' : '') + '>' + map + col + '</div>' + (lm ? lampHtml("cmbl").replace('class="lmp cmbl"', 'class="lmp cmbl" style="' + lpos + '"') : '');
   }},
-  map:{n:"Minikarte", d:"Karte mit Route", w:230, h:230, html:() => '<div class="pad" style="inset:10px"><div class="map"><canvas data-map></canvas>' + BLK + '<div class="bub"><b data-f="kmh">0</b><small>km/h</small></div>' + '</div></div>'},
+  perf:{n:"PC-Leistung", d:"CPU, GPU, Speicher", w:300, h:96, html:() => '<div class="pad pcw" style="inset:12px 16px">' + ["cpu", "gpu", "ram", "vram"].map(k => '<div class="pcr"><div><small>' + SV[k].s + '</small><b data-sv="' + k + '">–</b></div><i><u data-pc="' + k + '"></u></i></div>').join("") + '</div>'},
+  lamps:{n:"Kontrollleuchten", d:"MKL, TC, Licht, Tank", w:210, h:56, html:() => '<div class="pad" style="inset:0">' + lampHtml("lmw") + '</div>'},
+  map:{n:"Minikarte", d:"Karte mit Route", w:230, h:230, html:() => '<div class="pad" style="inset:10px"><div class="map"><canvas data-map></canvas>' + BLK + (spdW() ? '' : '<div class="bub"><b data-f="kmh">0</b><small>km/h</small></div>') + '</div></div>'},
   blink:{n:"Blinker", d:"Dein Blinker", w:200, h:76, html:() => '<div class="pad blw" style="inset:10px" data-blw><i data-b="l">' + AL + '</i><i data-b="r">' + AR + '</i></div>'},
   nav:{n:"Abbiegen", d:"Nächster Hinweis", w:320, h:74, html:() => '<div class="pad" style="inset:14px">' + navHtml + '</div>'},
   music:{n:"Musik", d:"Titel und Künstler", w:300, h:64, html:() => '<div class="pad" style="inset:14px">' + musHtml + '</div>'},
+  chain:{n:"Skill-Kette", d:"Multiplikator und Kombos", w:230, h:118, html:() => '<div class="pad chn"><div class="cht"><b data-f="chm">×1,0</b><span><small>im Topf</small><b data-f="chp">0 EP</b></span></div><div class="chb"><i data-f="chb"></i></div><div class="chc" data-f="chc"></div></div>'},
   speed:{n:"Tempo", d:"km/h und Gang", w:150, h:130, html:() => '<div class="pad big" style="inset:0"><i data-f="g">N</i><b data-f="kmh">0</b><small>km/h</small>' + '</div>'},
   stats:{n:"Werte", d:"Bis zu 4 Werte", w:300, h:62, html:w => '<div class="pad" style="inset:10px">' + statHtml(w) + '</div>'},
   ahead:{n:"Blinker vor dir", d:"Mitspieler blinkt", w:340, h:64, html:() => '<div class="ahb"><div class="ahc"><span class="ai" data-ahl>' + AL + '</span><span class="av" data-ahav>A</span><div class="tt s"><b data-ahn>–</b><small data-ahd>–</small></div><span class="ai" data-ahr>' + AR + '</span></div>' + DROPS + '</div>'},
@@ -348,6 +457,7 @@ function build(){
     const el = document.createElement("div"); el.className = "wd" + (sel === w.id ? " sel" : ""); el.dataset.id = w.id; el.dataset.t = w.t;
     const d = dims(w); el.style.width = d.w + "px"; el.style.height = d.h + "px";
     if (w.acc) el.style.setProperty("--acc", w.acc);
+    if (w.t === "lamps" && w.cfg && w.cfg.bg === "0") el.classList.add("nobg");
     el.innerHTML = '<div class="card"></div>' + ty.html(w) + '<i class="rs"></i>';
     st.appendChild(el);
   }
@@ -415,11 +525,11 @@ function drawMap(c, now){
     for (const p of POIS) {
       const K = POIK[p.k] || POIK.other;
       g.save(); g.translate(m * p.x, -p.z); g.rotate(a); g.scale(1 / zoom, 1 / zoom);
-      g.fillStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.arc(0, .8, 9, 0, 7); g.fill();
-      g.fillStyle = K.c; g.beginPath(); g.arc(0, 0, 7.6, 0, 7); g.fill(); g.lineWidth = 1.3; g.strokeStyle = "#fff"; g.stroke();
+      g.fillStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.arc(0, 1, 12, 0, 7); g.fill();
+      g.fillStyle = K.c; g.beginPath(); g.arc(0, 0, 10.2, 0, 7); g.fill(); g.lineWidth = 1.6; g.strokeStyle = "#fff"; g.stroke();
       g.fillStyle = "#fff";
-      if (K.t) { g.font = "800 9.5px 'Segoe UI', system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(K.t, 0, .6); }
-      else { g.translate(-4.8, -4.8); g.scale(.4, .4); g.fill(K.P); }
+      if (K.t) { g.font = "800 12.5px 'Segoe UI', system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(K.t, 0, .6); }
+      else { g.translate(-6.6, -6.6); g.scale(.55, .55); g.fill(K.P); }
       g.restore();
     }
     for (const e of FRM.values()) {
@@ -465,7 +575,17 @@ function fill(root, n){
   f("nd", n ? n.d || "" : "Freie Fahrt"); f("nt", n ? n.t || "" : "Kein Ziel gesetzt");
   f("mt", MUS && MUS.title ? MUS.title : MUS && MUS.running ? "Pausiert" : "Keine Musik"); f("ma", MUS && MUS.artist ? MUS.artist : "–");
   root.querySelectorAll("[data-sv]").forEach(e => { const d = SV[e.dataset.sv]; if (!d) return; const v = d.v(n); if (e.textContent !== v) e.textContent = v; });
+  // Drehzahl: gelb, dann rot, je näher am Begrenzer
+  { const r = T && T.rpmMax > 0 ? T.rpm / T.rpmMax : 0, col = r > .93 ? "#ff453a" : r > .82 ? "#ffd60a" : "";
+    root.querySelectorAll('[data-sv="rpm"],[data-sv="dreh"]').forEach(e => { const c = e.dataset.sv === "dreh" && n ? "" : col; if (e.style.color !== c) e.style.color = c; }); }
+  root.querySelectorAll("[data-pc]").forEach(e => { const k = e.dataset.pc, v = !SYS ? 0 : Array.isArray(SYS[k]) ? (SYS[k][1] ? SYS[k][0] / SYS[k][1] : 0) : (SYS[k] || 0) / 100; e.style.width = Math.round(Math.max(0, Math.min(1, v)) * 100) + "%"; e.style.background = v > .9 ? "#ff453a" : v > .75 ? "#ffd60a" : "#30d158"; });
+  lampFill(root);
   root.querySelectorAll("[data-sk]").forEach(e => { const d = SV[e.dataset.sk]; if (!d || !d.k) return; const v = d.k(n); if (e.textContent !== v) e.textContent = v; });
+  { const ch = EDIT ? {m:2.4, p:126, f:.8, b:0, c:[["Geblinkt & abgebogen", "+7 EP", ""], ["Sauberer Kilometer", "+5 EP", ""]]} : NAV && NAV.ch && performance.now() - NAV._t < 6000 ? NAV.ch : {m:1, p:0, f:0, b:0, c:[]};
+    f("chm", "×" + ch.m.toFixed(1).replace(".", ",")); f("chp", ch.p + " EP");
+    root.querySelectorAll('[data-f="chb"]').forEach(e => { e.style.width = Math.round(ch.f * 100) + "%"; e.style.background = ch.m >= 3 ? "#ff9f0a" : ch.m >= 2 ? "#bf5af2" : "#0a84ff"; });
+    root.querySelectorAll(".chn").forEach(e => e.classList.toggle("brk", !!ch.b));
+    root.querySelectorAll('[data-f="chc"]').forEach(e => { const h = (ch.c || []).map(c => '<div class="' + c[2] + '"><span>' + c[0].replace(/[<>&]/g, "") + '</span><b>' + c[1] + '</b></div>').join(""); if (e.dataset.h !== h) { e.dataset.h = h; e.innerHTML = h; } }); }
   f("ek", n ? "Ankunft · " + (n.eta || "") : "Ankunft"); f("ev", n ? D.arr(n) : "Kein Ziel");
   const fu = T && typeof T.fuel === "number" ? Math.max(0, Math.min(1, T.fuel)) : null;
   f("fv", fu === null ? "–" : Math.round(fu * 100) + " %");
@@ -475,7 +595,7 @@ const AHX = {n:"Anna", b:"l", d:42, col:"#5e5ce6"};   // Vorschau beim Anpassen
 let AHDEMO = 0;   // Zeitpunkt, an dem „Animation ansehen“ gedrückt wurde
 const AH_ICON = {l:AL, r:AR, h:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M12 4 21 19H3z"/><path d="M12 9.5 16.2 17H7.8z"/></svg>'};
 function ahContent(el, a){
-  const k = a.n + a.b + a.col;
+  const k = a.n + a.b + a.col + (a.hb ? "hb" : "");
   if (el.dataset.k !== k) {
     el.dataset.k = k;
     // Pfeil links bzw. rechts (Warnblinker: beide), Kante auf dieser Seite leuchtet – alles im selben Takt neu starten
@@ -486,7 +606,7 @@ function ahContent(el, a){
     el.style.setProperty("--fc", a.col || "#5e5ce6");
     el.querySelector("[data-ahn]").textContent = a.n;
   }
-  const t = (a.b === "h" ? "Warnblinker an" : a.b === "l" ? "biegt links ab" : "biegt rechts ab") + " · " + a.d + " m";
+  const t = (a.hb ? "Warnblinker hinter dir" : a.b === "h" ? "Warnblinker an" : a.b === "l" ? "biegt links ab" : "biegt rechts ab") + " · " + a.d + " m";
   const sm = el.querySelector("[data-ahd]"); if (sm.textContent !== t) sm.textContent = t;
 }
 // Ablauf: auftauchen (Blase) – stehen bleiben – zerplatzen
@@ -507,7 +627,23 @@ function ahFill(el){
     setTimeout(() => { if (el.dataset.st === "pop") { el.classList.add("hid"); el.dataset.st = ""; box.className = "ahb"; } }, 560);
   } else if (!stt) el.classList.add("hid");
 }
+// Hinweis-Blase: kommt mit „note“ vom Dashboard, verschwindet mit Zerplatzen
+function noteUi(){
+  const el = $("note"), box = el.querySelector(".ahb"), n = !EDIT && NAV && NAV.note && performance.now() - NAV._t < 2500 ? NAV.note : null;
+  el.style.transform = "translateX(-50%) translateY(" + Math.round(VH() * .1) + "px) scale(" + kf() + ")";
+  const st = el.dataset.st || "";
+  if (n) {
+    const k = n.k + n.t;
+    if (el.dataset.k !== k) { el.dataset.k = k; el.querySelector("b").textContent = n.t; el.querySelector("small").textContent = n.s || "";
+      el.querySelector(".ni").innerHTML = n.k === "lv" ? String(n.t).replace(/\D/g, "") : '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4M6 4h11l-2 4 2 4H6"/></svg>'; }
+    if (st !== "on") { el.classList.remove("hid"); box.className = "ahb"; void box.offsetWidth; box.className = "ahb in"; el.dataset.st = "on"; }
+  } else if (st === "on") {
+    box.className = "ahb pop"; el.dataset.st = "pop";
+    setTimeout(() => { if (el.dataset.st === "pop") { el.classList.add("hid"); el.dataset.st = ""; box.className = "ahb"; el.dataset.k = ""; } }, 560);
+  }
+}
 function ui(force){
+  noteUi();
   const n = D.nav(), now = Date.now();
   for (const el of st.children) {
     const w = L.w.find(x => x.id === el.dataset.id); if (!w) continue;
@@ -538,7 +674,8 @@ function onNav(v){
 }
 function connect(){
   const es = new EventSource("/events");
-  if (!EDIT) es.onmessage = e => { try { const d = JSON.parse(e.data); if (d && typeof d.on !== "undefined") { T = d; tT = performance.now(); } } catch (x) {} };
+  if (!EDIT) es.onmessage = e => { try { const d = JSON.parse(e.data); if (d && typeof d.on !== "undefined") { T = d; tT = performance.now(); lampTick(d); } } catch (x) {} };
+  if (!EDIT) es.addEventListener("sys", e => { try { SYS = JSON.parse(e.data); } catch (x) {} });
   es.addEventListener("ov", e => { try { onNav(JSON.parse(e.data)); } catch (x) {} });
   es.addEventListener("ovlayout", e => { try { if (!EDIT) { L = JSON.parse(e.data); migrate(); build(); } } catch (x) {} });
   es.onerror = () => { es.close(); setTimeout(connect, 2000); };
@@ -563,7 +700,7 @@ if (EDIT) {
       const m = MI[w.t] || ["#8e8e93", ""];
       $("wName").innerHTML = '<i style="background:' + m[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' + m[1] + '</svg></i>' + TYPES[w.t].n;
     }
-    const hasP = !!(w && (w.t === "combo" || w.t === "stats" || w.t === "stack"));
+    const hasP = !!(w && (w.t === "combo" || w.t === "stats" || w.t === "stack" || w.t === "lamps"));
     $("bCmb").style.display = hasP ? "" : "none";
     $("bDemo").style.display = w && w.t === "ahead" ? "" : "none";
     if (!hasP) $("cmbp").classList.remove("on"); else if ($("cmbp").classList.contains("on")) cmbRender();
@@ -573,20 +710,26 @@ if (EDIT) {
   const MI = {
     combo:["#0a84ff", '<rect x="3" y="4.5" width="8" height="15" rx="2"/><path d="M14.5 7h6M14.5 12h6M14.5 17h4"/>'], map:["#30d158", '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>'],
     nav:["#0a84ff", '<path d="M7 21v-8a4 4 0 0 1 4-4h8M15 5l4 4-4 4"/>'], eta:["#ff375f", '<path d="M6 21V4M6 4h11l-2 4 2 4H6"/>'],
-    speed:["#ff453a", '<path d="M4.5 17a8.5 8.5 0 1 1 15 0"/><path d="m12 13 4-4"/>'], stats:["#5e5ce6", '<rect x="3" y="7" width="5" height="10" rx="1.5"/><rect x="9.5" y="7" width="5" height="10" rx="1.5"/><rect x="16" y="7" width="5" height="10" rx="1.5"/>'],
+    speed:["#ff453a", '<path d="M4.5 17a8.5 8.5 0 1 1 15 0"/><path d="m12 13 4-4"/>'], chain:["#bf5af2", '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'], stats:["#5e5ce6", '<rect x="3" y="7" width="5" height="10" rx="1.5"/><rect x="9.5" y="7" width="5" height="10" rx="1.5"/><rect x="16" y="7" width="5" height="10" rx="1.5"/>'],
     fuel:["#34c759", '<path d="M5 20V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14M4 20h12M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V9l-3-3"/>'], blink:["#ff9f0a", '<path d="M10 6 4 12l6 6M14 6l6 6-6 6"/>'],
     ahead:["#0a84ff", '<path d="M5.5 16 7 11.6A2 2 0 0 1 8.9 10h6.2a2 2 0 0 1 1.9 1.6l1.5 4.4v3h-13z"/><path d="M8 19v1.5M16 19v1.5M2 6l2.5 2.5L2 11M22 6l-2.5 2.5L22 11"/>'],
     music:["#ff2d55", '<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'], clock:["#8e8e93", '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'],
     stack:["#64d2ff", '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>'],
   };
-  const MG = [["Navigation", ["combo", "map", "nav", "eta"]], ["Fahren", ["speed", "stats", "fuel", "blink", "ahead"]], ["Mehr", ["music", "clock", "stack"]]];
+  MI.perf = ["#64d2ff", '<rect x="4" y="4" width="16" height="16" rx="2.5"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/>'];
+  MI.lamps = ["#ffd60a", '<path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M5 10h9M14 8h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V9l-3-3"/>'];
+  const MG = [["Navigation", ["combo", "map", "nav", "eta"]], ["Fahren", ["chain", "speed", "stats", "fuel", "lamps", "blink", "ahead"]], ["Mehr", ["perf", "music", "clock", "stack"]]];
   $("menu").innerHTML = '<div class="mh"><b>Widgets</b><button data-x="1" title="Schließen">✕</button></div><div class="ms">Tippe ein Widget an – es landet in der Mitte und lässt sich verschieben und vergrößern.</div>'
     + MG.map(([g, ks]) => '<div class="mg">' + g + '</div><div class="mt">' + ks.filter(k => TYPES[k]).map(k => '<button data-t="' + k + '"><i style="background:' + MI[k][0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + MI[k][1] + '</svg></i><span><b>' + TYPES[k].n + '</b><small>' + TYPES[k].d + '</small></span></button>').join("") + '</div>').join("");
-  const menuOpen = () => { const m = $("menu"); m.style.top = VH() / 2 + "px"; m.style.maxHeight = (VH() - 24) + "px"; $("mbg").style.height = VH() + "px"; $("cmbp").classList.remove("on"); m.classList.toggle("on"); };
+  const menuOpen = () => {
+    // Doppelt-Hinweis an jedem Widget, dessen Inhalt schon sichtbar ist
+    $("menu").querySelectorAll(".mt button[data-t]").forEach(b => { const w = ovWhere(b.dataset.t); let e = b.querySelector(".dupb"); if (!w.length) { if (e) e.remove(); return; } if (!e) { e = document.createElement("em"); e.className = "dupb"; b.querySelector("span").appendChild(e); } e.textContent = "Doppelt: " + w.join(", "); });
+    const m = $("menu"); m.style.top = VH() / 2 + "px"; m.style.maxHeight = (VH() - 24) + "px"; $("mbg").style.height = VH() + "px"; $("cmbp").classList.remove("on"); m.classList.toggle("on"); };
   $("mbg").addEventListener("pointerdown", () => $("menu").classList.remove("on"));
   $("menu").addEventListener("click", e => {
     if (e.target.closest("[data-x]")) { $("menu").classList.remove("on"); return; }
     const b = e.target.closest("[data-t]"); if (!b) return;
+    { const wh = ovWhere(b.dataset.t); if (wh.length) ovWarn("Achtung: „" + TYPES[b.dataset.t].n + "“ ist " + wh.join(", ") + " – wird jetzt doppelt angezeigt"); }
     const w = {id:uid(), t:b.dataset.t, s:1, o:1}, d = dims(w); w.x = Math.max(0, (1920 - d.w) / 2 / 1920); w.y = Math.max(0, (1080 - d.h) / 2 / 1080);
     if (w.t === "stack") w.items = ["nav", "music", "stats"];
     if (w.t === "ahead") { w.y = 34 / 1080; }
@@ -649,7 +792,7 @@ if (EDIT) {
     return '<button class="r2 cat plain" data-fold="' + id + '"><span>' + cat + '</span><small>' + ks.length + '</small><i class="cv' + (op ? " op" : "") + '"></i></button>'
       + (op ? ks.map(k => '<button class="r2 sub" data-add="' + key + ':' + k + '"' + (full ? " disabled" : "") + '><i class="pl"></i><span>' + nameOf(k) + '</span></button>').join("") : "");
   }).join("") + '</div>';
-  const SVG_GROUPS = [["Fahren", ["gear", "kmh", "rpm", "pow", "tq", "boost", "gf", "acc", "fuel", "dist"]], ["Zeit & Navigation", ["zeit", "dreh", "clock", "arr", "rest", "turn"]], ["Rennen", ["pos", "lap", "cur", "best"]]];
+  const SVG_GROUPS = [["PC-Leistung", ["cpu", "gpu", "ram", "vram"]], ["Fahren", ["gear", "kmh", "rpm", "pow", "tq", "boost", "gf", "acc", "fuel", "dist"]], ["Zeit & Navigation", ["zeit", "dreh", "clock", "arr", "rest", "turn"]], ["Rennen", ["pos", "lap", "cur", "best"]]];
   const stHtml = w => { const it = stOf(w), full = it.length >= STMAX;
     return gh("Werte", it.length + " von " + STMAX) + listGrp("st", it, k => SV[k].n, it.length > 1)
       + (full ? gf("Maximal 4 Werte – entferne einen, um andere hinzuzufügen.") : gh("Werte hinzufügen") + addGrp("st", SVG_GROUPS.map(([c, ks]) => [c, ks.filter(k => !it.includes(k))]), k => SV[k].n, false)); };
@@ -659,12 +802,16 @@ if (EDIT) {
     if (w.t === "combo") {
       const c = cfgOf(w), apps = c.apps.filter(a => MOD[a]), full = apps.length >= MAXAPPS;
       h += gh("Karte") + '<div class="grp"><div class="r2 plain"><span>Position</span>' + seg("map", [["l", "Links"], ["r", "Rechts"], ["n", "Aus"]], c.map) + '</div>'
-        + (c.map !== "n" ? '<div class="r2 plain"><span>Größe</span>' + seg("ms", [["s", "S"], ["m", "M"], ["l", "L"]], c.ms) + '</div>' : '') + '</div>';
+        + (c.map !== "n" ? '<div class="r2 plain"><span>Größe</span>' + seg("ms", [["s", "S"], ["m", "M"], ["l", "L"]], c.ms) + '</div>' : '')
+        + '<div class="r2 plain"><span>Kontrollleuchten</span>' + seg("lamps", [["1", "Ein"], ["0", "Aus"]], c.lamps) + '</div></div>';
       h += gh("Im Fenster", apps.length + " von " + MAXAPPS) + (apps.length ? listGrp("apps", apps, k => MOD[k].n, !(apps.length === 1 && c.map === "n")) : '<div class="grp"><div class="r2 plain"><span style="color:rgba(235,235,245,.5)">Nur die Karte</span></div></div>');
       h += full ? gf("Maximal 4 Apps – entferne eine, um andere hinzuzufügen.") : gh("Hinzufügen") + addGrp("apps", [["Weitere Apps", Object.keys(MOD).filter(k => !apps.includes(k))]], k => MOD[k].n, false);
       if (apps.includes("stats")) h += stHtml(w);
       h += gh("Farbe") + '<div class="grp"><div class="sw">' + ACC.map(a => '<button data-acc="' + a + '" style="background:' + a + '"' + ((w.acc || ACC[0]) === a ? ' class="on"' : '') + '></button>').join("") + '</div></div>';
       h += gf("Ziehe ≡, um die Reihenfolge zu ändern. Die Größe passt sich von selbst an.");
+    } else if (w.t === "lamps") {
+      h += gh("Darstellung") + '<div class="grp"><div class="r2 plain"><span>Hintergrund</span>' + seg("bg", [["1", "Ein"], ["0", "Aus"]], (w.cfg && w.cfg.bg) || "1") + '</div></div>'
+        + gf("Ohne Hintergrund schweben nur die Symbole über dem Spiel. Größe über den Regler unten oder die Ecke.");
     } else if (w.t === "stats") {
       h += stHtml(w) + gf("„Uhrzeit · Ankunft“ und „Drehzahl · Restzeit“ wechseln von selbst, sobald ein Ziel gesetzt ist. Rennwerte zeigen nur im Rennen etwas.");
     } else if (w.t === "stack") {
@@ -709,7 +856,8 @@ if (EDIT) {
     const b = e.target.closest("button"); if (!b || b.disabled) return;
     if (b.dataset.done) { $("cmbp").classList.remove("on"); return; }
     if (b.dataset.fold) { const id = b.dataset.fold; if (ADDOPEN.has(id)) ADDOPEN.delete(id); else ADDOPEN.add(id); cmbRender(); return; }
-    if (b.dataset.k) cmbSet(c => { c[b.dataset.k] = b.dataset.v; });
+    if (b.dataset.k && cur() && cur().t === "lamps") { const w = cur(); w.cfg = Object.assign({}, w.cfg || {}, {[b.dataset.k]:b.dataset.v}); build(); sync(); cmbRender(); save(); }
+    else if (b.dataset.k) cmbSet(c => { c[b.dataset.k] = b.dataset.v; });
     else if (b.dataset.rm) { const [key, k] = b.dataset.rm.split(":"); setList(key, a => { const i = a.indexOf(k); if (i >= 0) a.splice(i, 1); }); }
     else if (b.dataset.add) { const [key, k] = b.dataset.add.split(":"); setList(key, a => { if (a.length < MAXOF[key] && !a.includes(k)) a.push(k); }); }
     else if (b.dataset.acc) { const w = cur(); if (!w) return; w.acc = b.dataset.acc; build(); sync(); cmbRender(); save(); }

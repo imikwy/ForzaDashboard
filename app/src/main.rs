@@ -3,6 +3,7 @@
 // zusätzlich im WLAN für Handy/Tablet bereit. Ein Symbol unten rechts in der Taskleiste hält es am Laufen.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod admin;
 mod apps;
 mod bruecke;
 mod dienst;
@@ -14,11 +15,13 @@ mod lobby;
 mod media;
 mod mqtt;
 mod overlay;
+mod profil;
 mod settings;
 mod sitzung;
 mod sozial;
 mod spotify;
 mod state;
+mod system;
 mod telemetry;
 mod tuning;
 mod updates;
@@ -42,7 +45,7 @@ use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
 // Format JJJJ-MM-TT.N. BAU_VER zählt ForzaDashboard-bauen.bat hoch; Releases auf GitHub setzen FD_VERSION beim Bauen.
-const BAU_VER: &str = "2026-11-09.10";
+const BAU_VER: &str = "2026-11-10.12";
 pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => BAU_VER };
 // hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
 pub const REPO: &str = "imikwy/ForzaDashboard";
@@ -214,6 +217,9 @@ async fn start(s: Arc<Shared>) -> Result<(), String> {
 
     dienst::start(&s);
     tuning::init(&s);   // Tuning-Börse (geteilte Tuning-Codes)
+    profil::init(&s);   // Spieler-Profile (freiwillig): Name, Bild, Tags, Level
+    admin::init(&s);    // Admin (Karte pflegen) und Straßen-Vorschläge der Spieler
+    system::start(s.clone());    // PC-Leistung (CPU, Grafikkarte, Speicher) fürs Dashboard und Overlay
     lenkrad::start(s.clone());   // Lenkrad-/Gamepad-Tasten fürs Dashboard (auch im Hintergrund)
     if let Some(u) = std::env::args().find(|a| a.starts_with("nxm://")) { mods::handle_nxm(s.clone(), &u); }   // per nxm-Link gestartet
     updates::spawn(s.clone());

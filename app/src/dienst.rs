@@ -71,7 +71,7 @@ fn friends_tick(s: &Shared) {
     let lr = s.flr.lock().unwrap().list.len();
     let upd = crate::updates::state(s)["text"].clone();
     s.emit(Some("fr"), json!({"on": on, "ok": s.net_ok(), "name": s.name(), "group": s.lobbys().names(), "lobbys": s.lobbys().list(),
-        "list": list, "gwp": s.lobbys().group_wps(), "me": s.sid, "soz": s.sozial().state(), "lr": lr, "upd": upd}).to_string());
+        "list": list, "gwp": s.lobbys().group_wps(), "kc": s.lobbys().kol_state(), "me": s.sid, "soz": s.sozial().state(), "lr": lr, "upd": upd}).to_string());
 }
 
 // ---------------- Ereignisse an die Dashboards ----------------
@@ -163,7 +163,8 @@ pub fn map_post(s: &Shared, b: &Value) -> Value {
     if !rest.is_empty() {
         let only_fit = rest.iter().all(|e| e["id"] == "cfg:mapfit");
         match s.sitz().cur() {
-            Some(c) if c.ready() => {
+            // die offizielle Karte ändert nur ein angemeldeter Admin
+            Some(c) if c.ready() && crate::admin::unlocked() => {
                 let sub = c.submit(&rest, b["grp"].as_str().map(String::from));
                 for e in &sub.ents { out.push(stamp(e, sub.t0)); }
             }
@@ -176,7 +177,7 @@ pub fn map_post(s: &Shared, b: &Value) -> Value {
             _ => {
                 let cur = map_ents(s);
                 let back: Vec<Value> = rest.iter().map(|e| cur.iter().find(|x| x["id"] == e["id"]).cloned().unwrap_or_else(|| json!({"id": e["id"], "k": e["k"], "d": 1, "ts": 0, "a": ""}))).collect();
-                return json!({"ok": false, "needSession": true, "ents": back});
+                return json!({"ok": false, "needSession": true, "needAdmin": !crate::admin::unlocked(), "ents": back});
             }
         }
     }
@@ -187,6 +188,7 @@ pub fn map_post(s: &Shared, b: &Value) -> Value {
 pub fn map_import(s: &Shared, b: &Value) -> Value {
     let Some(list) = b["ents"].as_array() else { return json!({"ok": false, "n": 0}) };
     let Some(c) = s.sitz().cur().filter(|c| c.ready()) else { return json!({"ok": false, "needSession": true, "n": 0}) };
+    if !crate::admin::unlocked() { return json!({"ok": false, "needAdmin": true, "n": 0}); }
     let cur: std::collections::HashMap<String, Value> = c.view().into_iter().map(|e| (e["id"].as_str().unwrap_or("").to_string(), e)).collect();
     let add: Vec<Value> = list.iter().filter(|e| {
         let id = e["id"].as_str().unwrap_or("");

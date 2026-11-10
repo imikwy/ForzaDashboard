@@ -38,20 +38,76 @@ fn get(s: &Shared, path: &str) -> Result<Value, String> {
     }
 }
 
-// Spielordner automatisch suchen (Steam und Xbox-App)
+// Spielordner automatisch suchen: laufendes Spiel, Xbox-App (auch umbenannte Spiele-Ordner über .GamingRoot),
+// alle Steam-Bibliotheken und übliche Ordner auf allen Laufwerken. Gültig ist ein Ordner mit forzahorizon6.exe.
+fn has_exe(p: &Path) -> bool {
+    std::fs::read_dir(p).map(|rd| rd.flatten().any(|e| { let n = e.file_name().to_string_lossy().to_lowercase(); n == "forzahorizon6.exe" || (n.starts_with("forzahorizon6") && n.ends_with(".exe")) })).unwrap_or(false)
+}
+// gewählten Ordner passend machen: …\Forza Horizon 6 → …\Content, eine Ebene zu tief → darüber
+pub fn norm_dir(p: &Path) -> Option<PathBuf> {
+    if has_exe(p) { return Some(p.to_path_buf()); }
+    let c = p.join("Content"); if has_exe(&c) { return Some(c); }
+    if let Ok(rd) = std::fs::read_dir(p) { for e in rd.flatten() { let q = e.path(); if q.is_dir() { if has_exe(&q) { return Some(q); } let c = q.join("Content"); if has_exe(&c) { return Some(c); } } } }
+    p.parent().filter(|pp| has_exe(pp)).map(Path::to_path_buf)
+}
+fn steam_libs() -> Vec<PathBuf> {
+    let mut roots: Vec<PathBuf> = vec![PathBuf::from("C:\\Program Files (x86)\\Steam"), PathBuf::from("C:\\Program Files\\Steam")];
+    let mut cmd = std::process::Command::new("reg");
+    crate::util::no_window(&mut cmd).args(["query", "HKCU\\Software\\Valve\\Steam", "/v", "SteamPath"]);
+    if let Ok(o) = cmd.output() { let t = String::from_utf8_lossy(&o.stdout); if let Some(l) = t.lines().find(|l| l.contains("SteamPath")) { if let Some(v) = l.split("REG_SZ").nth(1) { roots.push(PathBuf::from(v.trim().replace('/', "\\"))); } } }
+    let mut libs = Vec::new();
+    for r in roots {
+        libs.push(r.clone());
+        if let Ok(t) = std::fs::read_to_string(r.join("steamapps").join("libraryfolders.vdf")) {
+            for l in t.lines() { let l = l.trim(); if l.starts_with("\"path\"") { if let Some(v) = l.split('"').nth(3) { libs.push(PathBuf::from(v.replace("\\\\", "\\"))); } } }
+        }
+    }
+    libs
+}
+fn running_game() -> Option<PathBuf> {
+    let mut cmd = std::process::Command::new("powershell");
+    crate::util::no_window(&mut cmd).args(["-NoProfile", "-Command", "(Get-Process | Where-Object { $_.ProcessName -like 'forzahorizon6*' } | Select-Object -First 1).Path"]);
+    let o = cmd.output().ok()?; let p = String::from_utf8_lossy(&o.stdout).trim().to_string();
+    if p.is_empty() { None } else { Path::new(&p).parent().map(Path::to_path_buf) }
+}
 fn detect_dir() -> Option<String> {
     let mut cands: Vec<PathBuf> = Vec::new();
-    for d in ["C", "D", "E", "F", "G"] {
-        cands.push(PathBuf::from(format!("{d}:\\XboxGames\\Forza Horizon 6\\Content")));
-        cands.push(PathBuf::from(format!("{d}:\\SteamLibrary\\steamapps\\common\\ForzaHorizon6")));
-        cands.push(PathBuf::from(format!("{d}:\\Program Files (x86)\\Steam\\steamapps\\common\\ForzaHorizon6")));
+    let drives: Vec<String> = (b'A'..=b'Z').map(|c| format!("{}:\\", c as char)).filter(|d| Path::new(d).is_dir()).collect();
+    for d in &drives {
+        // Xbox-App: Spiele-Ordner steht in .GamingRoot (nach 8 Byte Kopf als UTF-16)
+        if let Ok(b) = std::fs::read(format!("{d}.GamingRoot")) {
+            if b.len() > 8 { let u: Vec<u16> = b[8..].chunks(2).filter(|c| c.len() == 2).map(|c| u16::from_le_bytes([c[0], c[1]])).take_while(|c| *c != 0).collect();
+                let rel = String::from_utf16_lossy(&u); if !rel.is_empty() { let base = PathBuf::from(d).join(rel.trim_start_matches('\\')); for n in ["Forza Horizon 6", "ForzaHorizon6"] { cands.push(base.join(n)); } } }
+        }
+        for n in ["XboxGames\\Forza Horizon 6", "XboxGames\\ForzaHorizon6", "Games\\Forza Horizon 6", "Program Files\\ModifiableWindowsApps\\Forza Horizon 6", "SteamLibrary\\steamapps\\common\\ForzaHorizon6", "SteamLibrary\\steamapps\\common\\Forza Horizon 6", "Steam\\steamapps\\common\\ForzaHorizon6", "Program Files (x86)\\Steam\\steamapps\\common\\ForzaHorizon6"] {
+            cands.push(PathBuf::from(d).join(n));
+        }
     }
-    cands.into_iter().find(|p| p.is_dir()).map(|p| p.to_string_lossy().to_string())
+    for l in steam_libs() { for n in ["ForzaHorizon6", "Forza Horizon 6"] { cands.push(l.join("steamapps").join("common").join(n)); } }
+    if let Some(p) = cands.iter().filter(|p| p.is_dir()).find_map(|p| norm_dir(p)) { return Some(p.to_string_lossy().to_string()); }
+    running_game().and_then(|p| norm_dir(&p)).map(|p| p.to_string_lossy().to_string())
+}
+// Ordner per Windows-Dialog wählen (immer vorne); danach passend machen und prüfen
+pub fn pick_dir(s: &Shared) -> Value {
+    let ps = "Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.Form -Property @{TopMost=$true; ShowInTaskbar=$false; WindowState='Minimized'}; $d = New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description = 'Ordner von Forza Horizon 6 wählen (z. B. C:\\XboxGames\\Forza Horizon 6)'; $d.ShowNewFolderButton = $false; if ($d.ShowDialog($f) -eq 'OK') { [Console]::OutputEncoding = [Text.Encoding]::UTF8; $d.SelectedPath }";
+    let mut cmd = std::process::Command::new("powershell");
+    crate::util::no_window(&mut cmd).args(["-NoProfile", "-STA", "-Command", ps]);
+    let Ok(o) = cmd.output() else { return json!({"ok": false, "why": "Der Auswahl-Dialog ließ sich nicht öffnen"}) };
+    let p = String::from_utf8_lossy(&o.stdout).trim().to_string();
+    if p.is_empty() { return json!({"ok": false, "cancel": true}); }
+    match norm_dir(Path::new(&p)) {
+        Some(d) => { let d = d.to_string_lossy().to_string(); let mut c = cfg(s); c["dir"] = json!(d); save(s, &c); json!({"ok": true, "dir": d}) }
+        None => json!({"ok": false, "why": "In diesem Ordner ist kein Forza Horizon 6 – wähle den Ordner, in dem das Spiel installiert ist"}),
+    }
+}
+pub fn auto_dir(s: &Shared) -> Value {
+    match detect_dir() { Some(d) => { let mut c = cfg(s); c["dir"] = json!(d); save(s, &c); json!({"ok": true, "dir": d}) } None => json!({"ok": false, "why": "Forza Horizon 6 wurde nicht gefunden – bitte den Ordner wählen"}) }
 }
 
 pub fn status(s: &Shared) -> Value {
     let c = cfg(s);
-    let dir = c["dir"].as_str().map(String::from).or_else(detect_dir).unwrap_or_default();
+    // gespeicherter Ordner nur, wenn es ihn noch gibt – sonst selbst suchen
+    let dir = c["dir"].as_str().filter(|d| !d.is_empty() && Path::new(d).is_dir()).map(String::from).or_else(detect_dir).unwrap_or_default();
     json!({"key": c["key"].as_str().map(|k| !k.is_empty()).unwrap_or(false), "user": c["user"], "premium": c["premium"], "dir": dir,
         "dirOk": !dir.is_empty() && Path::new(&dir).is_dir(), "installed": c["installed"].as_array().cloned().unwrap_or_default(), "nxm": c["nxm"].as_bool().unwrap_or(false)})
 }
@@ -70,8 +126,9 @@ pub fn set_key(s: &Shared, key: &str) -> Value {
 pub fn set_dir(s: &Shared, dir: &str) -> Value {
     let d = dir.trim().trim_matches('"');
     if !Path::new(d).is_dir() { return json!({"ok": false, "why": "Ordner gibt es nicht"}); }
+    let d = norm_dir(Path::new(d)).map(|p| p.to_string_lossy().to_string()).unwrap_or_else(|| d.to_string());
     let mut c = cfg(s); c["dir"] = json!(d); save(s, &c);
-    json!({"ok": true})
+    json!({"ok": true, "dir": d})
 }
 
 pub fn list(s: &Shared, kind: &str) -> Value {
