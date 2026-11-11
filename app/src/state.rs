@@ -81,6 +81,9 @@ pub struct Shared {
     pub last_packet: AtomicU64,
     // zuletzt wirklich gefahren (Spiel läuft, Auto rollt) – Forza schickt auch im Menü/Pause ständig Daten
     pub last_drive: AtomicU64,
+    // Lebenszeichen der Dashboard-Seite im Programmfenster (gegen den weißen Bildschirm, wenn die Anzeige abstürzt)
+    pub last_hb: AtomicU64,
+    pub hb_vis: std::sync::atomic::AtomicBool,
     pub last_len: AtomicUsize,
     pub tx: broadcast::Sender<Ev>,
     pub my_pos: Mutex<Option<MyPos>>,
@@ -129,6 +132,8 @@ impl Shared {
             packets: AtomicU64::new(0),
             last_packet: AtomicU64::new(0),
             last_drive: AtomicU64::new(0),
+            last_hb: AtomicU64::new(0),
+            hb_vis: std::sync::atomic::AtomicBool::new(true),
             last_len: AtomicUsize::new(0),
             tx,
             my_pos: Mutex::new(None),

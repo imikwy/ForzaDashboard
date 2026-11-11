@@ -2327,6 +2327,11 @@ function hlmTick(d){
 }
 setTimeout(hlmRender, 0);
 setInterval(() => { hz = msgCount; msgCount = 0; }, 1000);
+// Lebenszeichen fürs Programm: bleibt es aus, lädt die exe die Anzeige neu (statt weißem Bildschirm)
+if (window.FD_EXE) {
+  const hb = () => { try { fetch("/hb", {method:"POST", body:document.visibilityState, keepalive:true}).catch(() => {}); } catch (e) {} };
+  hb(); setInterval(hb, 2000); document.addEventListener("visibilitychange", hb);
+}
 // App-Leiste: merken, ob sie scrollt (dann blenden oben/unten weich aus – nur dort, wo noch etwas kommt)
 (() => {
   const mark = () => { const g = document.getElementById("grail"); if (!g) return; const ovf = g.scrollHeight > g.clientHeight + 2; g.classList.toggle("ovf", ovf); g.classList.toggle("top", ovf && g.scrollTop < 4); g.classList.toggle("end", ovf && g.scrollTop + g.clientHeight > g.scrollHeight - 4); };

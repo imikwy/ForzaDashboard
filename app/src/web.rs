@@ -234,6 +234,7 @@ pub fn router(s: Arc<Shared>) -> Router {
         }).await }))
         // Updates
         .route("/updates", get(|State(s): S| async move { j(updates::state(&s)) }))
+        .route("/hb", post(|State(s): S, b: Bytes| async move { s.last_hb.store(crate::util::now_ms(), std::sync::atomic::Ordering::Relaxed); s.hb_vis.store(&b[..] != b"hidden", std::sync::atomic::Ordering::Relaxed); j(json!({"ok": true})) }))
         .route("/updates/jetzt", post(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(tokio::task::spawn_blocking(move || updates::install_now(&s)).await.unwrap_or(json!({}))) }))
         .route("/updates/pruefen", post(|State(s): S| async move { s.upd.lock().unwrap().last = 0; j(json!({"ok": true})) }))
         .fallback(|| async { (StatusCode::NOT_FOUND, "Nicht gefunden") })

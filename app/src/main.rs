@@ -45,7 +45,7 @@ use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
 // Format JJJJ-MM-TT.N. BAU_VER zählt ForzaDashboard-bauen.bat hoch; Releases auf GitHub setzen FD_VERSION beim Bauen.
-const BAU_VER: &str = "2026-11-10.12";
+const BAU_VER: &str = "2026-11-11.1";
 pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => BAU_VER };
 // hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
 pub const REPO: &str = "imikwy/ForzaDashboard";
@@ -122,6 +122,7 @@ fn main() {
             }
             build_tray(&handle, &s_setup)?;
             if want_window { open_window(&handle, &s_setup); }
+            watchdog(handle.clone(), s_setup.clone());
             Ok(())
         })
         .build(tauri::generate_context!())
@@ -311,8 +312,59 @@ pub fn open_window(app: &AppHandle, s: &Arc<Shared>) {
     fenster_stil(&w, nf, top);
     // Fenster zu = ForzaDashboard ganz beenden (verschwindet auch aus dem Infobereich)
     let s2 = s.clone();
+    let s3 = s.clone(); let w2 = w.clone();
     w.on_window_event(move |e| {
         if let WindowEvent::CloseRequested { .. } = e { quit(&s2); }
+        // angeklickt/nach vorn geholt, aber die Seite hat sich länger nicht gemeldet -> gleich neu laden
+        if let WindowEvent::Focused(true) = e {
+            let hb = s3.last_hb.load(Ordering::Relaxed);
+            if hb > 0 && util::now_ms().saturating_sub(hb) > 10_000 {
+                log("Anzeige beim Anklicken ohne Lebenszeichen – wird neu geladen");
+                let url = format!("http://localhost:{}/", s3.web_port.load(Ordering::Relaxed));
+                if w2.navigate(url.parse().expect("URL")).is_err() { let _ = w2.reload(); }
+            }
+        }
+    });
+}
+
+// ---------------- Wächter gegen den weißen Bildschirm ----------------
+// Die Dashboard-Seite meldet sich alle 2 s (/hb). Stürzt die Anzeige ab (WebView2-Prozess weg, Seite hängt),
+// bleibt das Fenster weiß. Dann: neu laden – und wenn auch das nicht hilft, das Fenster ganz neu aufbauen.
+// Nur wenn das Fenster sichtbar ist; ist die Seite verdeckt, drosselt Windows sie (dann großzügiger warten).
+fn watchdog(app: AppHandle, s: Arc<Shared>) {
+    tauri::async_runtime::spawn(async move {
+        let mut opened_at = 0u64;      // seit wann es das Fenster gibt (Seite muss sich danach erst melden)
+        let mut tries = 0u32;          // Neuladen ohne Erfolg
+        let mut last_fix = 0u64;
+        loop {
+            sleep(Duration::from_secs(4)).await;
+            let now = util::now_ms();
+            let Some(w) = app.get_webview_window("main") else { opened_at = 0; continue };
+            if opened_at == 0 { opened_at = now; }
+            if !w.is_visible().unwrap_or(false) || w.is_minimized().unwrap_or(false) { continue; }
+            let hb = s.last_hb.load(Ordering::Relaxed);
+            let vis = s.hb_vis.load(Ordering::Relaxed);
+            let since = now.saturating_sub(hb.max(opened_at));
+            let limit = if hb == 0 { 45_000 } else if vis { 15_000 } else { 150_000 };
+            if since < limit { if hb > last_fix { tries = 0; } continue; }
+            if now.saturating_sub(last_fix) < 20_000 { continue; }
+            last_fix = now;
+            if tries < 2 {
+                tries += 1;
+                log(format!("Anzeige reagiert seit {} s nicht – wird neu geladen", since / 1000));
+                let url = format!("http://localhost:{}/", s.web_port.load(Ordering::Relaxed));
+                if w.navigate(url.parse().expect("URL")).is_err() { let _ = w.reload(); }
+            } else {
+                tries = 0; opened_at = 0;
+                log("Anzeige bleibt weiß – Fenster wird neu aufgebaut");
+                let (a2, s2) = (app.clone(), s.clone());
+                let _ = app.run_on_main_thread(move || {
+                    if let Some(w) = a2.get_webview_window("main") { let _ = w.destroy(); }
+                    let (a3, s3) = (a2.clone(), s2.clone());
+                    std::thread::spawn(move || { std::thread::sleep(Duration::from_millis(800)); let a4 = a3.clone(); let _ = a3.run_on_main_thread(move || open_window(&a4, &s3)); });
+                });
+            }
+        }
     });
 }
 
