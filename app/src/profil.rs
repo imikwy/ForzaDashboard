@@ -117,6 +117,20 @@ fn clean_act(v: &Value) -> Vec<Value> {
         Some(json!({"k": k, "n": n, "t": x["t"].as_u64().unwrap_or(0)}))
     }).take(12).collect()).unwrap_or_default()
 }
+// aktive Mods (nur Name, Nexus-Nummer, Kategorie) – zum Anzeigen auf dem Profil
+fn clean_mods(v: &Value) -> Vec<Value> {
+    v.as_array().map(|a| a.iter().filter_map(|x| {
+        let n = clean_txt(x["n"].as_str().unwrap_or(""), 60);
+        if n.is_empty() { return None; }
+        let k = x["k"].as_str().filter(|k| key_ok(k)).unwrap_or("misc");
+        Some(json!({"n": n, "id": x["id"].as_u64().unwrap_or(0) % 10_000_000_000, "k": k, "c": x["c"].as_u64().unwrap_or(0) % 100_000}))
+    }).take(40).collect()).unwrap_or_default()
+}
+// Fahrstil: je 5 Werte 0–100 (Cruise, Race, Drift, Offroad, Rage) für 30 Tage und gesamt
+fn clean_fs(v: &Value) -> Value {
+    let arr = |x: &Value| -> Option<Vec<u64>> { let a = x.as_array()?; if a.len() != 5 { return None; } a.iter().map(|n| n.as_u64().map(|n| n.min(100))).collect() };
+    match arr(&v["a"]) { Some(a) => json!({"m": arr(&v["m"]).unwrap_or_else(|| a.clone()), "a": a}), None => Value::Null }
+}
 fn clean_gar(v: &Value) -> Vec<Value> {
     v.as_array().map(|a| a.iter().take(400).filter_map(|g| Some(json!([g[0].as_u64()? % 100_000, (g[1].as_f64()?.max(0.0) * 10.0).round() / 10.0]))).collect()).unwrap_or_default()
 }
@@ -167,7 +181,7 @@ pub fn init(s: &Arc<Shared>) {
         let ep = o["ep"].as_u64().unwrap_or(0).min(10_000_000);
         let lv = level_of(ep).0;
         pr.alle.lock().unwrap().insert(who.to_string(), json!({"id": who, "u": u, "tags": clean_tags(&o["tags"]), "ep": ep, "lv": lv,
-            "links": clean_links(&o["links"]), "st": clean_style(&o["st"], lv), "ach": clean_ach(&o["ach"]), "act": clean_act(&o["act"]), "gar": clean_gar(&o["gar"]), "bg": o["bg"].as_bool().unwrap_or(false) && lv >= BG_LEVEL,
+            "links": clean_links(&o["links"]), "st": clean_style(&o["st"], lv), "ach": clean_ach(&o["ach"]), "act": clean_act(&o["act"]), "gar": clean_gar(&o["gar"]), "mods": clean_mods(&o["mods"]), "fs": clean_fs(&o["fs"]), "bg": o["bg"].as_bool().unwrap_or(false) && lv >= BG_LEVEL,
             "km": o["km"].as_f64().unwrap_or(0.0).max(0.0).round(), "cars": o["cars"].as_u64().unwrap_or(0).min(5000), "ev": o["ev"].as_u64().unwrap_or(0).min(5000),
             "garage": garage, "car": o["car"].as_u64().unwrap_or(0) % 100_000, "since": o["since"].as_u64().unwrap_or(0), "t": o["t"].as_u64().unwrap_or(0), "av": o["av"].as_bool().unwrap_or(false)}));
     }));
@@ -189,7 +203,7 @@ impl Profil {
             "km": (m["km"].as_f64().unwrap_or(0.0) * 10.0).round() / 10.0, "cars": g.len(), "ev": m["ev"].as_u64().unwrap_or(0),
             "garage": g.iter().take(3).map(|(o, k)| json!([o, (k * 10.0).round() / 10.0])).collect::<Vec<_>>(), "car": m["car"].as_u64().unwrap_or(0),
             "gar": g.iter().take(400).map(|(o, k)| json!([o, (k * 10.0).round() / 10.0])).collect::<Vec<_>>(),
-            "links": clean_links(&m["links"]), "st": clean_style(&m["st"], level_of(m["ep"].as_u64().unwrap_or(0)).0), "ach": clean_ach(&m["ach"]), "act": clean_act(&m["act"]),
+            "links": clean_links(&m["links"]), "st": clean_style(&m["st"], level_of(m["ep"].as_u64().unwrap_or(0)).0), "ach": clean_ach(&m["ach"]), "act": clean_act(&m["act"]), "mods": clean_mods(&m["mods"]), "fs": clean_fs(&m["fs"]),
             "bg": self.bg_file.exists() && level_of(m["ep"].as_u64().unwrap_or(0)).0 >= BG_LEVEL,
             "since": m["since"].as_u64().unwrap_or(0), "t": now_ms(), "av": self.av_file.exists()})
     }
@@ -234,8 +248,10 @@ pub fn me() -> Value {
         "car": m["car"], "since": m["since"], "av": pr.av_file.exists()}), true);
     let lv = v["lv"].as_u64().unwrap_or(1);
     v["ok"] = json!(true); v["has"] = json!(pr.has()); v["today"] = m["log"][today()].clone(); v["alltags"] = json!(TAGS);
-    v["links"] = clean_links(&m["links"]); v["st"] = clean_style(&m["st"], lv); v["ach"] = json!(clean_ach(&m["ach"])); v["act"] = json!(clean_act(&m["act"]));
+    v["links"] = clean_links(&m["links"]); v["st"] = clean_style(&m["st"], lv); v["ach"] = json!(clean_ach(&m["ach"])); v["act"] = json!(clean_act(&m["act"])); v["mods"] = json!(clean_mods(&m["mods"])); v["fs"] = clean_fs(&m["fs"]);
     v["gar"] = json!(g.iter().map(|(o, k)| json!([o, (k * 10.0).round() / 10.0])).collect::<Vec<_>>()); v["tot"] = m["tot"].clone();
+    // Verlauf nur für das eigene Profil (wird nicht geteilt): Tage aus hist, dazu das aktuelle 14-Tage-Log
+    { let mut h = m["hist"].as_object().cloned().unwrap_or_default(); if let Some(l) = m["log"].as_object() { for (d, x) in l { h.insert(d.clone(), x.clone()); } } v["hist"] = Value::Object(h); }
     v["bg"] = json!(pr.bg_file.exists() && lv >= BG_LEVEL); v["bgLevel"] = json!(BG_LEVEL); v["jdmLevel"] = json!(JDM_LEVEL);
     v
 }
@@ -288,9 +304,11 @@ pub fn set_extra(v: &Value) -> Value {
         if v.get("links").is_some() { m["links"] = clean_links(&v["links"]); }
         if v.get("ach").is_some() { m["ach"] = json!(clean_ach(&v["ach"])); }
         if v.get("tags").is_some() { m["tags"] = json!(clean_tags(&v["tags"])); }
+        if v.get("mods").is_some() { m["mods"] = json!(clean_mods(&v["mods"])); }
+        if v.get("fs").is_some() { m["fs"] = clean_fs(&v["fs"]); }
     }
     pr.save();
-    if pr.has() { pr.publish(false); }
+    if pr.has() { if v.as_object().map(|o| !o.is_empty() && o.keys().all(|k| k == "mods" || k == "fs")) == Some(true) { pr.publish_soon(); } else { pr.publish(false); } }
     json!({"ok": true})
 }
 // „Zuletzt dabei“ ergänzen (Event, Kolonne, eigener Beitrag); gleiche Einträge rücken nach vorn
@@ -308,6 +326,13 @@ pub fn activity(k: &str, n: &str) {
     }
     pr.save();
     if pr.has() { pr.publish_soon(); }
+}
+pub fn activity_rename(old: &str, new: &str) {
+    let Some(pr) = p() else { return };
+    let n = clean_txt(new, 48); if n.is_empty() { return; }
+    let mut ch = false;
+    { let mut m = pr.me.lock().unwrap(); if let Some(a) = m["act"].as_array_mut() { for x in a.iter_mut() { if x["k"] == "kol" && x["n"].as_str() == Some(old) { x["n"] = json!(n); ch = true; } } } }
+    if ch { pr.save(); }
 }
 pub fn avatar(id: &str) -> Option<String> {
     let pr = p()?;
@@ -416,6 +441,14 @@ pub fn drive(v: &Value) -> Value {
         }
         let before = m["ep"].as_u64().unwrap_or(0);
         m["ep"] = json!(before + gained);
+        if gained > 0 {
+            if !m["hist"].is_object() {
+                // beim ersten Mal das vorhandene 14-Tage-Log übernehmen
+                let mut h = serde_json::Map::new();
+                if let Some(l) = m["log"].as_object() { for (d, v) in l { h.insert(d.clone(), v.clone()); } }
+                m["hist"] = Value::Object(h);
+            } else if let Some(td) = m["log"][day.as_str()].as_object().cloned() { m["hist"][day.as_str()] = Value::Object(td); }
+        }
         let up = level_of(before + gained).0 > level_of(before).0;
         drop(m);
         pr.save();

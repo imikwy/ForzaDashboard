@@ -149,7 +149,7 @@ pub fn list(s: &Shared) -> Value {
         for l in v["likes"].as_array().into_iter().flatten() { if let Some(l) = l.as_str() { *likes.entry(l.to_string()).or_default() += 1; } }
         for c in v["cm"].as_array().into_iter().flatten() {
             let to = c["to"].as_str().unwrap_or("").to_string();
-            cms.entry(to).or_default().push(json!({"by": n, "x": c["x"], "t": c["t"], "mine": *who == tu.me, "id": c["id"]}));
+            cms.entry(to).or_default().push(json!({"by": n, "x": c["x"], "t": c["t"], "mine": *who == tu.me, "id": c["id"], "pid": v["pid"]}));
         }
     }
     let bilder = tu.bilder.lock().unwrap();
@@ -172,11 +172,25 @@ pub fn list(s: &Shared) -> Value {
             out.push(x);
         }
     }
+    // Kommentare zu Mods (nur im ForzaDashboard zu sehen) mit Daumen hoch/runter („cu:“/„cd:“ + Kommentar-Id)
+    let mut mod_cm = serde_json::Map::new();
+    for (to, list) in cms.iter() {
+        let Some(id) = to.strip_prefix("mod:") else { continue };
+        let mut l = list.clone();
+        l.sort_by_key(|c| c["t"].as_u64().unwrap_or(0));
+        for c in l.iter_mut() {
+            let cid = c["id"].as_str().unwrap_or("").to_string();
+            let (ku, kd) = (format!("cu:{cid}"), format!("cd:{cid}"));
+            c["up"] = json!(likes.get(&ku).copied().unwrap_or(0)); c["dn"] = json!(likes.get(&kd).copied().unwrap_or(0));
+            c["myv"] = json!(if my_likes.contains(&ku) { 1 } else if my_likes.contains(&kd) { -1 } else { 0 });
+        }
+        mod_cm.insert(id.to_string(), json!(l));
+    }
     // Herzen für Mods (Schlüssel „mod:<id>“) – zählen über alle Spieler wie bei Beiträgen
     let mut modl = serde_json::Map::new();
     for (k, n) in &likes { if let Some(id) = k.strip_prefix("mod:") { modl.insert(id.to_string(), json!(n)); } }
     let mod_mine: Vec<&str> = my_likes.iter().filter_map(|k| k.strip_prefix("mod:")).collect();
-    json!({"ok": true, "net": tu.net.ok(), "posts": out, "players": alle.len(), "modLikes": modl, "modMine": mod_mine})
+    json!({"ok": true, "net": tu.net.ok(), "posts": out, "players": alle.len(), "modLikes": modl, "modMine": mod_mine, "modCm": mod_cm})
 }
 
 pub fn photo(key: &str) -> Option<String> {

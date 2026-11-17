@@ -335,6 +335,29 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .edbar .btn.on{background:var(--accent);color:#fff}
 .edbar{flex-direction:column;align-items:stretch;gap:8px;max-height:calc(100% - 140px);overflow:auto}
 .edrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+/* Editor: eine kompakte Zeile, Untermenüs klappen darunter auf */
+.edbar .edtop{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.edbar .edtop::-webkit-scrollbar{display:none}
+.edsep{width:1px;height:26px;background:rgba(255,255,255,.14);flex:none;margin:0 2px}
+.ederase{display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:10px;font-weight:600;font-size:13px;color:#ff453a;background:rgba(255,69,58,.12);box-shadow:inset 0 0 0 1px rgba(255,69,58,.35);flex:none;margin-left:6px}
+.ederase svg{width:16px;height:16px}.ederase.on{background:#ff453a;color:#fff;box-shadow:0 0 0 3px rgba(255,69,58,.3)}
+.edbar.erasing{box-shadow:inset 0 0 0 2px #ff453a,0 0 24px rgba(255,69,58,.25)}
+.edmb.on{background:var(--accent);color:#fff}
+.edpop{border-radius:14px;background:rgba(255,255,255,.05);padding:10px;max-height:46vh;overflow:auto}
+.edpop.more{display:flex;flex-direction:column;gap:10px}
+.edter{display:flex;gap:14px;flex-wrap:wrap}.edter canvas{border-radius:12px;flex:none;max-width:100%}
+.edter .inf{flex:1;min-width:220px;display:flex;flex-direction:column;gap:7px}.edter small{color:var(--muted);font-size:12px;line-height:1.4}
+.edter .pb{height:8px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}.edter .pb u{display:block;height:100%}
+.edter .nums{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.edter .nums div{padding:6px;border-radius:10px;background:rgba(255,255,255,.06);text-align:center}.edter .nums b{display:block;font-size:15px}
+.edrl{display:flex;flex-direction:column;gap:6px}.edrl>div{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:12px;background:rgba(255,255,255,.04)}
+.edrl>div.on{box-shadow:inset 0 0 0 2px #64d2ff}
+.edrl .rdx{color:#ff453a;min-width:34px;padding:0 10px}
+.edroads .seg2.sm i{font-style:normal;opacity:.65;margin-left:2px}.edrl i{width:18px;height:4px;border-radius:2px;background:#64d2ff;flex:none}
+.edrl span{flex:1;min-width:0;display:flex;flex-direction:column}.edrl small{color:var(--muted);font-size:12px}
+.edbar.quick{right:auto;width:min(420px,calc(100% - 32px))}
+.edq{display:flex;flex-direction:column;gap:10px}.edqh b{display:block;font-size:15px}.edqh small{color:var(--muted);font-size:12.5px}
+.edqk{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.edqk button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px;border-radius:12px;background:rgba(255,255,255,.07);font-size:12px;font-weight:600;color:var(--text)}
+.edqk button.on{box-shadow:inset 0 0 0 2px var(--accent)}.edqk i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-style:normal;font-weight:800;color:#fff}.edqk svg{width:18px;height:18px}
 .edbar kbd{font:700 10px/1.2 Manrope,Segoe UI,sans-serif;margin-left:6px;padding:1px 4px;border-radius:4px;background:rgba(255,255,255,.1);color:var(--muted)}
 .edbar .on kbd,.edbar .btn.pri kbd{background:rgba(255,255,255,.22);color:#fff}
 .edbar .btn:disabled{opacity:.35;cursor:default}
@@ -771,6 +794,8 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .hlm i.o{animation:hlmb .5s steps(1) infinite}
 @keyframes hlmb{0%{color:#ff9f0a;filter:drop-shadow(0 0 5px rgba(255,159,10,.85))}50%{color:rgba(255,255,255,.14);filter:none}}
 @container (max-width:620px){ .hlm{display:none} }
+#hplay.hcov{box-shadow:inset 0 0 0 100px rgba(0,0,0,.35)}
+.fdidle *,.fdidle *::before,.fdidle *::after{animation-play-state:paused!important}
 .hbl{display:flex;gap:2px;flex:none}
 .hbl[hidden]{display:none}
 .hbl button{width:34px;height:46px;border-radius:14px;display:grid;place-items:center;color:rgba(255,255,255,.22);transition:color .15s}
@@ -1035,6 +1060,49 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .cxph .ov{position:absolute;left:10px;right:10px;bottom:9px;z-index:1;display:flex;align-items:center;gap:8px;font-size:12.5px;color:#fff}
 .cxph .ov b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cxph .ov span{display:flex;align-items:center;gap:3px;font-weight:700}.cxph .ov svg{width:13px;height:13px}
+.cxtl{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;scroll-snap-type:x proximity}
+.cxtl::-webkit-scrollbar{display:none}
+.cxtlc{flex:none;width:330px;scroll-snap-align:start;border-radius:22px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);padding:12px 12px 10px;display:flex;flex-direction:column;gap:6px}
+.cxtlc .hd{display:flex;flex-direction:column;padding:2px 4px 4px}.cxtlc .hd b{font-size:16px;font-weight:700}.cxtlc .hd small{font-size:12px;color:var(--muted)}
+.cxtlc .r{display:flex;align-items:center;gap:10px;padding:5px;border-radius:14px;background:rgba(255,255,255,.04)}
+.cxtlc .im{width:74px;height:40px;flex:none;display:grid;place-items:center}.cxtlc .im img{max-width:100%;max-height:100%;object-fit:contain}
+.cxtlc .t{flex:1;min-width:0;display:flex;flex-direction:column}.cxtlc .t b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cxtlc .t small{font-size:11px;color:var(--muted)}
+.cxtlc .cxcode{font-size:12.5px;padding:6px 8px;color:#30d158}
+.cxtlc .src{font-size:11px;color:var(--dim);padding:2px 4px 0}
+.mdcms{display:flex;flex-direction:column;gap:10px;max-width:760px}
+.mdcm{display:flex;gap:10px}.mdcm .b{flex:1;min-width:0;padding:10px 12px;border-radius:16px;background:var(--mdc2,rgba(255,255,255,.08))}
+.mdcm .h{display:flex;align-items:baseline;gap:8px}.mdcm .h small{color:var(--muted);font-size:12px}.mdcm .h button{margin-left:auto;font-size:12px;color:#ff453a}
+.mdcm p{margin:4px 0 6px;font-size:14px;line-height:1.45;word-break:break-word}
+.mdcm .v{display:flex;gap:6px}.mdcm .v button{display:flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:14px;background:rgba(255,255,255,.08);font-size:12.5px;font-weight:700;color:var(--muted)}
+.mdcm .v svg{width:14px;height:14px}.mdcm .v button.on{color:#30d158;background:rgba(48,209,88,.15)}.mdcm .v button.dn.on{color:#ff453a;background:rgba(255,69,58,.15)}
+.mdcm.me .b{background:rgba(10,132,255,.14)}
+.fdav{background:linear-gradient(135deg,#0a84ff,#bf5af2)}.fdav span{background:#0b0e14!important;color:#fff;font-weight:800;letter-spacing:-.02em}
+.pfq-t{display:inline-flex;cursor:pointer}
+.pfq{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s}
+.pfq.on{opacity:1;pointer-events:auto}
+.pfq .c{position:relative;width:min(360px,92vw);max-height:88vh;overflow:auto;border-radius:26px;background:rgba(22,26,34,.96);box-shadow:0 22px 60px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.12);padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;color:#fff;transform:scale(.96);transition:transform .2s}
+.pfq.on .c{transform:scale(1)}
+.pfq .ban{height:90px;margin:0 -16px;border-radius:26px 26px 0 0}
+.pfq .x{position:absolute;right:12px;top:12px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;z-index:2}
+.pfq .who{display:flex;align-items:flex-end;gap:12px;margin-top:-40px}.pfq .who .pfr{box-shadow:0 0 0 4px rgba(22,26,34,.96)}
+.pfq .who b{display:block;font-size:19px}.pfq .who small{color:rgba(255,255,255,.6);font-size:12.5px}
+.pfq .pfnum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pfq .pfnum div{text-align:center;padding:8px 0;border-radius:12px;background:rgba(255,255,255,.07)}.pfq .pfnum b{display:block}.pfq .pfnum small{font-size:11px;color:rgba(255,255,255,.55)}
+.pfq .car{font-size:13px;color:#34d27b;font-weight:600}
+.pfq .pfsh,.pfq .pftags{justify-content:flex-start}
+.plcard{position:absolute;left:76px;top:16px;z-index:45;width:320px;max-width:calc(100% - 32px);border-radius:24px;overflow:hidden;background:rgba(22,26,34,.9);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);box-shadow:0 18px 44px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.13);color:#fff;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .2s,transform .2s}
+.plcard.on{opacity:1;transform:none;pointer-events:auto}
+.plcard .hd{display:flex;align-items:center;gap:10px;padding:12px 12px 10px}
+.plcard .ic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-weight:800;flex:none}.plcard .ic svg{width:20px;height:20px}
+.plcard .tt{flex:1;min-width:0}.plcard .tt b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.plcard .tt small{color:rgba(255,255,255,.6);font-size:12.5px}
+.plcard .x{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;flex:none}
+.plcard .ph{position:relative;height:170px;background:rgba(255,255,255,.06)}
+.plcard .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s}.plcard .ph img.on{opacity:1}
+.plcard .ph .no{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.45);font-size:13px}
+.plcard .ph .cr{position:absolute;left:10px;bottom:10px;font-size:10.5px;color:rgba(255,255,255,.85);text-shadow:0 1px 3px rgba(0,0,0,.9);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plcard .ph .add{position:absolute;right:10px;bottom:10px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:22px;line-height:1}
+.plcard .dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:5px}.plcard .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.45)}.plcard .dots i.on{background:#fff}
+.plcard p{margin:10px 14px 0;font-size:13.5px;line-height:1.45;color:rgba(255,255,255,.82)}
+.plcard .bt{display:flex;gap:8px;padding:12px 14px 14px}.plcard .bt button{flex:1;height:38px;border-radius:12px;background:rgba(255,255,255,.12);color:#fff;font-weight:600}.plcard .bt .pri{background:#0a84ff}
 .cxtunes{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
 .cxtu{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.06);cursor:pointer;min-width:0}
 .cxtu .ic{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#ff9f0a,#ff375f);display:grid;place-items:center;font-size:18px;flex:none}
@@ -1448,9 +1516,7 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .mdshelf,.mdhero,.mdgal,.mdcats,.cmrow,.tdshelf,.sprow,.kce{cursor:grab}
 .hdrag,.hdrag *{cursor:grabbing!important;user-select:none}
 .mdshelf img,.mdhero img,.mdgal img,.cmrow img,.tdshelf img,.sprow img{-webkit-user-drag:none}
-/* nur zeichnen, was sichtbar ist (lange Listen) */
-.mdgrid .mdc{content-visibility:auto;contain-intrinsic-size:auto 330px}
-.mdshelf,.mdgal{content-visibility:auto;contain-intrinsic-size:auto 300px}
+
 .mdbar{display:flex;align-items:center;gap:12px;margin:18px 2px 12px;flex-wrap:wrap}
 .mdbar>span{font-weight:650;color:var(--muted);font-size:14px;flex:1;min-width:140px}
 .mdbar .seg2{margin:0;width:400px;max-width:100%}
@@ -1744,6 +1810,7 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .pfpop .car .dot{width:8px;height:8px;border-radius:50%;background:#30d158;box-shadow:0 0 0 4px rgba(48,209,88,.18);flex:none}
 .pfpop .car .t{flex:1;min-width:0}
 .pfpop .car small{display:block;font-size:10.5px;font-weight:700;letter-spacing:.07em;color:rgba(255,255,255,.5)}
+.pfpop .car .cmod{display:block;font-style:normal;font-size:11.5px;font-weight:600;color:#ff9f0a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pfpop .car b{display:block;font-size:13.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pfpop .car .sp{font:700 15px var(--font-num);text-align:right;white-space:nowrap}
 .pfpop .car .sp small{text-align:right}
@@ -1845,6 +1912,58 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .pfach em{display:block;height:100%;background:var(--accent)}
 .pfach .ti{position:absolute;right:8px;top:8px;width:24px;height:24px;border-radius:50%;font-size:13px;background:rgba(255,255,255,.08);color:var(--muted)}
 .pfach .ti.on{background:#ffd60a;color:#1c1c1e}
+.pfmods{display:flex;flex-wrap:wrap;gap:6px}
+.pfmods em{font-style:normal;display:flex;flex-direction:column;line-height:1.2;min-width:0}.pfmods em small{font-size:10.5px;color:var(--muted);font-weight:600}
+.gch{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:8px}.gch::-webkit-scrollbar{display:none}
+.gch button{flex:none;height:28px;padding:0 11px;border-radius:14px;background:rgba(255,255,255,.08);font-size:12px;font-weight:600;color:var(--muted)}.gch button.on{background:var(--accent);color:#fff}
+.pfgarage{grid-column:1/-1}
+.pfl{display:flex;flex-direction:column;gap:14px;min-width:0}
+.fsb{padding:14px 14px 12px}
+.fsh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}.fsh b{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.fsr{width:100%;height:auto;display:block;color:var(--text,#fff);margin-top:2px}
+.fsr .ln{fill:var(--muted);font-size:11.5px}.fsr .vl{fill:var(--text,#fff);font-size:15px;font-weight:600}
+.fsep{height:1px;background:rgba(255,255,255,.1);margin:4px -14px 0}
+.fst{display:flex;align-items:center;gap:11px;padding-top:11px}
+.fsi{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none}.fsi svg{width:20px;height:20px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fst b{display:block;font-size:16px;font-weight:600}.fst small{font-size:12.5px;color:var(--muted)}
+.fst .km{margin-left:auto;text-align:right;font-size:11.5px;color:var(--muted);line-height:1.35}
+.gch button i{font-style:normal;opacity:.6;margin-left:2px}
+.gst{display:grid;grid-template-columns:1.7fr repeat(3,1fr);gap:8px;margin-bottom:12px}
+.gst>div{background:rgba(255,255,255,.05);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
+.gst small{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.gst b{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gst em{font-style:normal;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gst .gtop{flex-direction:row;align-items:center;justify-content:flex-start;gap:12px;background:linear-gradient(120deg,rgba(10,132,255,.22),rgba(255,255,255,.05))}
+.gtop img{width:112px;height:63px;object-fit:contain;flex:none}.gtop span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.gbgrp h5{font-size:13px;font-weight:700;margin:12px 0 7px;display:flex;gap:6px;align-items:center}.gbgrp h5 i{font-style:normal;font-size:12px;color:var(--muted);font-weight:600}
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+.gc{display:flex;flex-direction:column;border-radius:16px;background:rgba(255,255,255,.05);min-width:0;overflow:hidden;transition:background .15s}
+.gc:hover{background:rgba(255,255,255,.09)}.gc[data-a]{cursor:pointer}.gc.mod{box-shadow:inset 0 0 0 1px rgba(255,159,10,.5)}
+.gc .im{position:relative;aspect-ratio:16/9;background:radial-gradient(ellipse at 50% 80%,rgba(255,255,255,.09),rgba(255,255,255,.02));display:grid;place-items:center}
+.gc .im img{width:100%;height:100%;object-fit:contain}.gc .im svg{width:62%;opacity:.35}
+.gc .mb{position:absolute;left:7px;top:7px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:rgba(255,159,10,.92);color:#1c1c1e}
+.gc .tb{position:absolute;right:7px;top:7px;font-size:11px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:rgba(255,214,10,.92);color:#1c1c1e}
+.gc .gi{display:flex;flex-direction:column;gap:1px;padding:8px 10px 9px}
+.gc b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gc small{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gk{height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px}.gk i{display:block;height:100%;border-radius:2px;background:var(--accent,#0a84ff)}
+.gc em{font-style:normal;font-size:11px;color:var(--muted);margin-top:2px}
+@media (max-width:900px){.gst{grid-template-columns:1fr 1fr}.gst .gtop{grid-column:1/-1}}
+.pfhl{color:var(--accent);cursor:pointer;font-weight:600}
+.ephc{width:min(780px,94vw)!important;padding-bottom:16px;gap:12px!important}
+.epk{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:14px;padding-right:40px;flex-wrap:wrap}
+.epk small{display:inline-block;color:rgba(255,255,255,.55);font-size:11px;font-weight:700;letter-spacing:.05em}
+.epk b{display:block;font:800 40px/1.05 var(--font-num,inherit);letter-spacing:-.02em;margin:2px 0}
+.epk .up,.epk .dn{font-size:14px;font-weight:700}.epk .up{color:#30d158}.epk .dn{color:#ff453a}
+.epcw{position:relative;border-radius:16px;background:rgba(255,255,255,.035);padding:6px 4px 0}
+.epg{width:100%;height:auto;display:block;touch-action:none;cursor:crosshair}
+.eppl{animation:eppl 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}@keyframes eppl{0%{transform:scale(.6);opacity:.5}100%{transform:scale(2.2);opacity:0}}
+.eptip{position:absolute;top:8px;transform:translateX(-50%);background:rgba(28,28,30,.94);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 10px;font-size:12.5px;line-height:1.35;pointer-events:none;display:none;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.eptip small{color:rgba(255,255,255,.6);font-size:11.5px}
+.eprow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.eprow>small{color:rgba(255,255,255,.5);font-size:12px}
+.epst{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.epst div{background:rgba(255,255,255,.06);border-radius:12px;padding:8px 11px;display:flex;flex-direction:column;gap:1px}
+.epst small{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:rgba(255,255,255,.5)}.epst b{font-size:15px}
+.eplg{display:flex;gap:14px;font-size:12px;color:rgba(255,255,255,.6)}.eplg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.pfmods span{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:10px;background:var(--surface3);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pfmods span[data-a]{cursor:pointer}.pfmods i{font-style:normal}
 .pfact{display:flex;flex-direction:column;gap:8px}
 .pfact>div{display:flex;gap:10px;align-items:center}
 .pfact>div[data-a]{cursor:pointer}
@@ -1867,6 +1986,7 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .gbh small{font-size:12px;color:var(--muted)}
 .pftg{display:flex;flex-wrap:wrap;gap:6px}
 .klead{font-size:13px}
+.av.pfl{cursor:pointer;overflow:hidden}.av.pfl img{width:100%;height:100%;object-fit:cover}
 .itx.red.on{opacity:.7}
 /* Kolonnen-Chat: klein unten links in der Karte, nur in einer Kolonne */
 .kc{position:absolute;left:16px;bottom:104px;z-index:30;display:flex;flex-direction:column;align-items:flex-start;gap:8px;pointer-events:none;max-width:min(340px,calc(100% - 32px))}
@@ -2178,7 +2298,7 @@ const $ = id => document.getElementById(id);
 const APP_VER = "2026-10-27.22";
 
 /* ======================= Einstellungen ======================= */
-const DEF = {home:null, binds:{}, lampsDash:true, blinkOn:true, blinkOthers:true, blinkSnd:"modern", blinkVol:0.6, lht:true, voiceMode:"off", voiceSex:"f", voiceVol:1, unit:"kmh", temp:"c", press:"bar", power:"ps", orient:"heading", autozoom:true, color:"speed", mirror:false,
+const DEF = {home:null, binds:{}, terrain:true, lampsDash:true, blinkOn:true, blinkOthers:true, blinkSnd:"modern", blinkVol:0.6, lht:true, voiceMode:"off", voiceSex:"f", voiceVol:1, unit:"kmh", temp:"c", press:"bar", power:"ps", orient:"heading", autozoom:true, color:"speed", mirror:false,
   save:true, zoom:1, mapDim:true, brandDash:false, trailShow:"off", learn:false, carSnap:true, tilt:true, lrSens:1.4, mapSrc:"both", accent:"#0a84ff", fs:1, corners:"round", tireMode:"temp", fuelMul:1, fuelCap:0, friends:true, fname:"",
   diag:false, mapTheme:"dark", design:"std", gMode:"dark", gWall:"welle", gBgBlur:0, gTrans:70, gTint:"klar", gOrder:null, limReg:"de", limDe:[50,100,0], limJp:[40,60,100], limWarn:5,
   w:{boost:true, pedals:true, tires:true, gforce:true, laps:true, music:true, home:true, weather:true, power:false, fuel:true, susp:false, attitude:false, graph:false, surface:false, car:false}};
@@ -2263,6 +2383,8 @@ function onData(d){
   // Forza pausiert (Menü, Dashboard bedient): das Spiel schickt dann die Position 0/0. Sonst springt die Karte an den
   // Rand der Welt (schwarz bzw. stark vergrößert, ohne Pfeil) – deshalb die letzte echte Position stehen lassen.
   try { wearTick(d); } catch (e) {}
+  try { liveTick(d); } catch (e) {}
+  try { hgtTick(d); } catch (e) {}
   if (!d.on && !d.px && !d.pz) { const lp = lastPos || (() => { try { return JSON.parse(localStorage.getItem("fd.lastpos") || "null"); } catch (e) { return null; } })(); if (lp && (lp.x || lp.z)) { d.px = lp.x; d.pz = lp.z; } }
   // Overlay im Spiel: auch versorgen, wenn das Dashboard-Fenster hinter Forza liegt (dann zeichnet es selbst kaum noch)
   if (d.on && d.dash && window.OV && OV.on && performance.now() - (OV.tk || 0) > 250) { OV.tk = performance.now(); try { navBanner(OV.tk); } catch (e) {} }
@@ -2270,6 +2392,7 @@ function onData(d){
   try { blTick(d); } catch (e) {}
   try { epTick(d); } catch (e) {}
   try { chTick(d); } catch (e) {}
+  try { fsTick(d); } catch (e) {}
   try { wetTick(d); } catch (e) {}
   const v = d.spd * 3.6;
   if (v > sess.top && v < 600) sess.top = v;
@@ -2327,6 +2450,111 @@ function hlmTick(d){
 }
 setTimeout(hlmRender, 0);
 setInterval(() => { hz = msgCount; msgCount = 0; }, 1000);
+
+// ---- Gelände (Stufe 1): Höhen aus den eigenen Fahrten sammeln und als Hügel-Schattierung auf die Karte legen ----
+// Forza schickt bei jedem Paket die Höhe des Autos (py). Je 16-m-Feld wird ein gleitender Mittelwert gespeichert;
+// zwischen bekannten Feldern wird weich aufgefüllt. Ergebnis: Berge, Täler und Brücken werden auf der Karte sichtbar.
+const HGT = {cell:16, m:new Map(), rev:0, dirty:false, cv:null, x0:0, z0:0, w:0, h:0, built:-1, srev:0, at:0};
+(() => { try { const a = JSON.parse(localStorage.getItem("fd.hgt") || "[]"); for (let i = 0; i + 3 < a.length + 1; i += 4) HGT.m.set(a[i] + "," + a[i + 1], [a[i + 2] / 10, a[i + 3]]); HGT.rev = HGT.m.size; } catch (e) {} })();
+function hgtTick(d){
+  if (!d.on || !d.dash || demo || Math.abs(d.spd || 0) < 1 || !isFinite(d.py) || (!d.px && !d.pz)) return;
+  const k = Math.floor(d.px / HGT.cell) + "," + Math.floor(d.pz / HGT.cell), e = HGT.m.get(k);
+  if (!e) { HGT.m.set(k, [d.py, 1]); HGT.rev++; HGT.dirty = true; return; }
+  if (e[1] < 30) { e[1]++; e[0] += (d.py - e[0]) / e[1]; HGT.dirty = true; if (e[1] % 10 === 0) HGT.rev++; }
+}
+setInterval(() => {
+  if (!HGT.dirty) return; HGT.dirty = false;
+  const a = []; for (const [k, v] of HGT.m) { const [i, j] = k.split(","); a.push(+i, +j, Math.round(v[0] * 10), v[1]); }
+  try { localStorage.setItem("fd.hgt", JSON.stringify(a)); } catch (e) {}
+}, 20000);
+// Schattierungsbild bauen (höchstens alle 20 s neu, nur wenn sich genug geändert hat)
+async function hgtSync(){
+  if (!live) return;
+  if (window.FD_EXE && HGT.m.size) { const a = []; for (const [k, v] of HGT.m) { const [i, j] = k.split(","); a.push(+i, +j, Math.round(v[0] * 10), v[1]); } fetch("/hoehen/mein", {method:"POST", body:JSON.stringify(a)}).catch(() => {}); }
+  const r = await fetch("/hoehen", {cache:"no-store"}).then(x => x.json()).catch(() => null);
+  if (r && r.ok) { const m = new Map(), c = r.c || []; for (let i = 0; i + 3 < c.length; i += 4) m.set(c[i] + "," + c[i + 1], [c[i + 2] / 10, c[i + 3]]); HGT.r = m; HGT.players = r.spieler || 0; HGT.rrev = (HGT.rrev || 0) + 1; }
+}
+setTimeout(hgtSync, 20000); setInterval(hgtSync, 5 * 60000);
+function hgtBuild(){
+  const sig = HGT.rev + "/" + (HGT.rrev || 0);
+  if ((!HGT.m.size && !(HGT.r && HGT.r.size)) || HGT.built === sig || (HGT.cv && HGT.lastRR === (HGT.rrev || 0) && (performance.now() - HGT.at < 120000 || HGT.rev - (HGT.lastRev || 0) < 60))) return;
+  HGT.at = performance.now(); HGT.built = sig; HGT.lastRev = HGT.rev; HGT.lastRR = HGT.rrev || 0;
+  const M = hgtMerged();
+  let i0 = Infinity, j0 = Infinity, i1 = -Infinity, j1 = -Infinity;
+  for (const k of M.keys()) { const [i, j] = k.split(",").map(Number); if (i < i0) i0 = i; if (j < j0) j0 = j; if (i > i1) i1 = i; if (j > j1) j1 = j; }
+  const PAD = 6; i0 -= PAD; j0 -= PAD; i1 += PAD; j1 += PAD;
+  // nur die Umgebung (±5 km) rechnen – sonst dauert es bei großen gefahrenen Gebieten zu lange
+  { const lp = D && (D.px || D.pz) ? D : (lastPos || null); if (lp && (i1 - i0 > 640 || j1 - j0 > 640)) { const ci = Math.floor((lp.px ?? lp.x) / HGT.cell), cj = Math.floor((lp.pz ?? lp.z) / HGT.cell); i0 = Math.max(i0, ci - 320); i1 = Math.min(i1, ci + 320); j0 = Math.max(j0, cj - 320); j1 = Math.min(j1, cj + 320); } }
+  const w = i1 - i0 + 1, h = j1 - j0 + 1; if (w * h > 6e6) return;   // Schutz: nicht mehr als ~6 Mio. Felder
+  const H = new Float32Array(w * h), Wt = new Float32Array(w * h);
+  for (const [k, v] of M) { const [i, j] = k.split(",").map(Number); if (i < i0 || i > i1 || j < j0 || j > j1) continue; const o = (j - j0) * w + (i - i0); H[o] = v[0]; Wt[o] = 1; }
+  // weich auffüllen: 5 Durchgänge, unbekannte Felder übernehmen den Mittelwert bekannter Nachbarn (Gewicht nimmt ab)
+  for (let pass = 0; pass < 8; pass++) {
+    const H2 = H.slice(), W2 = Wt.slice();
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const o = y * w + x; if (Wt[o] >= 1) continue; let s = 0, n = 0; for (const q of [o - 1, o + 1, o - w, o + w, o - w - 1, o - w + 1, o + w - 1, o + w + 1]) if (Wt[q] > 0) { s += H[q] * Wt[q]; n += Wt[q]; } if (n > 0) { H2[o] = s / n; W2[o] = Math.min(.9, n / 8 * .9 * (1 - pass * .09)); } }
+    H.set(H2); Wt.set(W2);
+  }
+  // große Lücken zwischen Straßen: auf einem groben Raster (64 m) weit auffüllen und weich zurückrechnen –
+  // so werden ganze Hänge zwischen den gefahrenen Straßen sichtbar, nicht nur die Straßen selbst
+  { const F = 4, cw = Math.ceil(w / F), ch = Math.ceil(h / F), CH = new Float32Array(cw * ch), CW = new Float32Array(cw * ch);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const o = y * w + x; if (Wt[o] >= 0.5) { const q = Math.floor(y / F) * cw + Math.floor(x / F); CH[q] += H[o]; CW[q] += 1; } }
+    for (let q = 0; q < CH.length; q++) if (CW[q]) { CH[q] /= CW[q]; CW[q] = 1; }
+    for (let pass = 0; pass < 14; pass++) { const H2 = CH.slice(), W2 = CW.slice();
+      for (let y = 1; y < ch - 1; y++) for (let x = 1; x < cw - 1; x++) { const o = y * cw + x; if (CW[o] >= 1) continue; let sm = 0, n = 0; for (const q of [o - 1, o + 1, o - cw, o + cw]) if (CW[q] > 0) { sm += CH[q] * CW[q]; n += CW[q]; } if (n > 0) { H2[o] = sm / n; W2[o] = Math.min(.85, n / 4 * .85 * (1 - pass * .05)); } }
+      CH.set(H2); CW.set(W2); }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const o = y * w + x; if (Wt[o] >= 0.5) continue;
+      const fx = Math.min(cw - 1.001, Math.max(0, x / F - .5)), fy = Math.min(ch - 1.001, Math.max(0, y / F - .5)), ix = Math.floor(fx), iy = Math.floor(fy), tx = fx - ix, ty = fy - iy;
+      let sm = 0, sw = 0; for (const [qx, qy, k] of [[ix, iy, (1 - tx) * (1 - ty)], [ix + 1, iy, tx * (1 - ty)], [ix, iy + 1, (1 - tx) * ty], [ix + 1, iy + 1, tx * ty]]) { const q = Math.min(ch - 1, qy) * cw + Math.min(cw - 1, qx); if (CW[q] > 0) { sm += CH[q] * k * CW[q]; sw += k * CW[q]; } }
+      if (sw > 0) { const cwv = Math.min(.8, sw); if (cwv > Wt[o]) { H[o] = Wt[o] > 0 ? (H[o] * Wt[o] + sm / sw * cwv) / (Wt[o] + cwv) : sm / sw; Wt[o] = cwv; } } } }
+  // glätten (3× Kastenfilter über bekannte Felder): keine Einzelfeld-Flecken, weiche Hänge
+  for (let pass = 0; pass < 3; pass++) {
+    const H2 = H.slice();
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const o = y * w + x; if (Wt[o] <= 0) continue; let sum = 0, n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const q = o + dy * w + dx; if (Wt[q] > 0) { sum += H[q]; n++; } } H2[o] = sum / n; }
+    H.set(H2);
+  }
+  const cv = HGT.cv || document.createElement("canvas"); cv.width = w; cv.height = h;
+  const g = cv.getContext("2d"), img = g.createImageData(w, h), px = img.data, C = HGT.cell, L = [-0.5, -0.5, 0.707];   // Licht von Nordwest, 45°
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const o = y * w + x, wt = Math.min(1, (Wt[o] + Wt[o - 1] + Wt[o + 1] + Wt[o - w] + Wt[o + w]) / 5); if (wt <= 0.05) continue;
+    const dx = (H[o + 1] - H[o - 1]) / (2 * C) * 2.2, dz = (H[o + w] - H[o - w]) / (2 * C) * 2.2, len = Math.hypot(dx, dz, 1);
+    const sh = (-dx * L[0] - dz * L[1] + L[2]) / len, d = sh - .707, p = o * 4;   // 0 = flach
+    if (d < 0) { px[p] = px[p + 1] = px[p + 2] = 0; px[p + 3] = Math.min(150, -d * 420 * wt); }
+    else { px[p] = px[p + 1] = px[p + 2] = 255; px[p + 3] = Math.min(70, d * 260 * wt); }
+  }
+  g.putImageData(img, 0, 0);
+  Object.assign(HGT, {cv, x0:i0, z0:j0, w, h}); HGT.srev++;
+}
+// neue Höhen regelmäßig ins Bild übernehmen (die Karte zeichnet ihr Zwischenbild dann neu)
+setInterval(() => { try { if (S.terrain !== false) hgtBuild(); } catch (e) {} }, 30000);
+function drawTerrain(g){
+  if (S.terrain === false) return; hgtBuild(); if (!HGT.cv) return;
+  g.save(); g.scale(mirror(), -1); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+  g.drawImage(HGT.cv, HGT.x0 * HGT.cell, HGT.z0 * HGT.cell, HGT.w * HGT.cell, HGT.h * HGT.cell);
+  g.restore();
+}
+// Fährt man gerade wirklich? Im Haus, im Menü oder zu Fuß schickt Forza oft weiter Daten – dann aber mit stehendem
+// Auto, ohne Motordrehzahl oder mit eingefrorenen Werten. Tasten (Blinker, Musik …) wirken nur, wenn das Auto „lebt“,
+// damit man im Spiel-Menü normal navigieren kann.
+const LIVE = {sig:"", since:0};
+function liveTick(d){
+  const st = d.steer || 0; if (LIVE.st === undefined || Math.abs(st - LIVE.st) > 2) { LIVE.st = st; LIVE.stT = performance.now(); }
+  const sig = [Math.round((d.px || 0) * 10), Math.round((d.pz || 0) * 10), Math.round(d.rpm || 0), d.gear, d.acc, d.brk, d.steer, Math.round((d.ax || 0) * 1000), Math.round((d.az || 0) * 1000), Math.round(((d.susp || [])[0] || 0) * 1e4)].join(",");   // Beschleunigung/Federung zittern beim echten Fahren immer etwas
+  if (sig !== LIVE.sig) { LIVE.sig = sig; LIVE.since = performance.now(); }
+}
+function carLive(){
+  if (!(D && D.on && D.dash && performance.now() - lastMsg < 1500)) return false;
+  if (!((D.rpm || 0) > 100 || Math.abs(D.spd || 0) > 0.5)) return false;   // Motor aus / zu Fuß
+  if (performance.now() - LIVE.since >= 3000) return false;                  // Werte eingefroren = Menü
+  // im Haus läuft das Auto weiter: in der Nähe eines Hauses (Zuhause oder Haus-Ort auf der Karte) und 7 s nicht gelenkt
+  if (performance.now() - (LIVE.stT || 0) > 7000 && nearHouse(D.px, D.pz)) return false;
+  return true;
+}
+function nearHouse(x, z){
+  if (S.home && isFinite(S.home.x) && Math.hypot(S.home.x - x, S.home.z - z) < 70) return true;
+  return (LR.pois || []).some(p => p.k === "home" && Math.hypot(p.x - x, p.z - z) < 70);
+}
+// nach einem Neuladen (z. B. Absturz der Anzeige) wieder dort weitermachen, wo man war
+try { const v0 = sessionStorage.getItem("fd.view"); if (v0 && v0 !== "dash") setTimeout(() => { try { setView(v0); } catch (e) {} }, 800); } catch (e) {}
 // Lebenszeichen fürs Programm: bleibt es aus, lädt die exe die Anzeige neu (statt weißem Bildschirm)
 if (window.FD_EXE) {
   const hb = () => { try { fetch("/hb", {method:"POST", body:document.visibilityState, keepalive:true}).catch(() => {}); } catch (e) {} };
@@ -2354,7 +2582,7 @@ if (window.FD_EXE) {
     const el = G.el; if (!el) return;
     if (!(e.buttons & 1)) { G.el = null; return; }
     const dx = e.clientX - G.x;
-    if (!G.moved) { if (Math.abs(dx) < 6) return; G.moved = true; G.snap = el.style.scrollSnapType; el.style.scrollSnapType = "none"; el.style.scrollBehavior = "auto"; document.documentElement.classList.add("hdrag"); }
+    if (!G.moved) { if (Math.abs(dx) < 6) return; G.moved = true; G.snap = el.style.scrollSnapType; G.snapCss = getComputedStyle(el).scrollSnapType; el.style.scrollSnapType = "none"; el.style.scrollBehavior = "auto"; document.documentElement.classList.add("hdrag"); }
     el.scrollLeft = G.sl - dx;
     const n = performance.now(), dt = n - G.lt; if (dt > 0) { G.v = .7 * ((G.lx - e.clientX) / dt) + .3 * G.v; G.lt = n; G.lx = e.clientX; }
     e.preventDefault();
@@ -2366,12 +2594,15 @@ if (window.FD_EXE) {
     // der Klick nach dem Ziehen soll keine Karte öffnen
     const stop = ev => { ev.stopPropagation(); ev.preventDefault(); };
     window.addEventListener("click", stop, {capture:true, once:true}); setTimeout(() => window.removeEventListener("click", stop, true), 60);
-    let v = performance.now() - G.lt > 90 ? 0 : Math.max(-38, Math.min(38, G.v * 16));   // Pixel pro Bild, begrenzt (max. ca. eine halbe Bildschirmbreite Schwung)
-    const glide = () => {
-      if (Math.abs(v) < .4) { el.style.scrollBehavior = "smooth"; el.style.scrollSnapType = G.snap; setTimeout(() => { el.style.scrollBehavior = ""; }, 400); return; }
-      el.scrollLeft += v; v *= .93; G.raf = requestAnimationFrame(glide);
-    };
-    glide();
+    // Ziel aus Schwung berechnen, auf die nächste Karte einrasten und weich dorthin gleiten (statt Schwung + Ruck beim Einrasten)
+    const v = performance.now() - G.lt > 90 ? 0 : Math.max(-3, Math.min(3, G.v));   // px pro ms
+    const from = el.scrollLeft, max = el.scrollWidth - el.clientWidth, proj = Math.max(0, Math.min(max, from + v * 260));
+    let to = proj;
+    const kids = [...el.children].filter(c => c.offsetWidth > 40);
+    if (G.snapCss && G.snapCss !== "none" && kids.length) { const pad = parseFloat(getComputedStyle(el).paddingLeft) || 0, base = el.firstElementChild ? el.firstElementChild.offsetLeft : 0; let best = Infinity; for (const c of kids) { const x = Math.min(max, c.offsetLeft - base - 0 * pad); if (Math.abs(x - proj) < Math.abs(best - proj)) best = x; } if (isFinite(best)) to = best; }
+    const dur = Math.max(260, Math.min(620, Math.abs(to - from) * 1.1)), t0 = performance.now(), ease = t => 1 - Math.pow(1 - t, 3);
+    const anim = () => { const k = Math.min(1, (performance.now() - t0) / dur); el.scrollLeft = from + (to - from) * ease(k); if (k < 1) G.raf = requestAnimationFrame(anim); else el.style.scrollSnapType = G.snap; };
+    anim();
   };
   document.addEventListener("pointerup", end, true);
   document.addEventListener("pointercancel", end, true);
@@ -2451,7 +2682,7 @@ function pollMedia(){
   if (demo || !live) return;
   fetch("/media", {cache:"no-store"}).then(r => r.json()).then(m => {
     music.src = "app"; music.running = !!m.running; music.playing = !!m.playing;
-    music.title = m.title || ""; music.artist = m.artist || ""; music.vol = typeof m.vol === "number" ? m.vol : null; music.volMode = m.volMode || "";
+    music.title = m.title || ""; music.artist = m.artist || ""; music.cover = m.cover || ""; music.vol = typeof m.vol === "number" ? m.vol : null; music.volMode = m.volMode || "";
   }).catch(() => {});
 }
 function mediaCmd(cmd){
@@ -2982,8 +3213,11 @@ function mdOpenUrl(u){ if (window.FD_EXE) mdJ("/mods/open?url=" + encodeURICompo
 // ---- Daten laden ----
 async function modsOpen(enter){
   if (enter) { MD.warn = true; if (MD.det && MD.det.loading) MD.det = null; }
-  if (live) MD.st = await mdJ("/mods/status").catch(() => null);
-  modsRender();
+  // sofort zeichnen (Katalog kommt aus dem Zwischenspeicher) – Status und Katalog laden im Hintergrund nach;
+  // früher blieb die Seite leer, solange die Status-Abfrage hing
+  try { modsRender(); } catch (e) { console.error(e); }
+  if (live) { const st = await Promise.race([mdJ("/mods/status").catch(() => null), new Promise(r => setTimeout(() => r(undefined), 4000))]); if (st !== undefined) MD.st = st; }
+  try { modsRender(); } catch (e) { console.error(e); setTimeout(() => { try { modsRender(); } catch (x) {} }, 400); }
   mdCatalog();
   mdLikes();
   if (window.FD_EXE && MD.st && MD.st.dirOk) mdLocal();
@@ -3010,6 +3244,57 @@ async function mdCatalog(force){
   MD.loading = false; if (GR.view === "mods") modsRender();
   mdAutoMatch();
 }
+// aktive Mods fürs Profil (andere sehen z. B. den Bodykit am aktuellen Auto)
+// welches Auto ersetzt eine Mod? Spieldatei „mediapc/cars/POR_911GT3RS_23.zip“ → Hersteller, Modell, Baujahr → Auto im Spiel
+function modCarOf(g){
+  const f = (g.files || []).map(x => x.rel || "").find(r => /(^|\/)cars\/[^/]+\.zip$/i.test(r)); if (!f) return 0;
+  const code = f.split("/").pop().replace(/\.zip$/i, ""), parts = code.split(/[_ ]+/), yy = /^\d{2}$/.test(parts[parts.length - 1]) ? +parts.pop() : null, mk = (parts.shift() || "").toUpperCase(), model = parts.join("").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!model || !CAR_LIST) return 0;
+  if (!modCarOf.list) modCarOf.list = CAR_LIST.split("|").map(e => { const i = e.indexOf("="), full = e.slice(i + 1), m = full.match(/^((?:19|20)\d{2}) (.+)$/), nm = m ? m[2] : full, br = brandOf(nm); return {o:+e.slice(0, i), y:m ? +m[1] : 0, br:br.replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase(), md:nm.slice(br.length).toLowerCase().replace(/[^a-z0-9]/g, "")}; });
+  let best = 0, bs = 0;
+  for (const c of modCarOf.list) {
+    if (c.br !== mk && !(mk === "MCL" && c.br === "MCL")) continue;
+    let sc = 0; if (c.md === model) sc += 6; else if (c.md.startsWith(model) || model.startsWith(c.md)) sc += 4; else if (c.md.includes(model) || model.includes(c.md)) sc += 2; else continue;
+    if (yy !== null && c.y % 100 === yy) sc += 3;
+    if (sc > bs) { bs = sc; best = c.o; }
+  }
+  return best;
+}
+// echte Mod-Namen und Bilder von Nexus (über die eigene App), zwischengespeichert
+const MDI = (() => { try { return JSON.parse(localStorage.getItem("fd.mdi") || "{}"); } catch (e) { return {}; } })();
+function mdInfo(id){
+  id = +id; if (!id || id > 9e9) return null;
+  const c = MDI[id]; if (c && (c.n || Date.now() - (c.t || 0) < 6 * 3600e3)) return c.n ? c : null;
+  mdInfo.q = mdInfo.q || new Set(); if (mdInfo.q.has(id)) return null; mdInfo.q.add(id);
+  fetch("/mods/detail?id=" + id).then(r => r.json()).then(d => {
+    MDI[id] = d && d.name ? {n:String(d.name).slice(0, 80), pic:d.pic || "", t:Date.now()} : {t:Date.now()};
+    try { localStorage.setItem("fd.mdi", JSON.stringify(MDI)); } catch (e) {}
+    clearTimeout(mdInfo.rt); mdInfo.rt = setTimeout(() => { mdProfSync.sig = ""; mdProfSync(); if (GR.view === "friends") gFriends(true); }, 400);
+  }).catch(() => { MDI[id] = {t:Date.now()}; });
+  return null;
+}
+// angezeigter Name: automatisch erzeugte Namen („Auto: BMW M5 12“) durch den echten Mod-Namen ersetzen
+function mdNameOf(m){
+  if (!m) return "";
+  if (m.id && (/^Auto: /.test(m.n || "") || /^[A-Z]{3}_[A-Za-z0-9]+_\d{2}$/.test(m.n || ""))) { const i = mdInfo(m.id); if (i && i.n) return i.n; }
+  return m.n;
+}
+function mdProfSync(){
+  if (!live || !MD.loc || !MD.loc.mods) return;
+  const act = MD.loc.mods.filter(g => g.state === "an").map(g => { const id = mdLinkOf(g) || 0, m = id && (MD.all || []).find(x => x.id === id), car = modCarOf(g); return {n:m ? m.n : mdNameOf({n:mdLocalName(g), id}), id:id < 9e11 ? id : 0, k:car ? "cars" : m ? m.k : (g.name && /auto:|car/i.test(g.name) ? "cars" : "misc"), c:car}; }).filter(x => x.n).slice(0, 40);
+  const sig = JSON.stringify(act); if (mdProfSync.sig === sig) return; mdProfSync.sig = sig;
+  fetch("/profil/extra", {method:"POST", body:JSON.stringify({mods:act})}).catch(() => {});
+}
+// Mod am gerade gefahrenen Auto: Auto-Mod, deren Name zum Modell passt
+function carModOf(p, carId){
+  const c = carName(carId); if (!c || !p || !Array.isArray(p.mods)) return null;
+  { const hit = p.mods.find(m => m.c && m.c === +carId); if (hit) return hit; if (p.mods.some(m => m.c)) return null; }
+  const toks = c.name.toLowerCase().replace(/[^a-z0-9äöüß ]/g, " ").split(/\s+/).filter(t => t.length > 1 && !["the", "edition"].includes(t));
+  const model = toks.slice(1);   // ohne Marke
+  let best = null, bs = 0;
+  for (const m of p.mods) { if (m.k !== "cars") continue; const n = m.n.toLowerCase(); const sc = model.filter(t => n.includes(t)).length * 2 + (n.includes(toks[0]) ? 1 : 0); if (sc > bs && sc >= 2) { bs = sc; best = m; } }
+  return best;
+}
 async function mdLocal(){
   if (!window.FD_EXE || MD.locBusy) return; MD.locBusy = true;
   const r = await mdJ("/mods/local").catch(() => null); MD.locBusy = false;
@@ -3017,7 +3302,10 @@ async function mdLocal(){
   if (MD.loc.ok && (MD.loc.mods || []).some(mdIsRs)) await mdRsKeyLoad();
   if (GR.view === "mods") modsRender();
   mdAutoMatch();
+  try { mdProfSync(); } catch (e) {}
 }
+// aktive Mods auch ohne Besuch der Mods-Seite aktuell halten (fürs Profil)
+if (window.FD_EXE) { setTimeout(() => { try { mdLocal(); } catch (e) {} }, 25000); setInterval(() => { try { if (GR.view !== "mods") mdLocal(); } catch (e) {} }, 10 * 60000); }
 // Von Hand installierte Mods erkennen: Dateiname + exakte Größe bei Nexus suchen → passende Mod
 async function mdAutoMatch(){
   if (!MD.loc || !MD.loc.ok || MD._matching) return; MD._matching = true;
@@ -3045,7 +3333,9 @@ async function mdAutoMatch(){
   MD._matching = false;
   if (changed && GR.view === "mods") modsRender();
 }
-const mdLinkOf = g => g.dash && !g.imp ? g.mod : (S.mdLink && S.mdLink[g.key]) || (g.imp ? 0 : MD.match[g.key]) || 0;
+// Importierte Nexus-Downloads heißen „<Name> <Mod-Nummer> <Version> <Datum> …zip“ – daraus die Mod-Nummer lesen
+const mdSrcId = g => { const m = /^(.*?) (\d{1,7}) \S+ \d{4}-\d{2}-\d{2}T/.exec(String(g.src || "")); return m ? +m[2] : 0; };
+const mdLinkOf = g => g.dash && !g.imp ? g.mod : (S.mdLink && S.mdLink[g.key]) || (g.imp && mdSrcId(g)) || (S.mdLink && S.mdLink[g.key]) || (g.imp ? 0 : MD.match[g.key]) || 0;
 const mdInstIds = () => { const s = new Set(); ((MD.st && MD.st.installed) || []).forEach(m => s.add(m.mod)); ((MD.loc && MD.loc.mods) || []).forEach(g => { const id = mdLinkOf(g); if (id) s.add(id); }); return s; };
 async function modsDetail(id){
   id = id | 0;
@@ -3085,11 +3375,35 @@ function mdFav(id){
   if (live) fetch("/tunes/like", {method:"POST", body:JSON.stringify({key:"mod:" + id, on})}).catch(() => {});
   toast(on ? "Gemerkt – unter „Gemerkt“ wiederfinden" : "Nicht mehr gemerkt"); modsRender();
 }
+// Kommentare zu Mods: nur hier im ForzaDashboard sichtbar, mit Daumen hoch/runter
+function mdCmHtml(d){
+  const l = (MD.cm && MD.cm[d.id]) || [];
+  const ico = (up, on) => '<svg viewBox="0 0 24 24" fill="' + (on ? "currentColor" : "none") + '" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="' + (up ? '' : 'transform:scaleY(-1)') + '"><path d="M7 10v11H4V10zM7 10l4-7a2.5 2.5 0 0 1 2.5 3L13 10h6a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.7 21H7"/></svg>';
+  return '<div class="mdsec"><h3>Kommentare' + (l.length ? ' · ' + l.length : '') + '</h3><small class="mdcnt">nur im ForzaDashboard sichtbar</small></div><div class="mdcms">'
+    + (l.length ? l.map(c => '<div class="mdcm' + (c.mine ? ' me' : '') + '">' + '<span class="pfq-t"' + (c.pid ? ' data-pfid="' + esc(c.pid) + '"' : '') + '>' + tuAv(c.by) + '</span><div class="b"><div class="h"><b>' + esc(c.mine ? "Du" : c.by) + '</b><small>' + mdAgo(c.t) + '</small>' + (c.mine ? '<button data-mdcmdel="' + esc(c.id) + '">Löschen</button>' : '') + '</div><p>' + esc(c.x) + '</p>'
+      + '<div class="v"><button class="' + (c.myv === 1 ? 'on' : '') + '" data-mdvote="' + esc(c.id) + '" data-v="1">' + ico(true, c.myv === 1) + (c.up || 0) + '</button><button class="dn' + (c.myv === -1 ? ' on' : '') + '" data-mdvote="' + esc(c.id) + '" data-v="-1">' + ico(false, c.myv === -1) + (c.dn || 0) + '</button></div></div></div>').join("") : '<div class="tunone">Noch keine Kommentare – schreib den ersten.</div>')
+    + (live ? '<div class="cxin"><input id="mdCmIn" maxlength="300" placeholder="Kommentar zu dieser Mod …" autocomplete="off"><button data-mdcm="' + d.id + '" aria-label="Senden"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 21 12 3 3.5 5.5 12z"/></svg></button></div>' : '') + '</div>';
+}
+async function mdCmSend(id){
+  const i = $("mdCmIn"), x = ((i && i.value) || "").trim(); if (!x) return;
+  const r = await fetch("/tunes/comment", {method:"POST", body:JSON.stringify({key:"mod:" + id, x})}).then(r => r.json()).catch(() => null);
+  if (r && r.ok) { i.value = ""; toast("Kommentar gepostet"); await mdLikes(); } else toast((r && r.why) || "Kommentar ging nicht");
+}
+async function mdVote(cid, v){
+  const c = Object.values(MD.cm || {}).flat().find(x => x.id === cid); if (!c) return;
+  const cur = c.myv || 0, next = cur === v ? 0 : v;
+  // Daumen hoch und runter schließen sich aus
+  const send = (k, on) => fetch("/tunes/like", {method:"POST", body:JSON.stringify({key:k + ":" + cid, on})}).catch(() => {});
+  if (cur === 1) { c.up = Math.max(0, (c.up || 0) - 1); send("cu", false); } if (cur === -1) { c.dn = Math.max(0, (c.dn || 0) - 1); send("cd", false); }
+  if (next === 1) { c.up = (c.up || 0) + 1; send("cu", true); } if (next === -1) { c.dn = (c.dn || 0) + 1; send("cd", true); }
+  c.myv = next; modsRender();
+}
 async function mdLikes(){
   if (!live) return;
   const r = await fetch("/tunes", {cache:"no-store"}).then(x => x.json()).catch(() => null);
   if (!r || !r.ok) return;
   MD.lk = {}; for (const k in (r.modLikes || {})) MD.lk[+k] = r.modLikes[k] | 0;
+  MD.cm = {}; for (const k in (r.modCm || {})) MD.cm[+k] = r.modCm[k];
   // eigene Herzen von einem anderen Gerät/vorher übernehmen
   for (const k of (r.modMine || [])) MD.fav.add(+k);
   if (GR.view === "mods") modsRender();
@@ -3238,6 +3552,7 @@ function mdDetailHtml(inst){
     + d.vids.map(v => '<div class="mdvid" data-yt="' + esc(v) + '"><img src="https://i.ytimg.com/vi/' + esc(v) + '/hqdefault.jpg" alt="" loading="lazy" onerror="this.parentNode.remove()"><span>' + MD_SVG.play + '</span></div>').join("") + '</div>';
   if (d.media && d.media.length) h += '<div class="mdsec"><h3>Aus der Community</h3><small class="mdcnt">Screenshots von Nexus-Nutzern</small></div><div class="mdgal">' + d.media.map(x => '<figure data-lb="' + esc(x.u) + '"><img src="' + esc(x.t) + '" alt="" loading="lazy" onerror="this.parentNode.remove()">' + (x.n ? '<figcaption>' + esc(x.n) + '</figcaption>' : '') + '</figure>').join("") + '</div>';
   { const rec = mdRecs(d); if (rec.length) h += '<div class="mdsec"><h3>Das könnte dir auch gefallen</h3></div><div class="mdshelf">' + rec.map(m => mdCard(m, inst, " sm")).join("") + '</div>'; }
+  h += mdCmHtml(d);
   h += '<div class="mdcols"><div><div class="mdsec"><h3>Beschreibung</h3></div><div class="mddesc">' + (bbHtml(d.desc) || esc(d.summary)) + '</div></div><div>';
   if (d.req.length) h += '<div class="mdsec"><h3>Benötigt</h3></div><div class="mdfiles">' + d.req.map(r => '<div class="mdf"' + (r.modId && !r.externalRequirement ? ' data-mod="' + r.modId + '" style="cursor:pointer"' : '') + '><div><b>' + esc(bb(r.modName || "Mod")) + '</b><small>' + (r.externalRequirement ? 'Externe Seite' : 'Nexus-Mod') + '</small></div>' + (r.modId && !r.externalRequirement ? MD_SVG.chev : '') + '</div>').join("") + '</div>';
   const fcat = {MAIN:"Hauptdatei", UPDATE:"Update", OPTIONAL:"Optional", MISCELLANEOUS:"Sonstiges"};
@@ -3316,6 +3631,9 @@ $("gmods").addEventListener("click", async e => {
   const so = e.target.closest("[data-sort]"); if (so) { MD.sort = so.dataset.sort; MD.show = 48; modsRender(); return; }
   const b = e.target.closest("[data-md]");
   { const hv = e.target.closest("[data-mdfav]"); if (hv) { e.stopPropagation(); mdFav(+hv.dataset.mdfav); return; } }
+  { const x = e.target.closest("[data-mdcm]"); if (x) { mdCmSend(+x.dataset.mdcm); return; } }
+  { const x = e.target.closest("[data-mdvote]"); if (x) { mdVote(x.dataset.mdvote, +x.dataset.v); return; } }
+  { const x = e.target.closest("[data-mdcmdel]"); if (x) { await fetch("/tunes/uncomment", {method:"POST", body:JSON.stringify({id:x.dataset.mdcmdel})}).catch(() => {}); await mdLikes(); return; } }
   { const yt = e.target.closest("[data-yt]"); if (yt) { mdOpenUrl("https://www.youtube.com/watch?v=" + yt.dataset.yt); return; } }
   const c = e.target.closest("[data-mod]");
   if (c && !b) {
@@ -3575,12 +3893,78 @@ async function cmDemoLoad(){
 const cmWhen = at => { const d = new Date(at), now = new Date(), days = Math.round((new Date(d).setHours(0, 0, 0, 0) - new Date(now).setHours(0, 0, 0, 0)) / 864e5);
   const day = days === 0 ? "HEUTE" : days === 1 ? "MORGEN" : d.toLocaleDateString("de-DE", {weekday:"long"}).toUpperCase();
   return day + " · " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
-const cmAuthor = p => { const pr = p.pid && PROF.all.get(p.pid); return pr ? pr.u : p.mine ? (PROF.me && PROF.me.has ? PROF.me.u : "Du") : p.by; };
-const cmAv = (p, size) => { const pr = p.pid && PROF.all.get(p.pid); return pfAvatar(pr ? Object.assign({cur:0, need:1}, pr) : {u:p.by || p.n || "?", id:p.by || p.n || "x"}, size || 30, false); };
+const cmAuthor = p => { if (p.demo && !p.official) return "forzadashboard"; const pr = p.pid && PROF.all.get(p.pid); return pr ? pr.u : p.mine ? (PROF.me && PROF.me.has ? PROF.me.u : "Du") : p.by; };
+// Profilbild antippen = kurze Profil-Vorschau (überall in der Community); Beiträge der App bekommen das App-Logo
+const FD_AV = s => '<span class="pfr fdav" style="width:' + s + 'px;height:' + s + 'px"><span style="width:' + (s - 8) + 'px;height:' + (s - 8) + 'px;font-size:' + Math.round(s * .36) + 'px">FD</span></span>';
+const cmAv = (p, size) => { if (p.demo) return FD_AV(size || 30); const pr = p.pid && PROF.all.get(p.pid); return '<span class="pfq-t"' + (p.pid ? ' data-pfid="' + esc(p.pid) + '"' : '') + '>' + pfAvatar(pr ? Object.assign({cur:0, need:1}, pr) : {u:p.by || p.n || "?", id:p.by || p.n || "x"}, size || 30, false) + '</span>'; };
 function cmPosts(){
-  const real = TU.list || [], demo = CMD.hide ? [] : (CMD.list || []);
-  return real.concat(demo.filter(d => !real.some(r => r.key === d.key)));
+  // Beispiel-Events sind ersetzt durch die festen ForzaDashboard-Events (laufen immer / Spezial alle 2 Stunden)
+  const real = TU.list || [], demo = (CMD.hide ? [] : (CMD.list || [])).filter(d => d.k !== "event");
+  return real.concat(fdEvents(), demo.filter(d => !real.some(r => r.key === d.key)));
 }
+// ---- Feste Events: Kolonne steht rund um die Uhr offen; Spezial-Events zu festen Zeiten alle 2 Stunden ----
+// Bilder: freie Fotos aus Tokio und von JDM-Autos (Wikimedia Commons, Bildnachweis steht dabei)
+const FDE_IMG = {
+  supra:["https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/TOYOTA_SUPRA_%28A80%29_HONG_KONG_%282%29.jpg/3840px-TOYOTA_SUPRA_%28A80%29_HONG_KONG_%282%29.jpg", "Dinkun Chen, CC BY-SA 4.0"],
+  ae86:["https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Toyota_E-AE86_Sprinter_Trueno_GT_APEX_%2822010314081%29.jpg/3840px-Toyota_E-AE86_Sprinter_Trueno_GT_APEX_%2822010314081%29.jpg", "先従隗始, CC0"],
+  hakone:["https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Hakone_Turnpike_20140412-2.jpg/3840px-Hakone_Turnpike_20140412-2.jpg", "PekePON, CC BY-SA 4.0"],
+  iroha:["https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Irohazaka_%2852506196693%29.jpg/3840px-Irohazaka_%2852506196693%29.jpg", "Raita Futo, CC BY 2.0"],
+  daikoku:["https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Daikoku_Parking_Area_-01.jpg/3840px-Daikoku_Parking_Area_-01.jpg", "Aimaimyi, CC BY-SA 3.0"],
+  route5:["https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Route_5_%28Shuto_Expressway%29_night_2015_July.jpg/3840px-Route_5_%28Shuto_Expressway%29_night_2015_July.jpg", "Morio, CC BY-SA 4.0"],
+  neon:["https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Buildings_with_colorful_neon_street_signs_at_blue_hour%2C_Shinjuku%2C_Tokyo.jpg/3840px-Buildings_with_colorful_neon_street_signs_at_blue_hour%2C_Shinjuku%2C_Tokyo.jpg", "Basile Morin, CC BY-SA 4.0"],
+  rx7:["https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Mazda_RX-7_FD3S%2C_front_right%2C_05-05-2024.jpg/3840px-Mazda_RX-7_FD3S%2C_front_right%2C_05-05-2024.jpg", "Ethan Llamas, CC BY-SA 4.0"],
+  yasu:["https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Yasukuni-dori_Avenue_at_night_with_vehicles_and_colorful_neon_street_signs%2C_Shinjuku%2C_Tokyo%2C_Japan.jpg/3840px-Yasukuni-dori_Avenue_at_night_with_vehicles_and_colorful_neon_street_signs%2C_Shinjuku%2C_Tokyo%2C_Japan.jpg", "Basile Morin, CC BY-SA 4.0"],
+};
+const FDE = [
+  ["drag", "Drag-Night", "Flugfeld", "Viertelmeile gegeneinander – einfach dazukommen, die Startaufstellung im Kolonnen-Chat ausmachen.", "supra"],
+  ["drift", "Drift-Session", "Bergpass", "Solo oder Tandem – Winkel vor Tempo. Jeder saubere Drift treibt deine Skill-Kette hoch.", "ae86"],
+  ["race", "Straßenrennen", "Turnpike", "Kurze Sprints von Treffpunkt zu Treffpunkt. Fair fahren – ein Crash reißt die Kette.", "hakone"],
+  ["offroad", "Offroad-Tour", "Berge", "Über Schotter und Wiesen durch die Berge, gemeinsam im Konvoi.", "iroha"],
+  ["meet", "Car-Meet", "Daikoku-Parkplatz", "Autos zeigen, quatschen, Fotos machen – der Klassiker am Parkplatz.", "daikoku"],
+  ["cruise", "Chill-Cruise", "Stadtautobahn", "Entspannt in der Kolonne über die Stadtautobahn – blinken, Abstand halten, Musik an.", "route5"],
+  ["photo", "Foto-Tour", "Shinjuku", "Neon, Regen, Brücken: von Spot zu Spot, die besten Bilder danach in die Community.", "neon"],
+];
+// Spezial: Tuning-Wettbewerb zu jeder geraden Stunde, Police Chase zu jeder ungeraden – je 60 Minuten
+const FDS = [
+  ["tuning", "Tuning-Wettbewerb", "Daikoku-Parkplatz", "Zeig dein bestes Build: alle bewerten mit 0–5 Sternen, die Top 3 werden gekürt.", "rx7", 0],
+  ["police", "Police Chase", "Shinjuku", "Jäger gegen Gejagte: Wer 10 Sekunden lang einen Polizisten im Nacken hat, ist gefangen.", "yasu", 1],
+];
+function fdEvents(){
+  const now = Date.now(), out = [];
+  for (const [k, t, place, text, im, par] of FDS) {
+    const d = new Date(); d.setMinutes(0, 0, 0); if (d.getHours() % 2 !== par) d.setHours(d.getHours() - 1);
+    let start = d.getTime(); if (now - start >= 3600e3) start += 2 * 3600e3;   // läuft gerade (60 min) – sonst der nächste Termin
+    const live = now >= start && now < start + 3600e3;
+    out.push({key:"fd:" + k + ":" + start, ev:k, special:true, live, k:"event", official:true, demo:true, title:t, place, text:text + (live ? " Läuft gerade – noch " + Math.ceil((start + 3600e3 - now) / 60000) + " Minuten." : " Alle 2 Stunden, je eine Stunde."), img:FDE_IMG[im][0], credit:"Foto: " + FDE_IMG[im][1] + " (Wikimedia Commons)", at:start, t:now, by:"ForzaDashboard", likes:0, goers:fdeCount(k + ":" + start), gl:[], cm:[]});
+  }
+  for (const [k, t, place, text, im] of FDE) out.push({key:"fd:" + k, ev:k, live:true, k:"event", official:true, demo:true, title:t, place, text:text + " Läuft rund um die Uhr – einfach beitreten.", img:FDE_IMG[im][0], credit:"Foto: " + FDE_IMG[im][1] + " (Wikimedia Commons)", at:now + 3 * 3600e3, t:now, by:"ForzaDashboard", likes:0, goers:fdeCount(k), gl:[], cm:[]});
+  return out;
+}
+// Kolonnen-Code eines Events: für alle gleich (aus dem Event berechnet) → alle, die beitreten, landen in derselben Kolonne
+function fdeCode(id){
+  const A = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; let h1 = 2166136261, h2 = 5381; const s = "fdevent-v1:" + id;
+  for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619) >>> 0; h2 = (Math.imul(h2, 33) + c) >>> 0; }
+  let out = ""; for (let i = 0; i < 9; i++) { const x = i < 5 ? (h1 >>> (i * 6)) : (h2 >>> ((i - 5) * 7)); out += A[x % A.length]; }
+  return out.slice(0, 3) + "-" + out.slice(3, 6) + "-" + out.slice(6);
+}
+const fdeId = p => p.key.slice(3);
+const fdeIn = p => (FR.lobbys || []).some(l => l.code === fdeCode(fdeId(p)) && l.an);
+function fdeCount(id){ const l = (FR.lobbys || []).find(x => x.code === fdeCode(id)); return l ? (l.online || []).length + 1 : 0; }
+async function fdeJoin(key){
+  const p = cmPosts().find(x => x.key === key); if (!p) return;
+  if (fdeIn(p)) { GR.frTab = "kolonne"; setView("friends"); return; }
+  const code = fdeCode(fdeId(p));
+  const j = await lobbyPost("/lobby/beitreten", {code});
+  if (j && j.ok) {
+    sessPost("/lobby/name", {code, name:p.title}).then(r => { if (r && r.liste) FR.lobbys = r.liste; tuRender(); }).catch(() => {});
+    if (p.special) { try { const m = JSON.parse(localStorage.getItem("fd.evlob") || "{}"); m[code] = p.at + 3 * 3600e3; localStorage.setItem("fd.evlob", JSON.stringify(m)); } catch (e) {} }
+    toast("In der Kolonne „" + p.title + "“ – im Chat triffst du die anderen");
+  }
+  tuRender();
+}
+// Spezial-Event-Kolonnen nach dem Event wieder verlassen (feste Events bleiben)
+setInterval(() => { try { const m = JSON.parse(localStorage.getItem("fd.evlob") || "{}"), now = Date.now(); let ch = false; for (const c in m) if (now > m[c]) { delete m[c]; ch = true; lobbyPost("/lobby/verlassen", {code:c}); } if (ch) localStorage.setItem("fd.evlob", JSON.stringify(m)); } catch (e) {} }, 60000);
+const fdeBtn = (p, cls) => '<button class="' + cls + (fdeIn(p) ? ' ok' : ' pri') + '" data-evjoin="' + esc(p.key) + '">' + (fdeIn(p) ? "In der Kolonne ✓" : "Kolonne beitreten") + '</button>';
 function tuFeedHtml(mine){
   if (TU.err && !TU.list) return '<div class="mdempty">' + esc(TU.err) + '</div>';
   if (!TU.list) return '<div class="mdempty"><span class="spin"></span>Wird geladen …</div>';
@@ -3606,7 +3990,7 @@ function tuFeedHtml(mine){
   if (evs.length) h += '<div class="cmsec"><h3>Demnächst</h3><button data-tusub="ev">Alle Events</button></div><div class="cmrow">' + evs.slice(0, 8).map(p => cmEvCard(p, false)).join("") + '</div>';
   const rest = all.filter(p => p.k !== "event");
   h += '<div class="cmsec"><h3>Neu in der Community</h3></div>' + (rest.length ? '<div class="cmfeed">' + rest.map(cmCard).join("") + '</div>' : empty("Noch keine Beiträge", "Mach den Anfang – oben rechts auf +."));
-  return h + ((CMD.list || []).length ? '<div style="text-align:center;margin:6px 0 26px"><button class="itx" data-tu="demo" style="font-size:13px">' + (CMD.hide ? "Beispiel-Beiträge zeigen" : "Beispiel-Beiträge ausblenden") + '</button></div>' : '');
+  return h + ((CMD.list || []).length ? '<div style="text-align:center;margin:6px 0 26px"><button class="itx" data-tu="demo" style="font-size:13px">' + (CMD.hide ? "Beiträge von ForzaDashboard zeigen" : "Beiträge von ForzaDashboard ausblenden") + '</button></div>' : '');
 }
 // Event: großes, filmisches Bild mit Verlauf; Herz oben rechts
 // Karten brauchen keine 4K-Fotos: Wikimedia-Bilder in 960 px laden (spart Dekodieren und Speicher → flüssiges Scrollen)
@@ -3619,7 +4003,7 @@ function cmSmall(u){
 }
 function cmEvCard(p, wide){
   const fav = !!EVF[p.key];
-  return '<article class="cmevc' + (wide ? ' wide' : '') + '" data-tupost="' + esc(p.key) + '">' + (p.img ? '<img src="' + esc(cmSmall(p.img)) + '" alt="" loading="lazy" decoding="async">' : '') + (p.demo ? '<span class="cmtag2">BEISPIEL</span>' : '')
+  return '<article class="cmevc' + (wide ? ' wide' : '') + '" data-tupost="' + esc(p.key) + '">' + (p.img ? '<img src="' + esc(cmSmall(p.img)) + '" alt="" loading="lazy" decoding="async">' : '') + (p.demo ? '' : '')
     + '<button class="cmht" data-tufav="' + esc(p.key) + '" aria-label="Favorit" style="z-index:3;right:14px;top:14px">' + HEART(fav) + (p.likes ? '<i>' + p.likes + '</i>' : '') + '</button>'
     + '<div class="tx"><div class="cap">' + cmWhen(p.at) + (p.place ? ' · ' + esc(p.place.toUpperCase()) : '') + '</div><h4>' + esc(p.title) + '</h4>'
     + '<div class="ln"><span>' + esc(cmAuthor(p)) + ' · ' + (p.goers || 0) + ' Teilnehmer</span><button class="cmb' + (p.going ? ' on' : '') + '" data-tugo="' + esc(p.key) + '">' + (p.going ? "Dabei ✓" : "Teilnehmen") + '</button></div></div></article>';
@@ -3629,8 +4013,8 @@ function cmCard(p){
   if (p.k === "event") return cmEvCard(p, true);
   const meta = '<div class="meta">' + cmAv(p, 34) + '<div class="who"><b>' + esc(cmAuthor(p)) + '</b><small>' + esc(p.car || "") + ' · ' + mdAgo(p.t) + '</small></div><span class="lk">' + MD_SVG.heart + (p.likes || 0) + '</span></div>';
   const chips = (p.mod ? '<span class="md">Mod: ' + esc(p.mod.n || "Nexus #" + p.mod.id) + ' ↗</span>' : '') + (p.code ? '<button data-tucopy="' + esc(p.code) + '">Code ' + tuCode(p.code) + ' kopieren</button>' : '') + (p.pi ? '<span>' + esc(p.pi) + '</span>' : '');
-  if (!p.img) return '<article class="cmcard code" data-tupost="' + esc(p.key) + '"><div class="pic">' + (p.demo ? '<span class="cmtag2" style="position:static;align-self:flex-start">BEISPIEL</span>' : '') + '<div><small>TUNE' + (p.pi ? ' · ' + esc(p.pi) : '') + '</small><b>' + esc(p.title) + '</b></div><code>' + tuCode(p.code) + '</code></div>' + meta + (chips ? '<div class="chips">' + chips + '</div>' : '') + '</article>';
-  return '<article class="cmcard" data-tupost="' + esc(p.key) + '"><div class="pic"><img src="' + esc(cmSmall(p.img)) + '" alt="" loading="lazy" decoding="async">' + (p.demo ? '<span class="cmtag2">BEISPIEL</span>' : '') + '</div>' + meta + '<p>' + esc(p.title) + '</p>' + (chips ? '<div class="chips">' + chips + '</div>' : '') + '</article>';
+  if (!p.img) return '<article class="cmcard code" data-tupost="' + esc(p.key) + '"><div class="pic">' + (p.demo ? '' : '') + '<div><small>TUNE' + (p.pi ? ' · ' + esc(p.pi) : '') + '</small><b>' + esc(p.title) + '</b></div><code>' + tuCode(p.code) + '</code></div>' + meta + (chips ? '<div class="chips">' + chips + '</div>' : '') + '</article>';
+  return '<article class="cmcard" data-tupost="' + esc(p.key) + '"><div class="pic"><img src="' + esc(cmSmall(p.img)) + '" alt="" loading="lazy" decoding="async">' + (p.demo ? '' : '') + '</div>' + meta + '<p>' + esc(p.title) + '</p>' + (chips ? '<div class="chips">' + chips + '</div>' : '') + '</article>';
 }
 const TU_CMI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>';
 // ---- Community (neu): oben Events, darunter Fotos und Tunes, rechts das Detailblatt mit Kommentaren ----
@@ -3657,8 +4041,8 @@ function cxHtml(srch){
       m += '<div class="cxev"><div class="cxhero' + (TU.post && TU.post.key === e0.key ? ' sel' : '') + '" data-tupost="' + esc(e0.key) + '">' + (e0.img ? '<img src="' + esc(cmSmall(e0.img)) + '" alt="" decoding="async">' : '')
         + (mins !== null && mins > 0 && mins < 48 * 60 ? '<span class="cxcd">in ' + (mins >= 60 ? Math.floor(mins / 60) + ':' + String(mins % 60).padStart(2, "0") + ' Std.' : mins + ' Min.') + '</span>' : '')
         + '<button class="cmht" data-tufav="' + esc(e0.key) + '" aria-label="Merken" style="left:16px;right:auto;top:14px">' + HEART(!!EVF[e0.key]) + (e0.likes ? '<i>' + e0.likes + '</i>' : '') + '</button>'
-        + '<div class="tx"><span class="cap">' + cmWhen(e0.at) + (e0.place ? ' · ' + esc(e0.place.toUpperCase()) : '') + '</span><h3>' + esc(e0.title) + '</h3><div class="ln"><span class="cxstk">' + (e0.gl || []).slice(0, 4).map(g => pfAvatar(g.pid && PROF.all.get(g.pid) ? PROF.all.get(g.pid) : {u:g.n, id:g.n}, 26, false)).join("") + '</span><span>' + (e0.goers || 0) + ' dabei' + cxDist(e0) + '</span>'
-        + '<span class="bts">' + (e0.x != null ? '<button class="cxb" data-turoute="' + esc(e0.key) + '">Route</button>' : '') + '<button class="cxb ' + (e0.going ? 'ok' : 'pri') + '" data-tugo="' + esc(e0.key) + '">' + (e0.going ? "Dabei ✓" : "Teilnehmen") + '</button></span></div></div></div>'
+        + '<div class="tx"><span class="cap">' + (e0.official && e0.live ? (e0.special ? "LÄUFT GERADE" : "LÄUFT JETZT · RUND UM DIE UHR") : cmWhen(e0.at)) + (e0.special ? ' · SPEZIAL-EVENT' : '') + (e0.place ? ' · ' + esc(e0.place.toUpperCase()) : '') + '</span><h3>' + esc(e0.title) + '</h3><div class="ln"><span class="cxstk">' + (e0.gl || []).slice(0, 4).map(g => pfAvatar(g.pid && PROF.all.get(g.pid) ? PROF.all.get(g.pid) : {u:g.n, id:g.n}, 26, false)).join("") + '</span><span>' + (e0.goers || 0) + ' dabei' + cxDist(e0) + '</span>'
+        + '<span class="bts">' + (e0.x != null ? '<button class="cxb" data-turoute="' + esc(e0.key) + '">Route</button>' : '') + (e0.official ? fdeBtn(e0, "cxb") : '<button class="cxb ' + (e0.going ? 'ok' : 'pri') + '" data-tugo="' + esc(e0.key) + '">' + (e0.going ? "Dabei ✓" : "Teilnehmen") + '</button>') + '</span></div></div></div>'
         + (rest.length ? '<div class="cxevl">' + rest.map(cxEvRow).join("") + '</div>' : '') + '</div>';
     } else if (sub === "ev") m += empty("Keine Events geplant", "Kündige selbst eines an – oben rechts auf +.");
   }
@@ -3667,21 +4051,34 @@ function cxHtml(srch){
     m += '<div class="cxsec"><h3>Neue Fotos</h3>' + (sub === "all" && fotos.length > n ? '<button data-cxsub="foto">Alle ' + fotos.length + '</button>' : '') + '</div>'
       + (fotos.length ? '<div class="cxgrid">' + fotos.slice(0, n).map(cxTile).join("") + '</div>' + (sub === "foto" && fotos.length > n ? '<button class="btn mdmore" data-cxmore="1">Mehr anzeigen</button>' : '') : empty("Noch keine Fotos", "Teile dein Auto – oben rechts auf +."));
   }
+  if (sub === "all" || sub === "tune") m += cxTuneLists();
   if (sub === "all" || sub === "tune") {
     const l = sub === "tune" ? tunes : tunes.slice(0, 4);
     if (l.length || sub === "tune") m += '<div class="cxsec"><h3>Tunes</h3>' + (sub === "all" && tunes.length > 4 ? '<button data-cxsub="tune">Alle ' + tunes.length + '</button>' : '') + '</div>' + (l.length ? '<div class="cxtunes">' + l.map(cxTune).join("") + '</div>' : empty("Noch keine Tunes", "Teile deinen Tuning-Code – oben rechts auf +."));
   }
-  if ((CMD.list || []).length) m += '<div style="text-align:center;margin:18px 0 6px"><button class="itx" data-tu="demo" style="font-size:13px">' + (CMD.hide ? "Beispiel-Beiträge zeigen" : "Beispiel-Beiträge ausblenden") + '</button></div>';
+  if ((CMD.list || []).length) m += '<div style="text-align:center;margin:18px 0 6px"><button class="itx" data-tu="demo" style="font-size:13px">' + (CMD.hide ? "Beiträge von ForzaDashboard zeigen" : "Beiträge von ForzaDashboard ausblenden") + '</button></div>';
   return h + '<div class="cxw"><div class="cxmain">' + m + '</div><aside class="cxside">' + (TU.post ? cxSide(TU.post) : '<div class="tunone" style="padding:30px">Wähle einen Beitrag.</div>') + '</aside></div>';
+}
+// Tune-Listen (Codes aus bekannten Tuning-Listen der Community, Tuner/Quelle angegeben) – Code antippen kopiert
+const TUNE_LISTS = [
+  ["Straßenrennen", "Top-Tunes für Street Races", "Noob Gamer", [["1998-nissan-23-pennzoil-nismo-skyline-gt-r", "Nissan #23 Pennzoil Skyline GT-R", "256342369", "S2 · Handling"], ["2024-nissan-gt-r-nismo", "Nissan GT-R NISMO 2024", "779813648", "A-Klasse"], ["1993-nissan-32-skyline-wtac-xtreme-gtr", "Nissan #32 Skyline WTAC", "434858691", "R · Pure Handling"], ["1991-mazda-55-mazda-787b", "Mazda 787B", "980607348", "R-Klasse"], ["2018-lotus-scura-motorsports-exige-wtac", "Lotus Scura Exige WTAC", "241365379", "R-Klasse"]]],
+  ["Dirt", "Die besten Dirt-Tunes", "Noob Gamer", [["1968-alfa-romeo-33-stradale", "Alfa Romeo 33 Stradale", "123200713", "S1 · Dirt"], ["1994-mazda-mx-5-miata-forza-edition", "Mazda MX-5 Miata Forza Edition", "128928248", "S1 · Dirt"], ["1999-dodge-viper-gts-acr-forza-edition", "Dodge Viper GTS ACR FE", "242074519", "S1 · Dirt"], ["2004-subaru-impreza-wrx-sti", "Subaru Impreza WRX STI", "106869025", "A · Dirt"], ["2020-ford-super-duty-f-450-drw-platinum-forza-edition", "Ford F-450 Platinum FE", "172201488", "B · Dirt"]]],
+  ["X-Klasse", "Meta-Tunes ganz oben", "Noob Gamer", [["2000-nissan-36-dream-project-s15-silvia-wtac", "Nissan Silvia S15 WTAC", "729141161", "Bestes Handling"], ["1991-mazda-55-mazda-787b", "Mazda 787B", "159675124", "Rennen, Topspeed"], ["1970-porsche-3-917-lh-forza-edition", "Porsche 917 LH FE", "178948973", "Dirt, Offroad, Stunts"], ["1994-mazda-mx-5-miata-forza-edition", "Mazda MX-5 Miata FE", "173611186", "Topspeed, Drag"], ["2018-lotus-scura-motorsports-exige-wtac", "Lotus Exige WTAC", "707398058", "Beste Allround-Meta"]]],
+  ["Retro B-Klasse", "Series 1 Winter · Be a good sport", "Tuner LogikJ", [["1995-mitsubishi-eclipse-gsx", "Mitsubishi Eclipse GSX", "138854814", "B-Klasse"], ["2000-nissan-skyline-gt-r-v-spec-ii", "Nissan Skyline GT-R V-Spec II", "179825629", "B-Klasse"], ["1992-honda-nsx-r", "Honda NSX-R", "126326350", "B-Klasse"], ["2003-toyota-celica-sport-specialty-ii", "Toyota Celica 2003", "182893646", "B-Klasse"], ["1998-toyota-supra-rz", "Toyota Supra RZ", "123744040", "B-Klasse"]]],
+];
+function cxTuneLists(){
+  return '<div class="cxsec"><h3>Tune-Listen</h3><small class="mdcnt">Code antippen = kopieren</small></div><div class="cxtl">' + TUNE_LISTS.map(([t, s, src, rows]) => '<div class="cxtlc"><div class="hd"><b>' + esc(t) + '</b><small>' + esc(s) + '</small></div>'
+    + rows.map(([img, n, code, note]) => '<div class="r"><span class="im"><img src="' + ffImg(img) + '" alt="" loading="lazy" decoding="async" onerror="this.style.opacity=0"></span><span class="t"><b>' + esc(n) + '</b><small>' + esc(note) + '</small></span><button class="cxcode" data-tucopy="' + code + '">' + tuCode(code) + '</button></div>').join("")
+    + '<div class="src">Quelle: ' + esc(src) + '</div></div>').join("") + '</div>';
 }
 function cxDist(p){ return p.x != null && D && D.dash && (D.px || D.pz) ? ' · ' + fmtDist(Math.hypot(p.x - D.px, p.z - D.pz)) : ''; }
 function cxEvRow(p){
-  const d = new Date(p.at || 0), today = new Date().toDateString() === d.toDateString(), dn = today ? "HEUTE" : d.toLocaleDateString("de-DE", {weekday:"short"}).replace(".", "").toUpperCase();
-  return '<div class="cxer' + (TU.post && TU.post.key === p.key ? ' sel' : '') + '" data-tupost="' + esc(p.key) + '"><span class="d"><small>' + dn + '</small><b>' + d.toLocaleTimeString("de-DE", {hour:"2-digit", minute:"2-digit"}) + '</b></span>' + (p.img ? '<img src="' + esc(cmSmall(p.img)) + '" alt="" loading="lazy" decoding="async">' : '<i></i>')
-    + '<span class="t"><b>' + esc(p.title) + '</b><small>' + (p.goers || 0) + ' dabei' + cxDist(p) + '</small></span><button class="cxb ' + (p.going ? 'ok' : '') + '" data-tugo="' + esc(p.key) + '">' + (p.going ? "Dabei ✓" : "Teilnehmen") + '</button></div>';
+  const d = new Date(p.at || 0), today = new Date().toDateString() === d.toDateString(), dn = p.official && p.live ? (p.special ? "LÄUFT" : "IMMER") : today ? "HEUTE" : d.toLocaleDateString("de-DE", {weekday:"short"}).replace(".", "").toUpperCase();
+  return '<div class="cxer' + (TU.post && TU.post.key === p.key ? ' sel' : '') + '" data-tupost="' + esc(p.key) + '"><span class="d"><small>' + dn + '</small><b>' + (p.official && p.live && !p.special ? "24/7" : d.toLocaleTimeString("de-DE", {hour:"2-digit", minute:"2-digit"})) + '</b></span>' + (p.img ? '<img src="' + esc(cmSmall(p.img)) + '" alt="" loading="lazy" decoding="async">' : '<i></i>')
+    + '<span class="t"><b>' + esc(p.title) + '</b><small>' + (p.goers || 0) + ' dabei' + cxDist(p) + '</small></span>' + (p.official ? fdeBtn(p, "cxb") : '<button class="cxb ' + (p.going ? 'ok' : '') + '" data-tugo="' + esc(p.key) + '">' + (p.going ? "Dabei ✓" : "Teilnehmen") + '</button>') + '</div>';
 }
 function cxTile(p){
-  return '<div class="cxph' + (TU.post && TU.post.key === p.key ? ' sel' : '') + '" data-tupost="' + esc(p.key) + '"><img src="' + esc(cmSmall(p.img)) + '" alt="" loading="lazy" decoding="async">' + (p.demo ? '<span class="cmtag2">BEISPIEL</span>' : '')
+  return '<div class="cxph' + (TU.post && TU.post.key === p.key ? ' sel' : '') + '" data-tupost="' + esc(p.key) + '"><img src="' + esc(cmSmall(p.img)) + '" alt="" loading="lazy" decoding="async">' + (p.demo ? '' : '')
     + '<div class="ov">' + cmAv(p, 24) + '<b>' + esc(p.car || p.title || "") + '</b><span>' + MD_SVG.heart + (p.likes || 0) + '</span>' + ((p.cm || []).length ? '<span>' + TU_CMI + p.cm.length + '</span>' : '') + '</div></div>';
 }
 function cxTune(p){
@@ -3691,10 +4088,10 @@ function cxTune(p){
 function cxSide(p){
   const ev = p.k === "event", who = cmAuthor(p), gl = p.gl || [];
   let h = '<div class="cxsim" data-lbimg="' + esc(p.img || "") + '">' + (p.img ? '<img src="' + esc(cmSmall(p.img)) + '" alt="">' : p.code ? '<div class="cxbig"><small>TUNE' + (p.pi ? ' · ' + esc(p.pi) : '') + '</small><b>' + tuCode(p.code) + '</b></div>' : '') + '</div><div class="cxbd">';
-  h += '<div class="cxby"' + (p.pid ? ' data-cmprof="' + esc(p.pid) + '"' : '') + '>' + cmAv(p, 36) + '<span><b>' + esc(who) + '</b><small>' + (ev ? cmWhen(p.at) + (p.place ? ' · ' + esc(p.place) : '') : esc(p.car || "") + ' · ' + mdAgo(p.t)) + (p.demo ? ' · Beispiel' : '') + '</small></span></div>';
+  h += '<div class="cxby"' + (p.pid ? ' data-cmprof="' + esc(p.pid) + '"' : '') + '>' + cmAv(p, 36) + '<span><b>' + esc(who) + '</b><small>' + (ev ? (p.official && p.live ? (p.special ? "Läuft gerade" : "Läuft rund um die Uhr") : cmWhen(p.at)) + (p.place ? ' · ' + esc(p.place) : '') : esc(p.car || "") + ' · ' + mdAgo(p.t)) + '</small></span></div>';
   h += '<div class="cxtt"><b>' + esc(p.title || "") + '</b>' + (p.text ? '<p>' + esc(p.text) + '</p>' : '') + '</div>';
   if (ev && gl.length) h += '<div class="cmppl">' + gl.slice(0, 5).map(g => pfAvatar(g.pid && PROF.all.get(g.pid) ? PROF.all.get(g.pid) : {u:g.n, id:g.n}, 26, false)).join("") + '<span>' + (p.goers || 0) + ' dabei</span></div>';
-  h += '<div class="cxacts">' + (ev ? '<button class="' + (EVF[p.key] ? 'h' : '') + '" data-tufav="' + esc(p.key) + '">' + MD_SVG.heart + (p.likes || 0) + '</button><button class="' + (p.going ? 'ok' : 'pri') + '" data-tugo="' + esc(p.key) + '">' + (p.going ? "Dabei ✓" : "Teilnehmen") + '</button>'
+  h += '<div class="cxacts">' + (ev ? '<button class="' + (EVF[p.key] ? 'h' : '') + '" data-tufav="' + esc(p.key) + '">' + MD_SVG.heart + (p.likes || 0) + '</button>' + (p.official ? fdeBtn(p, "") : '<button class="' + (p.going ? 'ok' : 'pri') + '" data-tugo="' + esc(p.key) + '">' + (p.going ? "Dabei ✓" : "Teilnehmen") + '</button>')
       : '<button class="' + (p.liked ? 'h' : '') + '" data-tulike="' + esc(p.key) + '"' + (p.demo ? ' disabled' : '') + '>' + MD_SVG.heart + (p.likes || 0) + '</button>')
     + (p.x != null && p.z != null ? '<button data-turoute="' + esc(p.key) + '">Hinfahren</button>' : '')
     + (!ev && p.code ? '<button data-tucopy="' + esc(p.code) + '">Code kopieren</button>' : '')
@@ -3702,7 +4099,7 @@ function cxSide(p){
     + (p.mine ? '<button class="del" data-tudel="' + esc(p.id) + '">Löschen</button>' : '') + '</div>';
   if (p.credit) h += '<div class="cmcr">' + esc(p.credit) + '</div>';
   const cms = (p.cm || []).slice().sort((a, b) => (a.t || 0) - (b.t || 0));
-  h += '<div class="cxch">Kommentare' + (cms.length ? ' · ' + cms.length : '') + '</div><div class="cxcms" id="cxCms">' + (cms.length ? cms.map(c => '<div class="cxbub' + (c.mine ? ' me' : '') + '">' + (c.mine ? '' : tuAv(c.by)) + '<p>' + (c.mine ? '' : '<small>' + esc(c.by) + '</small>') + esc(c.x) + '<em>' + mdAgo(c.t) + (c.mine ? ' · <u data-tuuncm="' + esc(c.id) + '">löschen</u>' : '') + '</em></p></div>').join("") : '<div class="tunone">' + (p.demo ? 'Bei Beispiel-Beiträgen gibt es keine Kommentare.' : 'Noch keine Kommentare – schreib den ersten.') + '</div>') + '</div>';
+  h += '<div class="cxch">Kommentare' + (cms.length ? ' · ' + cms.length : '') + '</div><div class="cxcms" id="cxCms">' + (cms.length ? cms.map(c => '<div class="cxbub' + (c.mine ? ' me' : '') + '">' + (c.mine ? '' : tuAv(c.by)) + '<p>' + (c.mine ? '' : '<small>' + esc(c.by) + '</small>') + esc(c.x) + '<em>' + mdAgo(c.t) + (c.mine ? ' · <u data-tuuncm="' + esc(c.id) + '">löschen</u>' : '') + '</em></p></div>').join("") : '<div class="tunone">' + (p.official ? 'Unterhalten könnt ihr euch im Kolonnen-Chat – einfach beitreten.' : p.demo ? 'Kommentare sind bei diesem Beitrag geschlossen.' : 'Noch keine Kommentare – schreib den ersten.') + '</div>') + '</div>';
   if (!p.demo) h += '<div class="cxin"><input id="tuCm" maxlength="300" placeholder="Kommentieren …" autocomplete="off"><button data-tu="cm" aria-label="Senden"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 21 12 3 3.5 5.5 12z"/></svg></button></div>';
   return h + '</div>';
 }
@@ -3845,6 +4242,7 @@ $("gtune").addEventListener("click", async e => {
   if (td("data-tdreset")) { TD.f = {cls:[], land:"", era:"", rar:"", code:false, sort:"name"}; TD.pop = null; TU.q = ""; tuRender(); return; }
   if (td("data-tdmore")) { TD.show = (TD.show || 60) + 60; tuRender(); return; }
   if (TD.pop && !e.target.closest(".tdpop")) { TD.pop = null; tuRender(); }
+  { const ej = e.target.closest("[data-evjoin]"); if (ej) { e.stopPropagation(); fdeJoin(ej.dataset.evjoin); return; } }
   const po = e.target.closest("[data-tupost]"); if (po) {
     TU.post = cmPosts().find(p => p.key === po.dataset.tupost) || null;
     // neues Layout: nur das Detailblatt tauschen (Fotos bleiben stehen, kein Flackern)
@@ -3942,7 +4340,7 @@ const padActive = a => !(!S.blinkOn && /^(blink|hazard)/.test(a));
 const padFire = a => {
   const b = S.binds && S.binds[a];
   if (!(b && b.tab) && !PAD_ACT[a]) return;
-  if (!(D && D.on && performance.now() - lastMsg < 1500)) return;
+  if (!carLive()) return;
   try { if (b && b.tab) tabOpen(b.tab); else PAD_ACT[a][1](); } catch (e) {}
 };
 const padFind = (dev, btn, how, mod) => Object.keys(S.binds || {}).filter(a => { const b = S.binds[a]; return b && padActive(a) && b.dev === dev && b.btn === btn && padHow(b) === how && (how !== "+" || b.mod === mod); });
@@ -4116,6 +4514,7 @@ function blSet(m){
 function blShare(){ if (window.FD_EXE) fetch("/blink?m=" + (BL.m || ""), {cache:"no-store"}).catch(() => {}); }
 setInterval(() => { if (BL.m) blShare(); }, 2000);
 function blPress(side){
+  if (window.FD_EXE && !carLive() && !demo) return;
   const now = performance.now(), other = side === "l" ? "r" : "l"; BL.t[side] = now;
   if (now - BL.t[other] < 450) { blSet("h"); return; }   // beide fast gleichzeitig: Warnblinker
   if (BL.m === "h") { blSet(""); return; }
@@ -4184,7 +4583,7 @@ function fuelNav(){
 function O(id, k){ const o = (S.opt && S.opt[id]) || {}; if (k in o) return o[k]; const d = ((WIDGETS[id] || {}).opts || []).find(x => x.k === k); return d ? d.def : true; }
 function setO(id, k, v){ if (!S.opt) S.opt = {}; if (!S.opt[id]) S.opt[id] = {}; S.opt[id][k] = v; saveSettings(); }
 const WIDGETS = {
-  chain:{name:"Skill-Kette", hint:"Multiplikator bis ×3,5 fürs saubere Fahren – Crash beendet die Kette",
+  chain:{name:"Skill-Kette", hint:"Multiplikator bis ×10 fürs saubere Fahren, Drifts und Spurwechsel – Crash beendet die Kette (ab ×4 schon leichte Berührungen)",
     html:() => '<div class="chw"><div class="spwt"><span>Skill-Kette</span><span class="spwtop" id="chT">–</span></div>'
       + '<div class="chm"><b id="chM">×1,0</b><div class="chpot"><small>im Topf</small><b id="chP">0 EP</b></div></div>'
       + '<div class="chbar"><i id="chB"></i></div><div class="chl" id="chL"></div></div>',
@@ -4193,7 +4592,7 @@ const WIDGETS = {
       const now = performance.now();
       setText("chM", "×" + nf1.format(CH.m)); setText("chP", nf0.format(Math.round(CH.potSum)) + " EP");
       setText("chT", CH.t0 ? Math.floor((now - CH.t0) / 60000) + ":" + String(Math.floor((now - CH.t0) / 1000) % 60).padStart(2, "0") + " min" : "bereit");
-      const b = $("chB"); if (b) { b.style.width = Math.round(chFrac() * 100) + "%"; b.style.background = CH.m >= 3 ? "#ff9f0a" : CH.m >= 2 ? "#bf5af2" : "#0a84ff"; }
+      const b = $("chB"); if (b) { b.style.width = Math.round(chFrac() * 100) + "%"; b.style.background = CH.m >= 8 ? "#ffd60a" : CH.m >= 6 ? "#64d2ff" : CH.m >= 4.5 ? "#ff375f" : CH.m >= 3 ? "#ff9f0a" : CH.m >= 2 ? "#bf5af2" : "#0a84ff"; }
       el.classList.toggle("chbrk", now - CH.broke < 1500); el.classList.toggle("chmax", CH.m >= CH_MAX);
       const l = $("chL"); if (l) { const h = CH.combo.slice(0, 4).map(c => '<div class="' + c.k + '"><span>' + esc(c.t) + '</span><b>' + esc(c.v) + '</b></div>').join("") || '<div><span>Sauber fahren, blinken, nicht crashen</span><b></b></div>'; if (l.dataset.h !== h) { l.dataset.h = h; l.innerHTML = h; } }
     }},
@@ -4444,7 +4843,7 @@ const WIDGETS = {
       setText("mTitle", has ? music.title : music.running ? "Pausiert" : "Keine Musik");
       setText("mArtist", has ? music.artist : music.running ? "Spotify ist geöffnet" : (demo ? "Demo" : "Spotify-App am PC starten"));
       setText("mSrc", demo ? "Demo" : !music.running ? "nicht verbunden" : music.vol !== null && music.vol !== undefined ? "Lautstärke " + Math.round(music.vol * 100) + " %" : "Spotify-App");
-      const cov = $("mCover"), bg = has ? coverGradient(music.title + music.artist) : "";
+      const cov = $("mCover"), bg = has ? (music.cover ? 'center/cover no-repeat url("' + music.cover + '"),' : '') + coverGradient(music.title + music.artist) : "";
       if (cov.dataset.bg !== bg) { cov.dataset.bg = bg; cov.style.background = bg; }
       const ico = music.playing ? ICO.pause : ICO.play; const p = $("mPlay"); if (p.dataset.i !== ico) { p.dataset.i = ico; p.innerHTML = ico; }
       $("mProgW").hidden = !(demo && music.len); if (demo && music.len) $("mProg").style.width = (music.pos / music.len * 100).toFixed(1) + "%";
@@ -4483,7 +4882,8 @@ function renderWidgets(){
     const w = WIDGETS[id], el = document.createElement("section");
     el.className = "card"; el.dataset.w = id; el.innerHTML = w.html();
     grid.appendChild(el);
-    if (w.init) w.init(el);
+    // eine fehlerhafte Kachel darf nie den ganzen Start abbrechen (sonst keine Verbindung, keine Karte)
+    if (w.init) { try { w.init(el); } catch (e) { console.error("Kachel " + id, e); } }
     active.push([w, el]);
   }
   fitSide();
@@ -4935,7 +5335,7 @@ const MC = {cv:document.createElement("canvas"), g:null, key:"", c:null, moveT:0
 function staticKey(){
   const U = ed.on && ed.orig ? ed.under + ed.origA + (underImg() ? 1 : 0) : "";
   return [mapImg.T ? mapImg.T.join(",") : "-", mapImg.bmp ? 1 : 0, RFIX.rev, LR.rev, layKey(), U, ed.on && ed.orig && ed.hideRoads ? 1 : 0,
-    S.mapSrc, S.mirror ? 1 : 0, ed.on && ed.sel && !ed.sel.base ? ed.sel.id : "", ed.pendRev || 0].join("|");
+    S.mapSrc, S.mirror ? 1 : 0, ed.on && ed.sel && !ed.sel.base ? ed.sel.id : "", ed.pendRev || 0, S.terrain === false ? 0 : HGT.srev].join("|");
 }
 function mcValid(key, axS, ayS){
   const C = MC.c; if (!C || key !== MC.key || C.W !== W || C.H !== H || C.dpr !== DPR) return false;
@@ -4974,6 +5374,7 @@ function renderStatic(g, c){
     if (!hideR) drawRoads(g, s * mapImg.k, [vu, vv, r / mapImg.k + 20], lrMerged ? lrBuildPaths().img : null);
     g.restore();
   }
+  try { if (!ed.on) drawTerrain(g); } catch (e) {}
   if (S.mapSrc !== "image") drawLearned(g, s, hideR);
   if (!hasImg) {
     const steps = [25, 50, 100, 250, 500, 1000, 2500, 5000];
@@ -5049,7 +5450,7 @@ function drawMap(){
   try { drawEditOverlay(s); drawRoute(); } catch (e) { diagErr(e); }
   ctx.restore();
   // jede Ebene für sich: ein Fehler bei Freunden o. Ä. darf weder den Pfeil noch die übrige Karte verhindern
-  for (const layer of [drawPois, drawFriends, drawWaypoints, drawPresence]) { ctx.save(); try { layer(axS, ayS, s); } catch (e) { diagErr(e); } ctx.restore(); }
+  for (const layer of [drawPois, drawFriends, drawWaypoints, drawPresence, drawRoadPrev]) { ctx.save(); try { layer(axS, ayS, s); } catch (e) { diagErr(e); } ctx.restore(); }
   // eigener Pfeil zuletzt: liegt immer über Orten, Wegpunkten und Freunden
   if (D && D.dash && (D.px || D.pz)) {
     const [carX, carY] = carMap(), dx = (carX - cam.cx) * s, dy = (carY - cam.cy) * s;
@@ -5130,7 +5531,7 @@ cv.addEventListener("pointerdown", e => {
     drag = null; return;
   }
   if (ed.on && ed.erase) { ed.stroke = {before:new Map(), after:new Map(), last:null}; const [x, y] = canvasXY(e); edEraseAt(x, y); drag = null; return; }
-  drag = {x:e.clientX, y:e.clientY, moved:false};
+  drag = {x:e.clientX, y:e.clientY, moved:false, t:performance.now()};
 });
 cv.addEventListener("pointercancel", e => { ptrs.delete(e.pointerId); pinch = null; drag = null; if (ed.hd) edHandleEnd(); if (ed.stroke) edStrokeEnd(); if (ed.mv) { if (ed.sel) ed.sel.p = ed.mv.p0; ed.mv = null; } });
 cv.addEventListener("pointermove", e => {
@@ -5184,7 +5585,7 @@ cv.addEventListener("pointerup", e => {
   if (ed.mover) { ed.mover = null; ptrs.delete(e.pointerId); saveOwn(); return; }
   if (ed.stroke) { ptrs.delete(e.pointerId); edStrokeEnd(); return; }
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
-  const tap = drag && !drag.moved; drag = null; cv.classList.remove("drag");
+  const tap = drag && !drag.moved && performance.now() - (drag.t || 0) < 450; drag = null; cv.classList.remove("drag");
   if (tap) { const [x, y] = canvasXY(e); lastTap = [e.clientX, e.clientY]; onMapTap(x, y); }
 });
 
@@ -5831,7 +6232,7 @@ function demoRoute(){
 
 /* ======================= Freunde ======================= */
 // Andere ForzaDashboard-Nutzer derselben Gruppe auf der Karte (Positionen kommen über den PC-Server)
-const FR = {on:true, ok:false, name:"", group:"", list:[], m:new Map(), cfgT:0, gwp:[], me:"", known:{}, soz:null, popped:new Set()};
+const FR = {pidOf:(() => { try { return JSON.parse(localStorage.getItem("fd.pidof") || "{}"); } catch (e) { return {}; } })(), on:true, ok:false, name:"", group:"", list:[], m:new Map(), cfgT:0, gwp:[], me:"", known:{}, soz:null, popped:new Set()};
 function sozFriend(id){ return !!(FR.soz && FR.soz.freunde.some(f => f.id === id)); }
 // Anfragen an die exe; danach Freunde-Seite neu
 function sozPost(path, body){ return sessPost(path, body).then(j => { if (j && j.soz) FR.soz = j.soz; if (j && j.liste) FR.lobbys = j.liste; if (j && j.ok === false && j.why) toast(j.why); gFriends(true); sozPops(); return j; }).catch(() => toast("ForzaDashboard antwortet nicht")); }
@@ -5949,13 +6350,136 @@ function achSync(p){
 const BRAND2 = ["Aston Martin", "Alfa Romeo", "Land Rover", "De Tomaso", "Austin Healey", "Hot Wheels", "Rolls Royce", "Mercedes Benz", "Shelby Cobra", "Lynk & Co"];
 function brandOf(n){ const s = String(n || ""); for (const b of BRAND2) if (s.toLowerCase().startsWith(b.toLowerCase())) return b; return s.split(" ")[0] || "Andere"; }
 // Garage nach Marke (Standard) – innerhalb der Marke die meistgefahrenen zuerst
-function garageHtml(gar, mode){
-  const cars = (gar || []).map(([o, km]) => { const n = carName(o); return {o, km, n:n ? n.name : "Auto " + o, y:n ? n.year : "", b:n ? brandOf(n.name) : "Andere"}; });
+function modsBox(p){
+  const l = (p && p.mods) || []; if (!l.length) return "";
+  const ico = {cars:"🚗", gfx:"✨", sound:"🔊", cam:"🎥", play:"🎮", ui:"🖥️", world:"🌦️", tools:"🛠️"};
+  return '<div class="pfbox"><h4>Aktive Mods · ' + l.length + '</h4><div class="pfmods">' + l.slice(0, 14).map(m => '<span' + (m.id ? ' data-a="pf-mod" data-id="' + m.id + '"' : '') + ' title="' + esc(mdNameOf(m)) + '"><i>' + (ico[m.k] || "🧩") + '</i><em>' + esc(modShort(mdNameOf(m))) + (m.c && carName(m.c) ? '<small>' + esc(carName(m.c).name) + '</small>' : '') + '</em></span>').join("") + (l.length > 14 ? '<span><i>+</i>' + (l.length - 14) + ' weitere</span>' : '') + '</div></div>';
+}
+// ---- Fahrstil: Fahrzeit je Stil (Cruise, Race, Drift, Offroad, Rage), live aus der Telemetrie gemessen ----
+// Gemessen wird nur im Programmfenster (sonst zählt ein offener Browser doppelt). Gespeichert: Sekunden je Tag (40 Tage) + gesamt.
+const FS_AX = [
+  ["Cruise", "#64d2ff", "Cruiser", '<path d="M8 3 5 21M16 3l3 18M12 4v3M12 11v3M12 18v2"/>'],
+  ["Race", "#ff375f", "Racer", '<path d="M5 21V4M5 4h12l-2.5 4.5L17 13H5"/>'],
+  ["Drift", "#bf5af2", "Drifter", '<path d="M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7"/>'],
+  ["Offroad", "#ffb340", "Offroader", '<path d="M2.5 20 9 8.5l4 6.5 2.5-3.5L21.5 20z"/>'],
+  ["Rage", "#ff453a", "Rager", '<path d="M13 2 5 13h6l-1 9 8-11h-6z"/>']
+];
+const FS_ALL = '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>';
+const FS = (() => { try { const o = JSON.parse(localStorage.getItem("fd.fs") || "null"); if (o && o.d && Array.isArray(o.a) && o.a.length === 5) return o; } catch (e) {} return {d:{}, a:[0, 0, 0, 0, 0]}; })();
+Object.assign(FS, {lastT:0, hit:null, sm:false, saveT:0, syncT:0, offT:0, off:false, sig:""});
+function fsOffroad(d){
+  const now = performance.now(); if (now - FS.offT < 1000) return FS.off; FS.offT = now;
+  let far = false; try { far = !!(mapImg.T && !mapImg.demo && fit.quality && fit.quality.sure) && baseNearest(d.px, d.pz, 30) == null; } catch (e) {}
+  const sf = Array.isArray(d.surf) ? d.surf.reduce((a, b) => a + Math.abs(b || 0), 0) / 4 : 0;
+  return FS.off = far || sf > 0.6;
+}
+function fsTick(d){
+  if (!window.FD_EXE || demo) return;
+  const now = performance.now(), dt = FS.lastT ? Math.min(.5, (now - FS.lastT) / 1000) : 0; FS.lastT = now;
+  if (!dt) return;
+  const day = new Date().toISOString().slice(0, 10), t = FS.d[day] || (FS.d[day] = [0, 0, 0, 0, 0]), add = (i, s) => { t[i] += s; FS.a[i] += s; };
+  // Rage: Aufprall (wie beim Schaden) und umgefahrene Objekte
+  if (FS.hit !== null && (sess.lastHit || 0) !== FS.hit) add(4, 8);
+  FS.hit = sess.lastHit || 0;
+  const sm = d.smV > 0.5; if (sm && !FS.sm) add(4, 1.5); FS.sm = sm;
+  const kmh = Math.abs(d.spd || 0) * 3.6, sa = Array.isArray(d.slipA) ? (Math.abs(d.slipA[2] || 0) + Math.abs(d.slipA[3] || 0)) / 2 * 57.3 : 0;
+  if (sa > 15 && kmh > 40) add(2, dt);
+  else if (kmh > 20 && fsOffroad(d)) add(3, dt);
+  else if (kmh > 20 && (d.pos > 0 || kmh > 160 || ((d.acc || 0) > 230 && kmh > 110) || (Math.abs(d.ax || 0) / 9.81 > 0.85 && kmh > 70))) add(1, dt);
+  else if (kmh > 25 && kmh < 140) add(0, dt);
+  if (now - FS.saveT > 15000) { FS.saveT = now; fsSave(); }
+  if (now - FS.syncT > 120000) { FS.syncT = now; fsSync(); }
+}
+function fsSave(){
+  const cut = new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10);
+  for (const k in FS.d) if (k < cut) delete FS.d[k];
+  try { localStorage.setItem("fd.fs", JSON.stringify({d:FS.d, a:FS.a})); } catch (e) {}
+}
+// Werte 0–100: Wurzel aus dem Anteil an der Fahrzeit (so bleiben auch kleine Anteile sichtbar)
+function fsVals(a){ const s = a.reduce((x, y) => x + y, 0); return s < 120 ? null : a.map(v => Math.round(100 * Math.sqrt(v / s))); }
+function fsMine(){
+  const cut = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10), m = [0, 0, 0, 0, 0];
+  for (const k in FS.d) if (k >= cut) FS.d[k].forEach((v, i) => m[i] += v);
+  return {m:fsVals(m), a:fsVals(FS.a)};
+}
+function fsSync(){
+  if (!PROF.me || !PROF.me.has) return;
+  const v = fsMine(); if (!v.a) return;
+  const sig = JSON.stringify(v); if (sig === FS.sig) return; FS.sig = sig;
+  fetch("/profil/extra", {method:"POST", body:JSON.stringify({fs:{m:v.m || v.a, a:v.a}})}).catch(() => {});
+}
+function fsBox(p, own){
+  const r = PROF.fsr || "m", v = own && window.FD_EXE ? fsMine() : (p.fs || null), vals = v && (v[r] || v.a);
+  const head = '<div class="fsh"><b>Fahrstil</b><div class="seg2 sm"><button data-a="pf-fsr" data-id="m" class="' + (r === "m" ? "on" : "") + '">30 Tage</button><button data-a="pf-fsr" data-id="a" class="' + (r === "a" ? "on" : "") + '">Gesamt</button></div></div>';
+  if (!vals) return '<div class="pfbox fsb">' + head + '<div class="sub" style="color:var(--muted);font-size:13px;line-height:1.5;margin-top:6px">' + (own ? 'Fahr ein paar Minuten – dann zeigt sich hier, wie du fährst: Cruise, Race, Drift, Offroad oder Rage.' : 'Noch nicht genug gefahren.') + '</div></div>';
+  const ord = vals.map((x, i) => [x, i]).sort((a, b) => b[0] - a[0]), [m1, i1] = ord[0], [m2, i2] = ord[1], allr = m1 - ord[4][0] < 25, A = FS_AX[i1], col = allr ? "#0a84ff" : A[1];
+  const W = 280, H = 226, cx = 140, cy = 118, R = 66, ang = i => -Math.PI / 2 + i * 2 * Math.PI / 5, pt = (i, f) => [cx + Math.cos(ang(i)) * R * f / 100, cy + Math.sin(ang(i)) * R * f / 100];
+  const P = f => FS_AX.map((_, i) => pt(i, typeof f === "number" ? f : f[i]).map(n => n.toFixed(1)).join(",")).join(" "), gid = "fsg" + (fsBox.n = (fsBox.n || 0) + 1);
+  let s = '<svg class="fsr" viewBox="0 0 ' + W + ' ' + H + '"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + col + '" stop-opacity=".55"/><stop offset="1" stop-color="' + col + '" stop-opacity=".18"/></linearGradient></defs>';
+  for (const f of [33, 66, 100]) s += '<polygon points="' + P(f) + '" fill="none" stroke="currentColor" stroke-opacity="' + (f === 100 ? .16 : .08) + '"/>';
+  s += '<polygon points="' + P(vals) + '" fill="url(#' + gid + ')" stroke="' + col + '" stroke-width="1.8" stroke-linejoin="round"/>';
+  FS_AX.forEach((a, i) => { const [x, y] = pt(i, vals[i]); s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3" fill="#fff"/>'; });
+  FS_AX.forEach((a, i) => { const [x, y] = pt(i, 136), anc = Math.abs(x - cx) < 8 ? "middle" : x > cx ? "start" : "end", top = i === 0;
+    s += '<text class="ln" x="' + x.toFixed(1) + '" y="' + (top ? y - 13 : y - 3).toFixed(1) + '" text-anchor="' + anc + '">' + a[0] + '</text><text class="vl" x="' + x.toFixed(1) + '" y="' + (top ? y + 3 : y + 13).toFixed(1) + '" text-anchor="' + anc + '">' + vals[i] + '</text>'; });
+  s += '</svg>';
+  return '<div class="pfbox fsb">' + head + s + '<div class="fsep"></div><div class="fst"><div class="fsi" style="background:' + col + '2e"><svg viewBox="0 0 24 24" style="stroke:' + col + '">' + (allr ? FS_ALL : A[3]) + '</svg></div><div><b>' + (allr ? "Allrounder" : A[2]) + '</b><small>' + (allr ? "Kein Stil sticht heraus" : m2 >= m1 * .6 ? "mit " + FS_AX[i2][0] + "-Ader" : "Klar " + A[0]) + '</small></div><div class="km">' + nf0.format(p.km || 0) + ' km<br>' + (r === "m" && v.m ? "30 Tage" : "seit Beginn") + '</div></div></div>';
+}
+// Garage: breite Übersicht mit Kennzahlen, Marken-Filter, Sortierung und Karten nach Marke gruppiert.
+// Ersetzt eine aktive Mod ein Auto (z. B. Manthey-Kit am GT3 RS), stehen Mod-Name und Mod-Bild dran.
+function garageBox(p, own){
+  const gl = p.gar || p.garage || [], mode = PROF.gsort || "marke";
+  return '<div class="pfbox pfgarage"><div class="gbt"><h4>Garage · ' + gl.length + ' Autos</h4><div class="seg2 sm">' + [["marke", "Marke"], ["km", "Meistgefahren"], ["jahr", "Baujahr"]].map(([k, t]) => '<button data-a="pf-gsort" data-id="' + k + '" class="' + (mode === k ? "on" : "") + '">' + t + '</button>').join("") + '</div></div>'
+    + (gl.length ? garageHtml(gl, mode, p, own) : '<div class="sub" style="color:var(--muted);font-size:13.5px">' + (own ? 'Fahr los – deine Autos erscheinen hier.' : 'Noch keine Autos.') + '</div>') + '</div>';
+}
+function garageHtml(gar, mode, p, own){
+  const cars = (gar || []).map(([o, km]) => { const n = carName(o), md = carModOf(p, o), mi = md && md.k === "cars" && md.id ? mdInfo(md.id) : null; let img = own ? carImg(o, true, true) : ""; if (!img) img = (mi && mi.pic) || carImg(o, false);
+    return {o, km, n:n ? n.name : "Auto " + o, y:n ? +n.year || 0 : 0, b:n ? brandOf(n.name) : "Andere", md, img}; });
   if (!cars.length) return '<div class="sub" style="color:var(--muted);font-size:13.5px">Noch keine Autos.</div>';
-  if (mode === "km") return '<div class="pfgar">' + cars.sort((a, b) => b.km - a.km).map(c => '<div><b>' + esc(c.n) + '</b><small>' + (c.y ? c.y + ' · ' : '') + nf1.format(c.km) + ' km</small></div>').join("") + '</div>';
-  const by = new Map(); for (const c of cars) { if (!by.has(c.b)) by.set(c.b, []); by.get(c.b).push(c); }
-  return [...by.keys()].sort((a, b) => a.localeCompare(b, "de")).map(b => '<div class="gbr"><div class="gbh"><b>' + esc(b) + '</b><small>' + by.get(b).length + (by.get(b).length === 1 ? ' Auto' : ' Autos') + '</small></div><div class="pfgar">'
-    + by.get(b).sort((x, y) => y.km - x.km).map(c => '<div><b>' + esc(c.n.slice(b.length).trim() || c.n) + '</b><small>' + (c.y ? c.y + ' · ' : '') + nf1.format(c.km) + ' km</small></div>').join("") + '</div></div>').join("");
+  const cnt = {}; cars.forEach(c => cnt[c.b] = (cnt[c.b] || 0) + 1);
+  const brands = Object.keys(cnt).sort((a, b) => a.localeCompare(b, "de")), fb = PROF.gbrand && cnt[PROF.gbrand] ? PROF.gbrand : "";
+  const mx = Math.max(.1, ...cars.map(c => c.km)), top = cars.slice().sort((a, b) => b.km - a.km)[0], topB = brands.slice().sort((a, b) => cnt[b] - cnt[a])[0], mods = cars.filter(c => c.md), sumKm = cars.reduce((a, c) => a + c.km, 0);
+  const st = '<div class="gst"><div class="gtop">' + (top.img ? '<img src="' + esc(top.img) + '" alt="" onerror="this.style.opacity=0">' : '') + '<span><small>MEISTGEFAHREN</small><b>' + esc(top.md ? modShort(mdNameOf(top.md)) : top.n) + '</b><em>' + nf1.format(top.km) + ' km</em></span></div>'
+    + '<div><small>MARKEN</small><b>' + brands.length + '</b><em>meist ' + esc(topB) + ' (' + cnt[topB] + ')</em></div>'
+    + '<div><small>MIT MOD</small><b>' + mods.length + '</b><em>' + (mods.length ? esc(mods.slice(0, 2).map(c => c.n.split(" ").slice(1).join(" ")).join(", ")) : 'alles original') + '</em></div>'
+    + '<div><small>GEFAHREN</small><b>' + nf0.format(sumKm) + ' km</b><em>mit allen Autos</em></div></div>';
+  const chips = '<div class="gch"><button data-a="pf-gbrand" data-id="" class="' + (fb ? "" : "on") + '">Alle ' + cars.length + '</button>' + brands.map(b => '<button data-a="pf-gbrand" data-id="' + esc(b) + '" class="' + (fb === b ? "on" : "") + '">' + esc(b) + ' <i>' + cnt[b] + '</i></button>').join("") + '</div>';
+  const card = c => '<div class="gc' + (c.md ? ' mod' : '') + '"' + (own ? ' data-a="pf-car" data-id="' + c.o + '" title="Antippen: eigenes Bild"' : '') + '><div class="im">' + (c.img ? '<img src="' + esc(c.img) + '" alt="" loading="lazy" decoding="async" onerror="this.style.opacity=0">' : TD_SIL) + (c.md ? '<span class="mb">🔧 Mod</span>' : '') + (c === top ? '<span class="tb">★</span>' : '') + '</div>'
+    + '<div class="gi"><b>' + esc(c.md ? modShort(mdNameOf(c.md)) : c.n) + '</b><small>' + (c.md ? 'statt ' + esc(c.n) : (c.y ? c.y + ' · ' : '') + esc(c.b)) + '</small><div class="gk"><i style="width:' + Math.max(4, Math.sqrt(c.km / mx) * 100).toFixed(0) + '%"></i></div><em>' + nf1.format(c.km) + ' km</em></div></div>';
+  if (mode === "marke" && !fb) {
+    return st + chips + brands.map(b => '<div class="gbgrp"><h5>' + esc(b) + ' <i>' + cnt[b] + '</i></h5><div class="ggrid">' + cars.filter(c => c.b === b).sort((x, y) => y.km - x.km).map(card).join("") + '</div></div>').join("");
+  }
+  const l = fb ? cars.filter(c => c.b === fb) : cars.slice();
+  l.sort(mode === "jahr" ? (a, b) => b.y - a.y || b.km - a.km : mode === "km" ? (a, b) => b.km - a.km : (a, b) => a.b.localeCompare(b.b, "de") || b.km - a.km);
+  return st + chips + '<div class="ggrid">' + l.map(card).join("") + '</div>';
+}
+// Forza-Bild eines Autos (aus den Fahrzeugdaten) – oder das eigene Bild
+function carImg(ord, own, onlyOwn){
+  if (own) { try { const u = localStorage.getItem("fd.carimg:" + ord); if (u) return u; } catch (e) {} }
+  if (onlyOwn) return "";
+  if (!TD.d) { if (!carImg.asked) { carImg.asked = true; tdLoad().then(() => { if (GR.view === "friends") gFriends(true); }); } return ""; }
+  if (!TD.slug) { TD.slug = new Map(); const nz = t => String(t).toLowerCase().replace(/[^a-z0-9]/g, ""); for (const c of TD.d.cars) if (c.img) { TD.slug.set(nz(c.y + " " + c.n), c.img); if (!TD.slug.has(nz(c.n))) TD.slug.set(nz(c.n), c.img); } }
+  const n = carName(ord); if (!n) return "";
+  const nz = t => String(t).toLowerCase().replace(/[^a-z0-9]/g, "");
+  let sl = TD.slug.get(nz(n.full)) || TD.slug.get(nz(n.name));
+  if (!sl) {
+    // unscharf: alle Wörter des Kurznamens im Forza-Namen, Jahr möglichst gleich, kürzester Name gewinnt
+    TD.fz = TD.fz || new Map(); if (TD.fz.has(ord)) sl = TD.fz.get(ord);
+    else {
+      const tk = String(n.name).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
+      let best = null, bs = -1e9;
+      for (const c of TD.d.cars) { if (!c.img) continue; const h = " " + String(c.n).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ") + " ";
+        const hit = t => h.includes(" " + t + " ") || (t.length > 2 && h.includes(" " + t));
+        const m = tk.filter(hit).length; if (!hit(tk[0]) || (tk[1] && !hit(tk[1]) && !/^(romeo|benz|rover|martin|royce)$/.test(tk[1])) || m <Math.min(2, tk.length) || m < tk.length - 1) continue;
+        const sc = m * 10 - Math.abs((+c.y || 0) - (+n.year || 0)) * 3 - h.length / 10 - (/welcome|forza edition|treasure|pack/.test(h) ? 5 : 0); if (sc > bs) { bs = sc; best = c.img; } }
+      sl = best || ""; TD.fz.set(ord, sl);
+    }
+  }
+  return sl ? ffImg(sl) : "";
+}
+// Mod-Name kurz und sauber (ohne „FH6“, Versionsnummern …)
+function modShort(n){
+  let t = String(n || "").replace(/ \d{1,6} \d{1,4} \d{9,}$/, "").replace(/\b(forza horizon ?6|fh ?6|mod|v\d+(\.\d+)*|final|release)\b/gi, " ").replace(/[_]+/g, " ").replace(/\s*[-–|]\s*$/, "").replace(/\s+/g, " ").trim();
+  return t.length > 30 ? t.slice(0, 28).trim() + "…" : t || n;
 }
 // verknüpfte Konten: Steam (Link oder Name), Xbox-Gamertag, Discord-Name
 const LINKS = [["steam", "Steam", "#1b2838", '<path d="M12 3a9 9 0 0 0-9 8.4l4.8 2a2.6 2.6 0 0 1 1.6-.4l2.2-3.1v-.1a3.4 3.4 0 1 1 3.4 3.4h-.1L11.7 15a2.6 2.6 0 0 1-5.1.6L3.2 14A9 9 0 1 0 12 3z"/>'],
@@ -6068,8 +6592,8 @@ function epTurn(since){
 // ---- Skill-Kette (wie die Skill-Chains in Forza): sauber fahren baut einen Multiplikator bis ×3,5 auf.
 // EP der Kette liegen erst im „Topf“ und werden gesichert: alle 3 Minuten, beim Anhalten oder Pausieren.
 // Crash = Kette gerissen: Topf weg, zurück auf ×1. Abbiegen ohne Blinker kostet ×0,5.
-const CH_MAX = 3.5, CH_BANK = 180000;
-const CH = {m:1, pot:{}, potSum:0, t0:0, bankT:0, hit:0, combo:[], best:0, last:null, stopT:0, yaw:[], forgotT:0, driveT:0, lastT:0, broke:0, banked:0, bankedT:0};
+const CH_MAX = 10, CH_BANK = 180000;
+const CH = {dr:null, drT:0, lc:null, pa:null, m:1, pot:{}, potSum:0, t0:0, bankT:0, hit:0, combo:[], best:0, last:null, stopT:0, yaw:[], forgotT:0, driveT:0, lastT:0, broke:0, banked:0, bankedT:0};
 function chEP(base, why, label){
   const conv = epMult(), ep = base * CH.m * conv, extra = conv > 1 ? base * CH.m * (conv - 1) : 0;
   const add = (k, v, c) => { const p = CH.pot[k] || (CH.pot[k] = {ep:0, cnt:0}); p.ep += v; p.cnt += c; };
@@ -6077,7 +6601,8 @@ function chEP(base, why, label){
   CH.potSum += ep; if (!CH.t0) CH.t0 = performance.now();
   chCombo(label, "+" + nf0.format(Math.round(ep)) + " EP");
 }
-function chBoost(x){ const before = CH.m; CH.m = Math.min(CH_MAX, Math.round((CH.m + x) * 100) / 100); if (!CH.t0) CH.t0 = performance.now(); if (Math.floor(CH.m * 2) > Math.floor(before * 2)) chCombo("Multiplikator ×" + nf1.format(CH.m), "", "up"); CH.best = Math.max(CH.best, CH.m); }
+// bis ×5 wie gehabt; von ×5 bis ×10 dauert es mindestens so lange wie die ersten fünf (eher länger)
+function chBoost(x){ if (CH.m >= 5) x *= 0.3; else if (CH.m >= 3.5) x *= 0.5; const before = CH.m; CH.m = Math.min(CH_MAX, Math.round((CH.m + x) * 100) / 100); if (!CH.t0) CH.t0 = performance.now(); if (Math.floor(CH.m * 2) > Math.floor(before * 2)) chCombo("Multiplikator ×" + nf1.format(CH.m), "", "up"); CH.best = Math.max(CH.best, CH.m); }
 function chCombo(t, v, k){ CH.combo.unshift({t, v, k:k || "", at:performance.now()}); if (CH.combo.length > 6) CH.combo.length = 6; }
 function chBank(why){
   const pot = CH.pot; CH.pot = {}; const sum = CH.potSum; CH.potSum = 0; CH.bankT = performance.now();
@@ -6093,7 +6618,18 @@ function chTick(d){
   const now = performance.now(), dt = CH.lastT ? Math.min(.5, (now - CH.lastT) / 1000) : 0; CH.lastT = now;
   if (!d.on || !d.dash || demo) { if (CH.potSum >= 1) chBank("Pause"); return; }
   if ((sess.lastHit || 0) !== (CH.hit || 0)) { CH.hit = sess.lastHit; chBreak("Crash"); return; }
+  // Crash im Drift: seitliche Einschläge sind oft weicher als 3,5 g, deshalb im Drift (und kurz danach) schon ab 1,8 g
+  // oder bei plötzlichem Tempoverlust ohne Bremse (gegen die Wand gerutscht)
+  { const drifting = CH.dr || now - CH.drT < 1500, vv = Math.abs(d.spd || 0);
+    CH.vh = (CH.vh || []).filter(x => now - x[0] < 350); CH.vh.push([now, vv]);
+    const drop = CH.vh[0][1] - vv;
+    if (CH.pa && drifting && !(d.smV > 0.5)) { const j = Math.hypot((d.ax - CH.pa[0]) / 9.81, (d.az - CH.pa[1]) / 9.81); if (j > 1.8 || (drop > 6 && (d.brk || 0) < 60)) { CH.pa = [d.ax, d.az]; CH.dr = null; CH.vh = []; chBreak("Crash im Drift"); return; } }
+    if (!drifting && drop > 9 && (d.brk || 0) < 40 && (d.hb || 0) < 40 && !(d.smV > 0.5)) { CH.vh = []; chBreak("Crash"); return; } }
+  // ab ×4 empfindlich: schon leichte Berührungen beenden die Kette – je höher, desto empfindlicher
+  if (CH.pa && CH.m >= 4 && !(d.smV > 0.5)) { const j = Math.hypot((d.ax - CH.pa[0]) / 9.81, (d.az - CH.pa[1]) / 9.81); if (j > (CH.m >= 7 ? 1.3 : CH.m >= 4.75 ? 1.6 : 2.2)) { CH.pa = [d.ax, d.az]; chBreak("Berührung bei ×" + nf1.format(CH.m)); return; } }
+  CH.pa = [d.ax, d.az];
   const v = Math.abs(d.spd || 0);
+  chDrift(d, now, dt); chLane(d, now);
   // Zeit ohne Zwischenfall: jede Minute bei Fahrt (über 20 km/h) +0,05
   if (v > 5.5) { CH.driveT += dt; if (CH.driveT >= 60) { CH.driveT -= 60; chBoost(0.05); } }
   // Anhalten (4 s) oder alle 3 Minuten: sichern
@@ -6102,12 +6638,51 @@ function chTick(d){
   // Abbiegen ohne Blinker: in 5 s um mehr als 70° gedreht, bei 15–60 km/h, kein Blinker in den letzten 10 s (nicht im Rennen)
   if (S.blinkOn && !(d.pos > 0) && typeof d.yaw === "number") {
     CH.yaw.push([now, d.yaw, v]); while (CH.yaw.length && now - CH.yaw[0][0] > 5000) CH.yaw.shift();
-    if (CH.yaw.length > 10 && now - CH.forgotT > 12000 && now - (BL.onT || -1e9) > 10000 && !BL.m) {
+    if (CH.yaw.length > 10 && now - CH.forgotT > 12000 && now - (BL.onT || -1e9) > 10000 && !BL.m && !CH.dr && now - CH.drT > 4000) {
       let turn = 0, sp = 0; for (let i = 1; i < CH.yaw.length; i++) { let a = CH.yaw[i][1] - CH.yaw[i - 1][1]; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; turn += a; sp += CH.yaw[i][2]; }
       sp /= CH.yaw.length - 1;
       if (Math.abs(turn) > 1.22 && sp > 4.2 && sp < 16.7) { CH.forgotT = now; CH.yaw = []; if (CH.m > 1) { CH.m = Math.max(1, Math.round((CH.m - 0.5) * 100) / 100); } chCombo("Blinker vergessen", "−0,5×", "brk"); }
     }
   }
+}
+// Drift: Heckwinkel über ~12° bei über 30 km/h. Bewertet werden Dauer, Tempo und Winkel – dafür gibt es keine EP,
+// sondern mehr Multiplikator (je besser, desto mehr). Ein Crash im Drift beendet die Kette wie sonst auch.
+function chDrift(d, now, dt){
+  const sa = Array.isArray(d.slipA) ? (Math.abs(d.slipA[2] || 0) + Math.abs(d.slipA[3] || 0)) / 2 : 0, kmh = Math.abs(d.spd || 0) * 3.6, deg = sa * 57.3;
+  const on = deg > 12 && kmh > 30 && !(d.pos > 0);
+  if (on) {
+    if (!CH.dr) CH.dr = {t:0, score:0, max:0, v:0, off:0};
+    const r = CH.dr; r.t += dt; r.off = 0; r.max = Math.max(r.max, deg); r.v = Math.max(r.v, kmh); r.score += Math.min(60, deg) * Math.min(160, kmh) * dt / 100;
+  } else if (CH.dr) {
+    CH.dr.off += dt;
+    if (CH.dr.off > 0.6) {
+      const r = CH.dr; CH.dr = null; CH.drT = now;
+      if (r.t >= 1.2) {
+        const q = r.score >= 60 ? 0.35 : r.score >= 30 ? 0.25 : r.score >= 14 ? 0.15 : 0.08;
+        chBoost(q); chCombo("Drift " + nf1.format(r.t) + " s · " + Math.round(r.max) + "° · " + Math.round(r.v) + " km/h", "+" + nf1.format(CH.m >= 3.5 ? q / 2 : q) + "×", "up");
+      }
+    }
+  }
+}
+// Spurwechsel: geblinkt, dann 2,5–5 m seitlich versetzt ohne Richtungswechsel (> 30 km/h, keine Kreuzung) → sauber
+function chLane(d, now){
+  const side = BL.m === "l" || BL.m === "r" ? BL.m : "";
+  if (!side) { CH.lc = null; return; }
+  if (!CH.lc || CH.lc.side !== side) { CH.lc = {side, t:now, x:d.px, z:d.pz, h:d.yaw, done:false}; return; }
+  const c = CH.lc; if (c.done || now - c.t > 9000 || Math.abs(d.spd || 0) < 8.3) return;
+  let dh = (d.yaw || 0) - c.h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
+  if (Math.abs(dh) > 0.4) { c.done = true; return; }   // richtig abgebogen – zählt dort
+  const dx = d.px - c.x, dz = d.pz - c.z, lat = Math.abs(dx * Math.cos(c.h) - dz * Math.sin(c.h));
+  if (lat > 2.5 && lat < 6 && nearJunction(d.px, d.pz, 35) === false) { c.done = true; chEP(2, "turn", "Sauberer Spurwechsel"); chBoost(0.08); }
+}
+// Kreuzung in der Nähe? (Knoten im Straßennetz mit 3+ Abzweigen) – null, wenn die Karte noch nicht bereit ist
+function nearJunction(x, z, r){
+  try {
+    if (!mapImg.T) return null;
+    const G = navBuildGraph(), [u, v] = worldToImg(x, z), R = r / mapImg.k, cx = Math.floor(u / G.CELL), cy = Math.floor(v / G.CELL), C = Math.ceil(R / G.CELL);
+    for (let ix = -C; ix <= C; ix++) for (let iy = -C; iy <= C; iy++) { const a = G.grid.get((cx + ix) + "," + (cy + iy)); if (!a) continue; for (const j of a) if (G.adj[j].length >= 3 && Math.hypot(G.X[j] - u, G.Y[j] - v) < R) return true; }
+    return false;
+  } catch (e) { return null; }
 }
 // Fortschritt bis zum nächsten halben Schritt (für Balken)
 const chFrac = () => CH.m >= CH_MAX ? 1 : (CH.m * 2 - Math.floor(CH.m * 2));
@@ -6121,7 +6696,7 @@ function profPage(){
     + '<h3>' + esc(p.has ? p.u : "Noch kein Name") + '</h3>' + (titleOf(pv) ? '<div class="pfti">' + esc(titleOf(pv)) + '</div>' : '') + '<div class="sub">Level ' + p.lv + ' · ' + lvName(p.lv) + '</div>' + showcaseHtml(pv)
     + (c ? '<div class="car">' + (D && D.on ? "Unterwegs im " : "Zuletzt: ") + esc(c.name) + '</div>' : '')
     + (tags.length ? '<div class="pftags">' + tags.map(t => '<span>' + esc(t) + '</span>').join("") + '</div>' : '')
-    + '<div class="pfbar" style="width:100%"><u style="width:' + Math.round(p.cur / p.need * 100) + '%"></u></div><div class="sub">' + nf0.format(p.cur) + ' / ' + nf0.format(p.need) + ' EP bis Level ' + (p.lv + 1) + '</div>'
+    + '<div class="pfbar" style="width:100%"><u style="width:' + Math.round(p.cur / p.need * 100) + '%"></u></div><div class="sub">' + nf0.format(p.cur) + ' / ' + nf0.format(p.need) + ' EP bis Level ' + (p.lv + 1) + (p.has ? ' · <a class="pfhl" data-a="pf-hist">Verlauf ›</a>' : '') + '</div>'
     + '<div class="pfnum"><div><b>' + nf0.format(p.km || 0) + '</b><small>km</small></div><div><b>' + nf0.format(p.cars || 0) + '</b><small>Autos</small></div><div><b>' + nf0.format(p.ev || 0) + '</b><small>Events</small></div></div>'
     + (!ed ? linksHtml(p.links) : '')
     + (p.has && !ed ? '<button class="btn pri" data-a="pf-edit" style="width:100%;margin-top:4px">Profil bearbeiten</button>' : '') + '</div>';
@@ -6144,11 +6719,12 @@ function profPage(){
   }
   if (!ed && p.has) right += profOwnBoxes(p);
   const gl = p.gar || p.garage || [];
-  right += '<div class="pfbox"><div class="gbt"><h4>Garage · ' + gl.length + ' Autos</h4><div class="seg2 sm">' + [["marke", "Marke"], ["km", "Meistgefahren"]].map(([k, t]) => '<button data-a="pf-gsort" data-id="' + k + '" class="' + ((PROF.gsort || "marke") === k ? "on" : "") + '">' + t + '</button>').join("") + '</div></div>' + (gl.length ? garageHtml(gl, PROF.gsort || "marke") : '<div class="sub" style="color:var(--muted);font-size:13.5px">Fahr los – deine Autos erscheinen hier.</div>') + '</div>';
+  right += modsBox(p);
   const td = p.today || {}, lines = [["clean", "Sauber gefahren (ohne Crash)"], ["km", "Strecke"], ["turn", "Geblinkt und sauber abgebogen"], ["convoy", "Kolonnen-Bonus"], ["race", "Saubere Rennen"], ["car", "Neue Autos"], ["event", "Events"]].filter(([k]) => td[k] > 0);
   const tot = lines.reduce((a, [k]) => a + td[k], 0);
   right += '<div class="pfbox"><h4>Heute gesammelt</h4>' + (lines.length ? '<div class="pfep">' + lines.map(([k, n]) => '<div><span>' + n + '</span><b>+' + nf0.format(td[k]) + '</b></div>').join("") + '<div class="tot"><span>Zusammen</span><b>+' + nf0.format(tot) + ' EP</b></div></div>' : '<div class="sub" style="color:var(--muted);font-size:13.5px;line-height:1.5">EP gibt es fürs saubere Fahren: Kilometer ohne Crash, geblinkt und sauber abgebogen, saubere Rennen, neue Autos und Events. In einer Kolonne zählt alles doppelt, ab 16 Leuten fünffach.</div>') + '</div>';
-  return '<div class="pfp">' + left + '<div class="pfs">' + right + '</div></div>';
+  right += garageBox(p, true);
+  return '<div class="pfp"><div class="pfl">' + left + (p.has ? fsBox(p, true) : '') + '</div><div class="pfs">' + right + '</div></div>';
 }
 // fremdes Profil (nur ansehen)
 function profOther(id){
@@ -6167,12 +6743,100 @@ function profOther(id){
   const posts = (TU.list || []).filter(x => x.pid === id && !x.demo).sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 8);
   const goes = (TU.list || []).filter(x => x.k === "event" && (x.gl || []).some(g => g.pid === id)).slice(0, 4);
   const act = (p.act || []).slice(0, 6), actIco = {ev:"🎟️", kol:"🚙", post:"📸"}, actTxt = {ev:"Event", kol:"Kolonne", post:"Beitrag"};
-  const right = (act.length || goes.length ? '<div class="pfbox"><h4>Zuletzt dabei</h4><div class="pfact">' + goes.map(g => '<div data-a="pf-post" data-id="' + esc(g.key) + '"><i>📅</i><span><b>' + esc(g.title) + '</b><small>Event · ' + cmWhen(g.at) + '</small></span></div>').join("") + act.map(x => '<div><i>' + actIco[x.k] + '</i><span><b>' + esc(x.n) + '</b><small>' + actTxt[x.k] + (x.t ? ' · ' + agoTxt(x.t) : '') + '</small></span></div>').join("") + '</div></div>' : '')
+  const right = (act.length || goes.length ? '<div class="pfbox"><h4>Zuletzt dabei</h4><div class="pfact">' + goes.map(g => '<div data-a="pf-post" data-id="' + esc(g.key) + '"><i>📅</i><span><b>' + esc(g.title) + '</b><small>Event · ' + cmWhen(g.at) + '</small></span></div>').join("") + act.map(x => { const v = actView(x); return '<div><i>' + v.ico + '</i><span><b>' + esc(v.t) + '</b><small>' + esc(v.s) + (x.t ? ' · ' + agoTxt(x.t) : '') + '</small></span></div>'; }).join("") + '</div></div>' : '')
     + (posts.length ? '<div class="pfbox"><h4>Beiträge · ' + posts.length + '</h4><div class="pfposts">' + posts.map(x => '<div data-a="pf-post" data-id="' + esc(x.key) + '">' + (x.img ? '<img src="' + esc(x.img) + '" alt="" loading="lazy">' : '<span class="np">' + (x.k === "event" ? "📅" : x.k === "tune" ? "🔧" : "🚗") + '</span>') + '<b>' + esc(x.title || "") + '</b><small>' + MD_SVG.heart + (x.likes || 0) + '</small></div>').join("") + '</div></div>' : '')
-    + '<div class="pfbox"><div class="gbt"><h4>Garage · ' + (p.gar || p.garage || []).length + ' Autos</h4><div class="seg2 sm">' + [["marke", "Marke"], ["km", "Meistgefahren"]].map(([k, t]) => '<button data-a="pf-gsort" data-id="' + k + '" class="' + ((PROF.gsort || "marke") === k ? "on" : "") + '">' + t + '</button>').join("") + '</div></div>' + garageHtml(p.gar || p.garage || [], PROF.gsort || "marke") + '</div>';
-  return '<div class="pfp">' + left + '<div class="pfs">' + right + '</div></div>';
+    + modsBox(p) + garageBox(p, false);
+  return '<div class="pfp"><div class="pfl">' + left + fsBox(p, false) + '</div><div class="pfs">' + right + '</div></div>';
 }
 let pfChkT = 0, pfTuAsked = false;
+// eigenes Bild für ein Auto der Garage (bleibt auf diesem PC)
+function carImgPick(ord){
+  const i = document.createElement("input"); i.type = "file"; i.accept = "image/*";
+  i.onchange = () => { const f = i.files && i.files[0]; if (!f) return; const im = new Image(); im.onload = () => {
+    const W = 480, H = 270, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d"), r = Math.max(W / im.width, H / im.height);
+    g.drawImage(im, (W - im.width * r) / 2, (H - im.height * r) / 2, im.width * r, im.height * r);
+    let q = .8, u = c.toDataURL("image/webp", q); while (u.length > 50000 && q > .3) { q -= .1; u = c.toDataURL("image/webp", q); }
+    try { localStorage.setItem("fd.carimg:" + ord, u); toast("Bild gespeichert"); } catch (e) { toast("Speicher voll"); }
+    URL.revokeObjectURL(im.src); gFriends(true);
+  }; im.src = URL.createObjectURL(f); };
+  i.click();
+}
+// EP-Verlauf seit Anfang (nur das eigene Profil): Balken je Tag, Linie = Gesamt; Tag antippen = Aufteilung wie „Heute gesammelt“
+function epHistShow(){
+  const p = PROF.me; if (!p) return;
+  const h = p.hist || {}, days = Object.keys(h).sort();
+  let el = $("epH"); if (!el) { el = document.createElement("div"); el.id = "epH"; el.className = "pfq"; document.body.appendChild(el); el.addEventListener("click", e => { if (e.target === el || e.target.closest("[data-q=x]")) el.classList.remove("on"); const d = e.target.closest("[data-day]"); if (d) { el.dataset.sel = d.dataset.day; epHistDraw(); } const r = e.target.closest("[data-rg]"); if (r) { el.dataset.rg = r.dataset.rg; epHistDraw(); } const m = e.target.closest("[data-cm]"); if (m) { el.dataset.cm = m.dataset.cm; epHistDraw(); } }); }
+  el.dataset.sel = days[days.length - 1] || ""; el.classList.add("on"); epHistDraw();
+}
+// EP-Kurs wie eine Aktie: jeder Tag mit EP lässt ihn steigen (EP / 10), jeder Tag ohne Fahren kostet 6 %.
+function epKurs(h, KEYS){
+  const ds = Object.keys(h).sort(), all = [], today = new Date().toISOString().slice(0, 10);
+  if (ds.length) { const d0 = new Date(ds[0] + "T00:00:00Z"), d1 = new Date(); for (let d = d0; d <= d1; d = new Date(d.getTime() + 864e5)) all.push(d.toISOString().slice(0, 10)); }
+  const tot = d => KEYS.reduce((a, [k]) => a + ((h[d] || {})[k] || 0), 0);
+  let k = 100;
+  return all.map(d => { const ep = tot(d), o = k; if (ep > 0) k = k + ep / 10; else if (d !== today) k = Math.max(10, k * 0.94); return {d, ep, o, c:k, open:d === today && ep <= 0}; });
+}
+function epHistDraw(){
+  const el = $("epH"), p = PROF.me, h = p.hist || {}, KEYS = [["clean", "Sauber gefahren", "#30d158"], ["km", "Strecke", "#64d2ff"], ["turn", "Blinker & Spurwechsel", "#ff9f0a"], ["convoy", "Kolonnen-Bonus", "#bf5af2"], ["race", "Saubere Rennen", "#ff375f"], ["car", "Neue Autos", "#ffd60a"], ["event", "Events", "#5e5ce6"]];
+  const K = epKurs(h, KEYS), RG = [["w", "1W", 7], ["m", "1M", 30], ["q", "3M", 90], ["all", "Alles", 1e9]];
+  const rg = el.dataset.rg || "all", L = K.slice(-((RG.find(r => r[0] === rg) || RG[3])[2])), cm = el.dataset.cm || "line";
+  const sel = L.some(x => x.d === el.dataset.sel) ? el.dataset.sel : (L[L.length - 1] || {}).d || "";
+  const dlab = (d, o) => new Date(d + "T12:00:00Z").toLocaleDateString("de-DE", o || {day:"numeric", month:"short"});
+  const sgn = v => (v >= 0 ? "+" : "−") + nf2.format(Math.abs(v));
+  if (!L.length) { el.innerHTML = '<div class="c ephc"><button class="x" data-q="x" aria-label="Schließen">✕</button><div class="tunone" style="padding:40px">Noch keine Tage – fahr los, dann startet dein Kurs bei 100.</div></div>'; return; }
+  const base = L[0].o, now = L[L.length - 1].c, ch = now - base, pct = ch / base * 100, up = ch >= 0, col = up ? "#30d158" : "#ff453a";
+  const vs = L.flatMap(x => [x.o, x.c]), hi = Math.max(...vs), lo = Math.min(...vs), span = Math.max(4, hi - lo), y0 = lo - span * .12, y1 = hi + span * .12;
+  const W = 700, H = 240, PL = 6, PR = 54, PT = 12, PB = 26, iw = W - PL - PR, ih = H - PT - PB, sw = iw / L.length;
+  const X = i => PL + (i + .5) * sw, Y = v => PT + (1 - (v - y0) / (y1 - y0)) * ih;
+  let g = '<defs><linearGradient id="epgr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + col + '" stop-opacity=".38"/><stop offset="1" stop-color="' + col + '" stop-opacity="0"/></linearGradient></defs>';
+  for (let i = 0; i < 4; i++) { const v = y0 + (y1 - y0) * (i + .5) / 4, y = Y(v); g += '<line x1="' + PL + '" x2="' + (W - PR) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="rgba(255,255,255,.07)"/><text x="' + (W - PR + 8) + '" y="' + (y + 4).toFixed(1) + '" fill="rgba(255,255,255,.45)" font-size="11">' + nf1.format(v) + '</text>'; }
+  g += '<line x1="' + PL + '" x2="' + (W - PR) + '" y1="' + Y(base).toFixed(1) + '" y2="' + Y(base).toFixed(1) + '" stroke="rgba(255,255,255,.28)" stroke-dasharray="3 4"/>';
+  const si = L.findIndex(x => x.d === sel);
+  if (si >= 0) g += '<rect x="' + (X(si) - sw / 2).toFixed(1) + '" y="' + PT + '" width="' + sw.toFixed(1) + '" height="' + ih + '" fill="rgba(255,255,255,.06)" rx="4"/>';
+  if (cm === "candle") {
+    const bw = Math.min(22, Math.max(3, sw * .62));
+    L.forEach((x, i) => { const u = x.c >= x.o, c = x.open ? "rgba(255,255,255,.35)" : u ? "#30d158" : "#ff453a", ya = Y(Math.max(x.o, x.c)), yb = Y(Math.min(x.o, x.c));
+      g += '<line x1="' + X(i).toFixed(1) + '" x2="' + X(i).toFixed(1) + '" y1="' + (ya - 4).toFixed(1) + '" y2="' + (yb + 4).toFixed(1) + '" stroke="' + c + '" stroke-width="1.2"/><rect x="' + (X(i) - bw / 2).toFixed(1) + '" y="' + ya.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(2, yb - ya).toFixed(1) + '" rx="2" fill="' + c + '"/>'; });
+  } else {
+    const pts = [[PL, Y(base)]].concat(L.map((x, i) => [X(i), Y(x.c)]));
+    const line = pts.map(([x, y], i) => (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1)).join("");
+    g += '<path d="' + line + 'L' + X(L.length - 1).toFixed(1) + ' ' + (PT + ih) + 'L' + PL + ' ' + (PT + ih) + 'Z" fill="url(#epgr)"/><path d="' + line + '" fill="none" stroke="' + col + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>';
+    g += '<circle cx="' + X(L.length - 1).toFixed(1) + '" cy="' + Y(now).toFixed(1) + '" r="4.5" fill="' + col + '"/><circle cx="' + X(L.length - 1).toFixed(1) + '" cy="' + Y(now).toFixed(1) + '" r="9" fill="' + col + '" opacity=".25" class="eppl"/>';
+  }
+  const xl = [...new Set([0, Math.floor((L.length - 1) / 2), L.length - 1])];
+  g += xl.map((i, j) => '<text x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" fill="rgba(255,255,255,.45)" font-size="11" text-anchor="' + (xl.length > 1 && j === 0 ? "start" : xl.length > 1 && j === xl.length - 1 ? "end" : "middle") + '">' + (i === L.length - 1 ? "Heute" : dlab(L[i].d)) + '</text>').join("");
+  g += '<g id="epX" style="display:none"><line y1="' + PT + '" y2="' + (PT + ih) + '" stroke="rgba(255,255,255,.4)" stroke-dasharray="2 3"/><circle r="5" fill="#fff" stroke="' + col + '" stroke-width="2"/></g>';
+  // Kennzahlen
+  const play = L.filter(x => x.ep > 0).length; let streak = 0; for (let i = K.length - 1; i >= 0; i--) { if (K[i].ep > 0) streak++; else if (!K[i].open) break; }
+  const sumEp = L.reduce((a, x) => a + x.ep, 0), sx = L[si] || L[L.length - 1], sd = h[sx.d] || {}, sch = sx.c - sx.o;
+  el.innerHTML = '<div class="c ephc"><button class="x" data-q="x" aria-label="Schließen">✕</button>'
+    + '<div class="epk"><div><small>DEIN FD-KURS · ' + esc(p.u || "") + '</small><b>' + nf2.format(now) + '</b><span class="' + (up ? "up" : "dn") + '">' + (up ? "▲ " : "▼ ") + sgn(ch) + ' (' + sgn(pct) + ' %)</span><small style="margin-left:6px">' + (rg === "all" ? "seit Beginn" : "im Zeitraum") + '</small></div>'
+    + '<div class="seg2 sm">' + RG.map(([k, t]) => '<button data-rg="' + k + '" class="' + (rg === k ? "on" : "") + '">' + t + '</button>').join("") + '</div></div>'
+    + '<div class="epcw"><svg viewBox="0 0 ' + W + ' ' + H + '" class="epg">' + g + '</svg><div class="eptip"></div></div>'
+    + '<div class="eprow"><div class="seg2 sm"><button data-cm="line" class="' + (cm === "line" ? "on" : "") + '">Linie</button><button data-cm="candle" class="' + (cm === "candle" ? "on" : "") + '">Kerzen</button></div><small>Steigt mit jedem EP · an Tagen ohne Fahren −6 %' + (K[K.length - 1].open ? ' · heute noch offen' : '') + '</small></div>'
+    + '<div class="epst"><div><small>HOCH</small><b>' + nf2.format(hi) + '</b></div><div><small>TIEF</small><b>' + nf2.format(lo) + '</b></div><div><small>SPIELTAGE</small><b>' + play + ' / ' + L.length + '</b></div><div><small>SERIE</small><b>' + streak + (streak === 1 ? " Tag" : " Tage") + '</b></div><div><small>EP</small><b>' + nf0.format(sumEp) + '</b></div></div>'
+    + '<div class="pfbox" style="background:rgba(255,255,255,.06)"><h4>' + dlab(sx.d, {weekday:"long", day:"numeric", month:"long"}) + ' · ' + nf0.format(sx.ep) + ' EP · <span style="color:' + (sch >= 0 ? "#30d158" : "#ff453a") + '">' + (sch >= 0 ? "▲ " : "▼ ") + sgn(sch / sx.o * 100) + ' %</span></h4><div class="pfep">'
+    + (KEYS.filter(([k]) => sd[k] > 0).map(([k, n, c]) => '<div><span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c + ';margin-right:6px"></i>' + n + '</span><b>+' + nf0.format(sd[k]) + '</b></div>').join("") || '<div><span>' + (sx.open ? 'Heute noch nicht gefahren – der Kurs fällt erst, wenn der Tag ohne Fahren endet.' : 'Nicht gefahren – Kurs −6 %') + '</span></div>') + '</div></div></div>';
+  const svg = el.querySelector(".epg"), tip = el.querySelector(".eptip"), gx = el.querySelector("#epX");
+  const pick = e => { const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W; return Math.max(0, Math.min(L.length - 1, Math.floor((x - PL) / sw))); };
+  svg.onpointermove = e => { const i = pick(e), q = L[i], ln = gx.querySelector("line"), ci = gx.querySelector("circle"); gx.style.display = ""; ln.setAttribute("x1", X(i)); ln.setAttribute("x2", X(i)); ci.setAttribute("cx", X(i)); ci.setAttribute("cy", Y(q.c));
+    const d = q.c - q.o; tip.style.display = "block"; tip.style.left = Math.max(12, Math.min(88, X(i) / W * 100)) + "%"; tip.innerHTML = '<b>' + nf2.format(q.c) + '</b> <span style="color:' + (d >= 0 ? "#30d158" : "#ff453a") + '">' + sgn(d / q.o * 100) + ' %</span><br><small>' + dlab(q.d, {weekday:"short", day:"numeric", month:"short"}) + ' · ' + nf0.format(q.ep) + ' EP</small>'; };
+  svg.onpointerleave = () => { gx.style.display = "none"; tip.style.display = "none"; };
+  svg.onclick = e => { el.dataset.sel = L[pick(e)].d; epHistDraw(); };
+}
+document.addEventListener("click", e => { const t = e.target.closest("[data-pfid]"); if (!t || !t.dataset.pfid) return; e.stopPropagation(); e.preventDefault(); pfQuick(t.dataset.pfid); }, true);
+async function pfQuick(pid){
+  let el = $("pfQ"); if (!el) { el = document.createElement("div"); el.id = "pfQ"; el.className = "pfq"; document.body.appendChild(el); el.addEventListener("click", e => { if (e.target === el || e.target.closest("[data-q=x]")) el.classList.remove("on"); else if (e.target.closest("[data-q=full]")) { el.classList.remove("on"); PROF.view = el.dataset.pid; GR.frTab = "profil"; setView("friends"); gFriends(true); } }); }
+  el.dataset.pid = pid; el.innerHTML = '<div class="c"><div class="tunone" style="padding:30px">Profil wird geladen …</div></div>'; el.classList.add("on");
+  const p = PROF.me && PROF.me.id === pid ? PROF.me : await pfGet(pid);
+  if (!p) { el.innerHTML = '<div class="c"><div class="tunone" style="padding:30px">Profil nicht gefunden.</div><button class="btn" data-q="x">Schließen</button></div>'; return; }
+  const car = p.car ? carName(p.car) : null;
+  el.innerHTML = '<div class="c"><div class="ban" style="' + bannerStyle(p) + '"></div><button class="x" data-q="x" aria-label="Schließen">✕</button><div class="who">' + pfAvatar(p, 76) + '<div><b>' + esc(p.u) + '</b><small>' + (titleOf(p) ? esc(titleOf(p)) + ' · ' : '') + 'Level ' + p.lv + ' · ' + lvName(p.lv) + '</small></div></div>'
+    + showcaseHtml(p) + (p.tags && p.tags.length ? '<div class="pftags">' + p.tags.map(t => '<span>' + esc(t) + '</span>').join("") + '</div>' : '')
+    + '<div class="pfnum"><div><b>' + nf0.format(p.km || 0) + '</b><small>km</small></div><div><b>' + nf0.format(p.cars || 0) + '</b><small>Autos</small></div><div><b>' + nf0.format(p.ev || 0) + '</b><small>Events</small></div></div>'
+    + (car ? '<div class="car">Zuletzt im ' + esc(car.name) + (carModOf(p, p.car) ? ' · 🔧 ' + esc(modShort(mdNameOf(carModOf(p, p.car)))) : '') + '</div>' : '') + linksHtml(p.links)
+    + '<button class="btn pri" data-q="full">Ganzes Profil ansehen</button></div>';
+}
 // ---- Kolonnen-Chat: nur sichtbar in einer Kolonne; zu = kleiner Knopf (+ neue Nachricht kurz als Blase), auf = kleines Fenster ----
 const KC_EMO = [["gg", "🏁 GG"], ["top", "👍"], ["lol", "😂"], ["fire", "🔥"], ["wow", "😮"], ["go", "🚀 Los"], ["wait", "✋ Warte"], ["brb", "⏸️ Gleich da"], ["thx", "🙌 Danke"], ["sorry", "🙏 Sorry"]];
 const KC = {open:false, seen:(() => { try { return +(localStorage.getItem("fd.kcseen") || 0); } catch (e) { return 0; } })(), sig:"", pop:null, popT:0};
@@ -6251,14 +6915,26 @@ function achSorted(p, sh){
   return ACH.slice().sort((a, b) => ((sh || []).includes(b[0]) - (sh || []).includes(a[0])) || (f(b) >= 1) - (f(a) >= 1) || f(b) - f(a));
 }
 // eigenes Profil ohne Bearbeiten: Erfolge, nächstes Ziel, zuletzt dabei, eigene Beiträge
+// Art einer Kolonne aus „Zuletzt dabei“ (Event-Kolonnen erkennt man am Namen oder am Code)
+const KOL_ICO = {drag:"🚦", drift:"🌀", race:"🏁", offroad:"🏔️", meet:"🚗", cruise:"🛣️", photo:"📸", tuning:"🔧", police:"🚓"};
+function kolType(n){
+  for (const [k, t] of FDE.concat(FDS)) if (n === t) return [k, t];
+  const m = /([2-9A-HJ-NP-Z]{3}-[2-9A-HJ-NP-Z]{3}-[2-9A-HJ-NP-Z]{3})/.exec(n || ""); if (!m) return null;
+  if (!kolType.map) { kolType.map = new Map(); for (const [k, t] of FDE) kolType.map.set(fdeCode(k), [k, t]); const now = Date.now(); for (const [k, t, , , , par] of FDS) { const d = new Date(); d.setMinutes(0, 0, 0); for (let h = 0; h < 96; h++) { const at = d.getTime() - h * 3600e3; if (new Date(at).getHours() % 2 === par) kolType.map.set(fdeCode(k + ":" + at), [k, t]); } } }
+  return kolType.map.get(m[1]) || null;
+}
+function actView(x){
+  if (x.k !== "kol") return {ico:{ev:"🎟️", post:"📸"}[x.k] || "•", t:x.n, s:{ev:"Event", post:"Beitrag"}[x.k] || ""};
+  const kt = kolType(x.n); return kt ? {ico:KOL_ICO[kt[0]] || "🚙", t:kt[1], s:"Event-Kolonne"} : {ico:"🚙", t:/^Lobby /.test(x.n) ? "Private Kolonne" : x.n, s:/^Lobby /.test(x.n) ? "Kolonne " + x.n.replace(/^Lobby /, "") : "Kolonne"};
+}
 function profOwnBoxes(p){
   const done = achDone(p), next = ACH.filter(a => a[4](p) < 1).sort((a, b) => b[4](p) - a[4](p))[0];
   const show = ((p.st && p.st.sh) || []).filter(k => done.includes(k)).map(achOf).filter(Boolean), top = (show.length ? show : done.map(achOf)).slice(0, 3);
   let h = '<div class="pfbox"><div class="gbt"><h4>Erfolge · ' + done.length + ' von ' + ACH.length + '</h4><button class="itx" data-a="pf-edit">Ausstellen</button></div>'
     + (top.length ? '<div class="pfach">' + top.map(a => '<div class="ok"><i>' + a[3] + '</i><b>' + esc(a[1]) + '</b><small>' + esc(a[2]) + '</small></div>').join("") + '</div>' : '<div class="sub" style="color:var(--muted);font-size:13.5px">Noch keiner – der erste kommt schnell.</div>')
     + (next ? '<div class="pfnext"><i>' + next[3] + '</i><span><small>Nächstes Ziel</small><b>' + esc(next[1]) + '</b><u><em style="width:' + Math.round(next[4](p) * 100) + '%"></em></u></span><em>' + Math.round(next[4](p) * 100) + ' %</em></div>' : '') + '</div>';
-  const act = (p.act || []).slice(0, 5), ico = {ev:"🎟️", kol:"🚙", post:"📸"}, txt = {ev:"Event", kol:"Kolonne", post:"Beitrag"};
-  h += '<div class="pfbox"><h4>Zuletzt dabei</h4>' + (act.length ? '<div class="pfact">' + act.map(x => '<div><i>' + ico[x.k] + '</i><span><b>' + esc(x.n) + '</b><small>' + txt[x.k] + (x.t ? ' · ' + agoTxt(x.t) : '') + '</small></span></div>').join("") + '</div>' : '<div class="sub" style="color:var(--muted);font-size:13.5px">Events, Kolonnen und deine Beiträge erscheinen hier – auch für andere sichtbar.</div>') + '</div>';
+  const act = (p.act || []).slice(0, 5);
+  h += '<div class="pfbox"><h4>Zuletzt dabei</h4>' + (act.length ? '<div class="pfact">' + act.map(x => { const v = actView(x); return '<div><i>' + v.ico + '</i><span><b>' + esc(v.t) + '</b><small>' + esc(v.s) + (x.t ? ' · ' + agoTxt(x.t) : '') + '</small></span></div>'; }).join("") + '</div>' : '<div class="sub" style="color:var(--muted);font-size:13.5px">Events, Kolonnen und deine Beiträge erscheinen hier – auch für andere sichtbar.</div>') + '</div>';
   if (!TU.list && !pfTuAsked) { pfTuAsked = true; tuLoad().then(() => gFriends(true)); }
   const posts = (TU.list || []).filter(x => x.mine && !x.demo).sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 6);
   h += '<div class="pfbox"><h4>Meine Beiträge' + (posts.length ? ' · ' + posts.length : '') + '</h4>' + (posts.length ? '<div class="pfposts">' + posts.map(x => '<div data-a="pf-post" data-id="' + esc(x.key) + '">' + (x.img ? '<img src="' + esc(x.img) + '" alt="" loading="lazy">' : '<span class="np">' + (x.k === "event" ? "📅" : x.k === "tune" ? "🔧" : "🚗") + '</span>') + '<b>' + esc(x.title || "") + '</b><small>' + MD_SVG.heart + (x.likes || 0) + '</small></div>').join("") + '</div>' : '<div class="sub" style="color:var(--muted);font-size:13.5px">Teile Fotos, Tunes oder Events in der Community – sie erscheinen hier.</div>') + '</div>';
@@ -6291,6 +6967,11 @@ async function pfAction(a, id){
   const p = PROF.me; if (!p) return;
   if (a === "pf-back") { PROF.view = null; }
   else if (a === "pf-gsort") { PROF.gsort = id; }
+  else if (a === "pf-gbrand") { PROF.gbrand = id; }
+  else if (a === "pf-fsr") { PROF.fsr = id; }
+  else if (a === "pf-car") { carImgPick(+id); return; }
+  else if (a === "pf-hist") { epHistShow(); return; }
+  else if (a === "pf-mod") { setView("mods"); modsDetail(+id); return; }
   else if (a === "pf-bnall") { PROF.bnAll = !PROF.bnAll; pfKeepLinks(); }
   else if (a === "pf-achall") { PROF.achAll = !PROF.achAll; pfKeepLinks(); }
   else if (a === "pf-post") { const x = (TU.list || []).find(q => q.key === id); if (x) { TU.post = x; TU.tab = "comm"; setView("tune"); tuRender(); } return; }
@@ -6349,7 +7030,7 @@ async function pfPopShow(e){
   PFP.id = e.id; PFP.p = null;
   pfPopDraw(); pfPopPlace(true);
   requestAnimationFrame(() => el.classList.add("on"));
-  clearTimeout(PFP.t); PFP.t = setTimeout(pfPopHide, 20000);
+  clearTimeout(PFP.t); PFP.t = setTimeout(pfPopHide, 30000);
   if (e.pid) { const p = await pfGet(e.pid); if (PFP.id === e.id) { PFP.p = p; pfPopDraw(); } }
 }
 function pfPopDraw(){
@@ -6359,7 +7040,7 @@ function pfPopDraw(){
   el.innerHTML = '<div class="in"><div class="cov"' + (p && p.st ? ' style="' + bannerStyle(p) + '"' : '') + '></div><button class="x" data-p="x" aria-label="Schließen">✕</button>' + (p ? '<span class="lvchip">LV ' + p.lv + '</span>' : '')
     + '<div class="who">' + pfAvatar(Object.assign({}, p || {u:e.n, id:e.id}, {col}), 76, !!p) + '<div class="tx"><b>' + esc(name) + '</b><small>' + (p ? (titleOf(p) ? '<span class="pti">' + esc(titleOf(p)) + '</span> · ' : '') + lvName(p.lv) : "ohne Profil") + ' · <span data-pd>–</span></small></div></div>'
     + (p ? '<div class="num"><div><b>' + p.lv + '</b><small>LEVEL</small></div><div><b>' + nf0.format(p.km || 0) + '</b><small>KM</small></div><div><b>' + nf0.format(p.cars || 0) + '</b><small>AUTOS</small></div></div>' : '')
-    + (car ? '<div class="car"><span class="dot"></span><div class="t"><small>FÄHRT GERADE</small><b>' + esc(car.full || car.name) + '</b></div><div class="sp"><span data-ps>–</span><small>' + (S.unit === "mph" ? "MPH" : "KM/H") + '</small></div></div>' : '')
+    + (car ? '<div class="car"><span class="dot"></span><div class="t"><small>FÄHRT GERADE</small><b>' + esc(car.full || car.name) + '</b>' + (p && carModOf(p, e.c || p.car) ? '<em class="cmod">🔧 ' + esc(modShort(mdNameOf(carModOf(p, e.c || p.car)))) + '</em>' : '') + '</div><div class="sp"><span data-ps>–</span><small>' + (S.unit === "mph" ? "MPH" : "KM/H") + '</small></div></div>' : '')
     + (p && p.tags && p.tags.length ? '<div class="tg">' + p.tags.map(t => '<span>' + esc(t) + '</span>').join("") + '</div>' : '')
     + (p ? showcaseHtml(p, "pfsh pps") : '')
     + '<div class="bt"><button class="pri" data-p="go">Hinfahren</button>' + (p ? '<button data-p="prof">Profil ansehen</button>' : '') + '</div></div><span class="stem"></span>';
@@ -6376,6 +7057,8 @@ function pfPopLive(){
 function pfPopPlace(first){
   const el = $("pfPop"), e = FR.m.get(PFP.id), mc = $("mapcard"); if (!el || !e || !mc) return;
   const [x, y] = mapToCard(e.x ?? e.tx, e.z ?? e.tz), w = el.offsetWidth || 300, h = el.offsetHeight || 300, cw = mc.clientWidth, ch = mc.clientHeight;
+  // Karte woandershin geschoben (Spieler nicht mehr zu sehen) → Vorschau schließen
+  if (!first && (x < -20 || y < -20 || x > cw + 20 || y > ch + 20)) { pfPopHide(); return; }
   const below = y - h - 26 < 8;
   let left = Math.max(10, Math.min(cw - w - 10, x - w / 2)), top = below ? y + 26 : y - h - 26;
   top = Math.max(8, Math.min(ch - h - 8, top));
@@ -6416,6 +7099,8 @@ function frUpdate(o){
   FR.list = [...FR.m.values()];
   if (now - (FR.knownT || 0) > 10000) { FR.knownT = now; try { localStorage.setItem("fd.known", JSON.stringify(FR.known)); } catch (x) {} }
   FR.gwp = o.gwp || []; FR.me = o.me || FR.me; gwpCheck();
+  // Gerät → Profil merken (damit Freunde-Profile auch offline erreichbar sind)
+  { let ch = false; for (const f of (o.list || [])) if (f.pid && FR.pidOf[f.id] !== f.pid) { FR.pidOf[f.id] = f.pid; ch = true; } if (ch) try { localStorage.setItem("fd.pidof", JSON.stringify(FR.pidOf)); } catch (x) {} }
   FR.kc = o.kc || {kol:[], chat:[]}; try { kcUpdate(); } catch (x) {}
   if (o.soz) { FR.soz = o.soz; sozPops(); }
   frChip(); gFriends();
@@ -6486,8 +7171,10 @@ function frAhead(){
     // Warnblinker hinter dir (gleiche Richtung) – kommt in dieselbe Blase
     if (e.b === "h" && fwd < -3 && fwd > -150 && lat <= 22 - fwd * 0.12) { if (!back || -fwd < back.d) back = {n:e.n, b:"h", d:Math.round(-fwd), col:e.col, hb:1}; continue; }
     if (fwd < 3 || fwd > 150 || lat > 22 + fwd * 0.12) continue;
-    if (!best || fwd < best.d) best = {n:e.n, b:e.b, d:Math.round(fwd), col:e.col};
+    if (!best || fwd < best.d) best = {n:e.n, b:e.b, d:Math.round(fwd), col:e.col, x:e.x, z:e.z};
   }
+  if (best && (best.b === "l" || best.b === "r") && nearJunction(best.x, best.z, 45) === false) best.lc = 1;
+  if (best) { delete best.x; delete best.z; }
   // Warnblinker (vorne oder hinten) ist wichtiger als ein normaler Blinker
   return best && best.b === "h" ? best : back || best;
 }
@@ -6501,6 +7188,79 @@ function frNear(){
     if (out.length >= 12) break;
   }
   return out.length ? out : null;
+}
+// ---- Orts-Vorschau (wie Apple Karten): Name, Art, Entfernung, kurze Beschreibung, eigene Fotos (wechseln durch) ----
+// Beschreibungen für echte Orte in und um Tokio – erkannt am Namen; sonst eine kurze Beschreibung der Art
+const PLACE_INFO = [
+  [/daikoku/i, "Daikoku-Parkplatz", "Raststätte auf einer Insel in Yokohama, mitten im Autobahnkreuz – Japans berühmtester Treffpunkt der Autoszene."],
+  [/shibuya/i, "Shibuya", "Belebtes Viertel in Tokio mit der berühmten Kreuzung, auf der bei Grün tausende Menschen gleichzeitig loslaufen."],
+  [/shinjuku/i, "Shinjuku", "Hochhäuser, Neonreklamen und der meistgenutzte Bahnhof der Welt – Tokios Nachtleben-Viertel."],
+  [/akihabara|akiba/i, "Akihabara", "Elektronik-, Anime- und Gaming-Viertel – bunte Leuchtreklamen an jeder Ecke."],
+  [/ginza/i, "Ginza", "Tokios edles Einkaufsviertel mit Luxusläden und breiten Boulevards."],
+  [/rainbow|odaiba/i, "Odaiba / Rainbow Bridge", "Künstliche Insel in der Bucht von Tokio, verbunden über die beleuchtete Rainbow Bridge."],
+  [/tokyo tower|tokio tower/i, "Tokyo Tower", "333 m hoher Sendeturm im Stil des Eiffelturms, rot-weiß und nachts angestrahlt."],
+  [/hakone|turnpike/i, "Hakone", "Bergregion mit kurvigen Pass-Straßen, heißen Quellen und Blick auf den Fuji."],
+  [/fuji/i, "Fuji", "Japans höchster Berg (3.776 m) – auf klaren Tagen von weit her zu sehen."],
+  [/irohazaka|nikko/i, "Irohazaka", "Berühmte Serpentinenstraße bei Nikko mit 48 Haarnadelkurven."],
+  [/roppongi/i, "Roppongi", "Viertel mit Museen, Hochhäusern und internationalem Nachtleben."],
+  [/harajuku/i, "Harajuku", "Treffpunkt für Streetstyle und Jugendmode rund um die Takeshita-Straße."],
+  [/yokohama|minato ?mirai/i, "Yokohama", "Hafenstadt südlich von Tokio mit der Skyline von Minato Mirai."],
+  [/asakusa|senso/i, "Asakusa", "Altes Tokio mit dem Sensō-ji, dem ältesten Tempel der Stadt."],
+  [/shuto|c1|wangan/i, "Shuto-Expressway", "Tokios Stadtautobahn – Ringstraßen in mehreren Ebenen, nachts legendär."],
+  [/ebisu/i, "Ebisu", "Ruhigeres Viertel mit Restaurants, Bars und dem Yebisu Garden Place."],
+  [/tsukuba/i, "Tsukuba", "Rennstrecke nördlich von Tokio – Zeitenjagd-Klassiker der japanischen Tuning-Szene."],
+];
+// echte Fotos der echten Orte (Wikimedia Commons, frei nutzbar mit Bildnachweis)
+const PLACE_PICS = {
+  "Daikoku-Parkplatz":[["daikoku"]],
+  "Hakone":[["hakone"]],
+  "Irohazaka":[["iroha"]],
+  "Odaiba / Rainbow Bridge":[["https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Rainbow_Bridge%2C_Tokyo_20201112.jpg/960px-Rainbow_Bridge%2C_Tokyo_20201112.jpg", "Suicasmo, CC BY-SA 4.0"]],
+  "Shinjuku":[["neon"], ["yasu"]],
+  "Shuto-Expressway":[["route5"]],
+};
+function placePics(info){
+  if (!info) return [];
+  return (PLACE_PICS[info[1]] || []).map(x => { const f = FDE_IMG[x[0]]; return f ? {u:cmSmall(f[0]), c:f[1]} : {u:x[0], c:x[1]}; });
+}
+const PLACE_KIND_TXT = {park:"Parkplatz – gut zum Anhalten, Treffen und für Fotos.", meet:"Treffpunkt der Szene – hier stehen oft die schönsten Builds.", fav:"Einer deiner Lieblingsorte.", photo:"Aussichtspunkt – lohnt sich für Fotos.", home:"Haus – hier kannst du dein Auto abstellen.", fuel:"Tankstelle – hier volltanken.", other:"Markierter Ort."};
+const PLC = {p:null, i:0, t:0};
+function plcImgs(id){ try { return JSON.parse(localStorage.getItem("fd.plimg:" + id) || "[]"); } catch (e) { return []; } }
+function plcShow(p){
+  if (PLC.closedId === p.id && performance.now() - PLC.closedT < 2500) return;
+  if (PLC.p && PLC.p.id === p.id && $("plCard") && $("plCard").classList.contains("on")) return;
+  let el = $("plCard"); if (!el) { el = document.createElement("div"); el.id = "plCard"; el.className = "plcard"; $("mapcard").appendChild(el);
+    for (const t of ["pointerdown", "pointerup", "click", "wheel", "dblclick"]) el.addEventListener(t, e => { e.stopPropagation(); PLC.touchT = performance.now(); if (t === "pointerup") plcClick(e); }); }
+  PLC.p = p; PLC.i = 0; plcDraw(); requestAnimationFrame(() => el.classList.add("on"));
+  clearInterval(PLC.t); PLC.t = setInterval(() => { if (!PLC.p) return; const nm = PLC.p.n || "", info = PLACE_INFO.find(x => x[0].test(nm)), n = placePics(info).length + plcImgs(PLC.p.id).length; if (n > 1) { PLC.i = (PLC.i + 1) % n; plcDraw(true); } }, 4000);
+}
+function plcHide(){ const el = $("plCard"); if (el) el.classList.remove("on"); clearInterval(PLC.t); if (PLC.p) { PLC.closedId = PLC.p.id; PLC.closedT = performance.now(); } PLC.p = null; }
+function plcDraw(onlyImg){
+  const el = $("plCard"), p = PLC.p; if (!el || !p) return;
+  const K = POI_KINDS[p.k] || POI_KINDS.other, name = p.n || K.name, info = PLACE_INFO.find(x => x[0].test(name)), real = placePics(info), imgs = real.map(x => x.u).concat(plcImgs(p.id));
+  const dist = D && D.dash && (D.px || D.pz) ? fmtDist(Math.hypot(p.x - D.px, p.z - D.pz)) : "";
+  const pics = '<div class="ph">' + (imgs.length ? imgs.map((u, i) => '<img src="' + u + '" alt="" class="' + (i === PLC.i ? "on" : "") + '">').join("") + (imgs.length > 1 ? '<span class="dots">' + imgs.map((_, i) => '<i class="' + (i === PLC.i ? "on" : "") + '"></i>').join("") + '</span>' : '') : '<div class="no">Noch keine Fotos von hier</div>') + '<button class="add" data-pl="add" title="Eigenes Foto aus dem Spiel hinzufügen">+</button>' + (real[PLC.i] ? '<span class="cr">Echtes Foto · ' + esc(real[PLC.i].c) + '</span>' : '') + '</div>';
+  if (onlyImg) { const ph = el.querySelector(".ph"); if (ph) { ph.outerHTML = pics; return; } }
+  el.innerHTML = '<div class="hd"><span class="ic" style="background:' + K.col + '">' + (K.txt || '<svg viewBox="0 0 24 24" fill="#fff"><path d="' + (K.path || "") + '"/></svg>') + '</span><div class="tt"><b>' + esc(name) + '</b><small>' + esc(K.name) + (dist ? ' · ' + dist : '') + '</small></div><button class="x" data-pl="x" aria-label="Schließen">✕</button></div>'
+    + pics + '<p>' + esc(info ? info[2] : PLACE_KIND_TXT[p.k] || PLACE_KIND_TXT.other) + '</p>'
+    + '<div class="bt"><button class="pri" data-pl="go">Route</button><button data-pl="add">Foto hinzufügen</button></div>';
+}
+function plcClick(e){
+  const b = e.target.closest("[data-pl]"); if (!b) return; const a = b.dataset.pl, p = PLC.p; if (!p) return;
+  if (a === "x") plcHide();
+  else if (a === "go") { wpSet({x:p.x, z:p.z, n:p.n || (POI_KINDS[p.k] || POI_KINDS.other).name}); saveWp(); nav.route = null; nav.lastCalc = 0; setMode("follow"); plcHide(); }
+  else if (a === "add") {
+    const i = document.createElement("input"); i.type = "file"; i.accept = "image/*";
+    i.onchange = () => { const f = i.files && i.files[0]; if (!f) return; const im = new Image(); im.onload = () => {
+      const W = 720, H = 405, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d"), r = Math.max(W / im.width, H / im.height);
+      g.drawImage(im, (W - im.width * r) / 2, (H - im.height * r) / 2, im.width * r, im.height * r);
+      let q = .8, u = c.toDataURL("image/webp", q); while (u.length > 70000 && q > .3) { q -= .1; u = c.toDataURL("image/webp", q); }
+      const l = plcImgs(p.id); l.unshift(u); while (l.length > 6) l.pop();
+      try { localStorage.setItem("fd.plimg:" + p.id, JSON.stringify(l)); toast("Foto hinzugefügt"); } catch (x) { toast("Speicher voll – ein älteres Foto entfernen"); }
+      PLC.i = 0; plcDraw(); URL.revokeObjectURL(im.src);
+    }; im.src = URL.createObjectURL(f); };
+    i.click();
+  }
 }
 function friendHit(px, py){
   const [axS, ayS] = anchor(); let best = null;
@@ -6584,6 +7344,7 @@ function setPlacing(on, group){
 }
 // Wegpunkt-Menü: setzen (für mich / für die Kolonne) und löschen (eigener / Gruppen-Wegpunkt)
 const WPM_ICO = {
+  prof:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0z"/></svg>',
   pin:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>',
   grp:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="7" cy="8" r="3"/><path d="M1.5 19a5.5 5.5 0 0 1 11 0z"/><path d="M17.5 3a4.5 4.5 0 0 0-4.5 4.5c0 3.4 4.5 8.5 4.5 8.5s4.5-5.1 4.5-8.5A4.5 4.5 0 0 0 17.5 3zm0 6.2a1.7 1.7 0 1 1 0-3.4 1.7 1.7 0 0 1 0 3.4z"/></svg>',
   del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
@@ -6640,7 +7401,9 @@ function onMapTap(px, py){
   if (S.design === "glass") {
     try { pfPopHide(); } catch (e) {}
     const fq = friendHit(px, py); if (fq) { pfPopShow(fq); return; }
-    const hq = poiHit(px, py); if (hq) { toast((hq.n || (POI_KINDS[hq.k] || POI_KINDS.other).name) + " – für einen Wegpunkt erst den Wegpunkt-Knopf drücken"); return; }
+    if (performance.now() - (PLC.touchT || 0) < 500) return;   // Klick ging an die Orts-Karte, nicht an die Karte darunter
+    const hq = poiHit(px, py); if (hq) { plcShow(hq); return; }
+    if (PLC.p) { plcHide(); return; }
   }
   const fh = friendHit(px, py);
   if (fh) { frGoto(fh); return; }
@@ -8784,7 +9547,7 @@ function edTool(t){
 function edOpen(){
   if (live && !VOR.on && !SESS.aktiv) { openSess(); return; }
   if (live && !VOR.on && !SESS.aktiv.ready) { toast("Die Sitzung lädt noch die Kartenversion vom Host …"); openSess(); return; }
-  ed.on = true; ed.sel = null; ed.poi = null; if (cam.mode === "follow") setMode("free"); $("edbar").hidden = false; $("mapEdit").classList.add("on"); edTool("select");
+  ed.on = true; ed.sel = null; ed.poi = null; ed.menu = null; ed.quick = GR.view !== "map"; if (cam.mode === "follow" && !ed.quick) setMode("free"); $("edbar").hidden = false; $("mapEdit").classList.add("on"); edTool("select");
   if (SESS.histOpen) histToggle(true);
 }
 function edClose(){
@@ -8810,24 +9573,143 @@ function edToggleLayer(k){ LAY[k] = !LAY[k]; laySave(); if (ed.sel && !layOn(ed.
 function kb(k){ return '<kbd>' + k + '</kbd>'; }
 function edPanel(){
   const b = $("edbody"); if (!b || !ed.on) return;
-  const tools = [["select", "Auswählen", "V"], ["draw", "Neue Straße", "N"], ["erase", "Radierer", "R"], ["poi", "Ort", "P"]];
+  $("edbar").classList.toggle("quick", !!ed.quick); $("edbar").classList.toggle("erasing", ed.tool === "erase" && !ed.quick);
+  if (ed.quick) { b.innerHTML = edQuickHTML(); edQuickWire(b); return; }
+  const tools = [["select", "Auswählen", "V"], ["draw", "Straße", "N"], ["poi", "Ort", "P"]];
   const canU = live && !VOR.on ? !!SESS.aktiv : SM.undo.length, canR = live && !VOR.on ? !!SESS.aktiv : SM.redo.length;
   let h = (live && VOR.on ? '<div class="sessbar" id="edVor">' + vorBarHTML() + '</div>' : live && SESS.aktiv ? '<div class="sessbar" id="edSess">' + sessBarHTML() + '</div>' : '') +
-    '<div class="edrow"><div class="seg edtools">' + tools.map(([t, n, k]) => '<button data-tool="' + t + '"' + (ed.tool === t ? ' class="on"' : '') + '>' + n + kb(k) + '</button>').join("") + '</div>' +
-    '<button class="btn" id="edUndo" title="Rückgängig (Strg+Z)"' + (canU ? '' : ' disabled') + '>↶</button><button class="btn" id="edRedo" title="Wiederholen (Strg+Y)"' + (canR ? '' : ' disabled') + '>↷</button>' +
-    '<div class="lays">' + LAYERS.map(([k, n], i) => '<button class="lay' + (LAY[k] ? ' on' : '') + '" data-lay="' + k + '" title="' + n + ' ein-/ausblenden (Alt+' + (i + 1) + ')"><i style="background:' + LAY_COL[k] + '"></i>' + n + '</button>').join("") +
-    '<button class="lay' + (LAY.bg ? ' on' : '') + '" data-lay="bg" title="Kartenbild ein-/ausblenden (Alt+6)"><i style="background:#2a3a2c"></i>Bild</button><button class="lay' + (LAY.pois ? ' on' : '') + '" data-lay="pois" title="Orte ein-/ausblenden (Alt+7)"><i style="background:#0a84ff"></i>Orte</button></div>' +
-    '<span class="edsync" id="edSync">' + smStatus() + '</span><button class="btn" id="edHelpB" title="Tastenkürzel (?)">?</button><button class="btn pri" id="edDone">Fertig' + kb("E") + '</button></div>';
-  h += '<div class="edrow">' + edContext() + '</div>';
-  if (ed.help) h += edHelpHTML();
+    '<div class="edrow edtop"><div class="seg edtools">' + tools.map(([t, n, k]) => '<button data-tool="' + t + '"' + (ed.tool === t ? ' class="on"' : '') + '>' + n + kb(k) + '</button>').join("") + '</div>' +
+    '<button class="ederase' + (ed.tool === "erase" ? ' on' : '') + '" data-tool="erase" title="Radierer – löscht Straßenstücke (R)">' + ED_ERASER + 'Radierer' + kb("R") + '</button>' +
+    '<span class="edsep"></span><button class="btn" id="edUndo" title="Rückgängig (Strg+Z)"' + (canU ? '' : ' disabled') + '>↶</button><button class="btn" id="edRedo" title="Wiederholen (Strg+Y)"' + (canR ? '' : ' disabled') + '>↷</button>' +
+    '<button class="btn edmb' + (ed.menu === "lay" ? ' on' : '') + '" data-edm="lay">Ebenen ▾</button><button class="btn edmb' + (ed.menu === "more" ? ' on' : '') + '" data-edm="more">Mehr ▾</button>' +
+    '<span class="edsync" id="edSync">' + smStatus() + '</span><button class="btn pri" id="edDone">Fertig' + kb("E") + '</button></div>';
+  if (ed.menu === "lay") h += '<div class="edpop"><div class="lays">' + LAYERS.map(([k, n], i) => '<button class="lay' + (LAY[k] ? ' on' : '') + '" data-lay="' + k + '" title="' + n + ' ein-/ausblenden (Alt+' + (i + 1) + ')"><i style="background:' + LAY_COL[k] + '"></i>' + n + '</button>').join("") +
+    '<button class="lay' + (LAY.bg ? ' on' : '') + '" data-lay="bg" title="Kartenbild (Alt+6)"><i style="background:#2a3a2c"></i>Bild</button><button class="lay' + (LAY.pois ? ' on' : '') + '" data-lay="pois" title="Orte (Alt+7)"><i style="background:#0a84ff"></i>Orte</button></div></div>';
+  if (ed.menu === "more") h += '<div class="edpop more"><div class="seg2 sm">' + [["terrain", "Gelände"], ["roads", "Fahrkorrekturen"], ["keys", "Tastenkürzel"]].map(([k, n]) => '<button data-edsub="' + k + '" class="' + ((ed.sub || "terrain") === k ? "on" : "") + '">' + n + '</button>').join("") + '</div>' +
+    ((ed.sub || "terrain") === "terrain" ? edTerrainHTML() : ed.sub === "roads" ? edRoadsHTML() : edHelpHTML()) + '</div>';
+  const ctx = edContext(); if (ctx) h += '<div class="edrow edctx">' + ctx + '</div>';
   b.innerHTML = h;
-  b.querySelectorAll("[data-tool]").forEach(x => x.onclick = () => edTool(x.dataset.tool));
+  b.querySelectorAll("[data-tool]").forEach(x => x.onclick = () => { if (x.dataset.tool === "erase" && ed.tool !== "erase") toast("Radierer aktiv – wischen löscht Straßenstücke (Strg+Z holt sie zurück)"); edTool(x.dataset.tool); });
   b.querySelectorAll("[data-lay]").forEach(x => x.onclick = () => edToggleLayer(x.dataset.lay));
+  b.querySelectorAll("[data-edm]").forEach(x => x.onclick = () => { ed.menu = ed.menu === x.dataset.edm ? null : x.dataset.edm; edPanel(); });
+  b.querySelectorAll("[data-edsub]").forEach(x => x.onclick = () => { ed.sub = x.dataset.edsub; edPanel(); });
+  b.querySelectorAll("[data-rdv]").forEach(x => x.onclick = () => edRoadView(x.dataset.rdv));
+  { const all = b.querySelector("[data-rdall]"); if (all) all.onclick = () => { ED_PREV.all = !ED_PREV.all; ED_PREV.one = null; if (ED_PREV.all) edRoadRegion(); edPanel(); }; }
+  b.querySelectorAll("[data-rdreg]").forEach(x => x.onclick = () => { ED_PREV.reg = x.dataset.rdreg; ED_PREV.one = null; if (ED_PREV.all) edRoadRegion(); edPanel(); });
+  b.querySelectorAll("[data-rdhide]").forEach(x => x.onclick = () => { rdHidden.add(x.dataset.rdhide); rdSaveHidden(); if (ED_PREV.one === x.dataset.rdhide) ED_PREV.one = null; edPanel(); });
+  { const u = b.querySelector("[data-rdunhide]"); if (u) u.onclick = () => { rdHidden.clear(); rdSaveHidden(); edPanel(); }; }
+  { const cv = $("hgtPrev"); if (cv) hgtPreviewDraw(cv); }
   $("edUndo").onclick = edUndo; $("edRedo").onclick = edRedo;
   wireSessBar(); vorWireBar();
-  $("edHelpB").onclick = () => { ed.help = !ed.help; edPanel(); };
   $("edDone").onclick = edClose;
   edWire();
+}
+const ED_ERASER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3a1 1 0 0 1 0-1.4l9.6-9.6a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L13 21M22 21H7M5 11l9 9"/></svg>';
+// Kurzfassung im Home-Tab: nur Orte markieren – schnell beim kurzen Anhalten
+const ED_QUICK = ["park", "fuel", "meet", "photo", "fav", "home"];
+function edQuickHTML(){
+  const here = D && D.dash && (D.px || D.pz);
+  return '<div class="edq"><div class="edqh"><b>Ort markieren</b><small>' + (here ? 'Tippe auf eine Art – der Ort kommt an deine Position' : 'Art wählen, dann auf die Karte tippen') + '</small></div>'
+    + '<div class="edqk">' + ED_QUICK.map(k => { const K = POI_KINDS[k]; return '<button data-qk="' + k + '"' + (ed.qkind === k && ed.tool === "poi" ? ' class="on"' : '') + '><i style="background:' + K.col + '">' + (K.txt || '<svg viewBox="0 0 24 24" fill="#fff"><path d="' + K.path + '"/></svg>') + '</i>' + K.name + '</button>'; }).join("") + '</div>'
+    + (ed.poi ? '<div class="edrow edctx">' + edContext() + '</div>' : '')
+    + '<div class="edrow"><button class="btn" data-q="tap">Auf Karte tippen</button><button class="btn" data-q="full">Voller Editor …</button><span style="flex:1"></span><button class="btn pri" id="edDone">Fertig</button></div></div>';
+}
+function edQuickWire(b){
+  b.querySelectorAll("[data-qk]").forEach(x => x.onclick = () => {
+    ed.qkind = x.dataset.qk;
+    if (D && D.dash && (D.px || D.pz)) { const id = smId("o"); smSend([{id, k:"o", kind:ed.qkind, n:"", x:r1(D.px), z:r1(D.pz)}]); ed.poi = id; edTool("select"); edPanel(); smPresence(true); toast((POI_KINDS[ed.qkind] || POI_KINDS.other).name + " markiert – Name optional"); }
+    else { edTool("poi"); edPanel(); }
+  });
+  { const t = b.querySelector('[data-q="tap"]'); if (t) t.onclick = () => { ed.qkind = ed.qkind || "park"; edTool("poi"); edPanel(); toast("Auf die Karte tippen, um den Ort zu setzen"); }; }
+  { const f = b.querySelector('[data-q="full"]'); if (f) f.onclick = () => { ed.quick = false; setView("map"); edPanel(); }; }
+  $("edDone").onclick = edClose;
+  try { edWire(); } catch (e) {}
+}
+// ---- Mehr → Gelände: Fortschritt der Phase 1 (eigene + alle Spieler) ----
+function hgtMerged(){
+  const M = new Map(HGT.r || []);
+  for (const [k, v] of HGT.m) { const o = M.get(k); M.set(k, o ? [(o[0] * o[1] + v[0] * v[1]) / (o[1] + v[1]), o[1] + v[1]] : v.slice()); }
+  return M;
+}
+function hgtProgress(){
+  const M = hgtMerged(); let cov = 0, n = 0;
+  try { if (mapImg.T) { const G = navBuildGraph(), T = mapImg.T; for (let i = 0; i < G.X.length; i += 7) { const u = G.X[i], v = G.Y[i], x = T[0] * u + T[2] * v + T[4], z = T[1] * u + T[3] * v + T[5], ci = Math.floor(x / HGT.cell), cj = Math.floor(z / HGT.cell); n++; let hit = false; for (let a = -2; a <= 2 && !hit; a++) for (let b = -2; b <= 2 && !hit; b++) if (M.has((ci + a) + "," + (cj + b))) hit = true; if (hit) cov++; } } } catch (e) {}
+  return {own:HGT.m.size, all:M.size, players:HGT.players || 0, km2:M.size * HGT.cell * HGT.cell / 1e6, roads:n ? cov / n : 0};
+}
+function edTerrainHTML(){
+  const p = hgtProgress(), pct = Math.round(p.roads * 100), ready = p.roads >= 0.6;
+  return '<div class="edter"><canvas id="hgtPrev" width="300" height="190"></canvas><div class="inf"><b>Phase 1 · Gelände sammeln</b>'
+    + '<div class="pb"><u style="width:' + Math.min(100, pct) + '%;background:' + (ready ? "#30d158" : "#0a84ff") + '"></u></div><small>' + pct + ' % der Straßen haben Höhendaten' + (ready ? ' – genug für Phase 2 ✓' : ' – Phase 2 lohnt sich ab etwa 60 %') + '</small>'
+    + '<div class="nums"><div><b>' + nf0.format(p.all) + '</b><small>Felder gesamt</small></div><div><b>' + nf0.format(p.own) + '</b><small>von dir</small></div><div><b>' + nf0.format(p.players) + '</b><small>andere Spieler</small></div><div><b>' + nf1.format(p.km2) + '</b><small>km² vermessen</small></div></div>'
+    + '<small>Jedes Dashboard misst beim Fahren die Höhe und teilt sie (nur Feld + Höhe, ohne Namen). Alles wird zusammengeführt – je mehr Leute fahren, desto genauer.</small></div></div>';
+}
+// kleine Übersichtskarte: vermessene Felder, eingefärbt nach Höhe
+function hgtPreviewDraw(cv){
+  const g = cv.getContext("2d"), M = hgtMerged(); g.fillStyle = "#0d1117"; g.fillRect(0, 0, cv.width, cv.height);
+  if (!M.size) { g.fillStyle = "rgba(255,255,255,.4)"; g.font = "13px sans-serif"; g.textAlign = "center"; g.fillText("Noch keine Höhen – einfach losfahren", cv.width / 2, cv.height / 2); return; }
+  let i0 = Infinity, j0 = Infinity, i1 = -Infinity, j1 = -Infinity, h0 = Infinity, h1 = -Infinity;
+  for (const [k, v] of M) { const [i, j] = k.split(",").map(Number); i0 = Math.min(i0, i); i1 = Math.max(i1, i); j0 = Math.min(j0, j); j1 = Math.max(j1, j); h0 = Math.min(h0, v[0]); h1 = Math.max(h1, v[0]); }
+  const sc = Math.min((cv.width - 10) / (i1 - i0 + 1), (cv.height - 10) / (j1 - j0 + 1)), ox = (cv.width - (i1 - i0 + 1) * sc) / 2, oy = (cv.height - (j1 - j0 + 1) * sc) / 2, dot = Math.max(1, sc);
+  for (const [k, v] of M) { const [i, j] = k.split(",").map(Number), t = (v[0] - h0) / Math.max(1, h1 - h0);
+    g.fillStyle = "hsl(" + Math.round(140 - t * 140) + ",70%," + Math.round(38 + t * 22) + "%)"; g.fillRect(ox + (mirror() > 0 ? i - i0 : i1 - i) * sc, oy + (j1 - j) * sc, dot, dot); }
+  g.fillStyle = "rgba(255,255,255,.6)"; g.font = "11px sans-serif"; g.fillText(Math.round(h0) + "–" + Math.round(h1) + " m", 6, cv.height - 6);
+}
+// ---- Mehr → Erkannte Straßen: Vorschau, was beim Bestätigen in die Karte käme (verändert nichts) ----
+const ED_PREV = {all:false, one:null, reg:"mitte", cache:null, key:""};
+// Fahrkorrekturen = gefahrene Strecken, die noch nicht als Straße auf der Karte sind (eigene + Kolonne).
+// Nur die Stücke, wo wirklich noch keine Straße eingezeichnet ist; aufgeteilt in Oben/Mitte/Unten der Karte.
+const rdHidden = (() => { try { return new Set(JSON.parse(localStorage.getItem("fd.rdhide") || "[]")); } catch (e) { return new Set(); } })();
+function rdSaveHidden(){ try { localStorage.setItem("fd.rdhide", JSON.stringify([...rdHidden].slice(-3000))); } catch (e) {} }
+function edRoadList(withHidden){
+  const key = [LR.rev, LR.cands.length, FLR.v, FLR.cands.length, rdHidden.size, mapImg.T ? 1 : 0].join("|");
+  let all = ED_PREV.key === key && ED_PREV.cache;
+  if (!all) {
+    // Straßen-Raster: alle bekannten Straßen (Karte + gelernte) alle ~8 m, Zellen 20 m
+    const C = 20, grid = new Set();
+    for (const r of LR.roads || []) { const p = r.p || []; for (let i = 0; i < p.length; i++) { grid.add(Math.floor(p[i][0] / C) + "," + Math.floor(p[i][1] / C)); if (i) { const dx = p[i][0] - p[i - 1][0], dz = p[i][1] - p[i - 1][1], n = Math.floor(Math.hypot(dx, dz) / 8); for (let k = 1; k < n; k++) grid.add(Math.floor((p[i - 1][0] + dx * k / n) / C) + "," + Math.floor((p[i - 1][1] + dz * k / n) / C)); } } }
+    const covered = (x, z) => { const i = Math.floor(x / C), j = Math.floor(z / C); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) if (grid.has((i + a) + "," + (j + b))) return true; try { return !!baseNearest(x, z, 14); } catch (e) { return false; } };
+    const len = p => { let l = 0; for (let i = 1; i < p.length; i++) l += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]); return l; };
+    const region = p => { if (!mapImg.T || !mapImg.h) return "mitte"; const m = p[Math.floor(p.length / 2)], v = worldToImg(m[0], m[1])[1] / mapImg.h; return v < 1 / 3 ? "oben" : v < 2 / 3 ? "mitte" : "unten"; };
+    all = [];
+    const take = (cand, by) => {
+      const p = cand.p || []; if (p.length < 3) return;
+      let run = [];
+      const flush = () => { if (run.length >= 3) { const l = len(run); if (l >= 60) { const f = run[0], e = run[run.length - 1]; all.push({id:Math.round(f[0]) + "_" + Math.round(f[1]) + "_" + Math.round(e[0]) + "_" + Math.round(e[1]), p:run, by, l, reg:region(run)}); } } run = []; };
+      for (const q of p) { if (!covered(q[0], q[1])) run.push(q); else flush(); }
+      flush();
+    };
+    for (const c of LR.cands || []) take(c, "dir");
+    for (const c of FLR.cands || []) take(c, "Kolonne");
+    all.sort((x, y) => y.l - x.l);
+    ED_PREV.cache = all; ED_PREV.key = key;
+  }
+  return withHidden ? all : all.filter(r => !rdHidden.has(r.id));
+}
+function edRoadsHTML(){
+  const l = edRoadList(), reg = ED_PREV.reg || "mitte", cnt = {oben:0, mitte:0, unten:0}; l.forEach(r => cnt[r.reg]++);
+  const rl = l.filter(r => r.reg === reg).slice(0, 80), nHid = edRoadList(true).length - l.length;
+  return '<div class="edroads"><div class="edrow"><div class="seg2 sm">' + [["oben", "Oben"], ["mitte", "Mitte"], ["unten", "Unten"]].map(([k, n]) => '<button data-rdreg="' + k + '" class="' + (reg === k ? "on" : "") + '">' + n + ' <i>' + cnt[k] + '</i></button>').join("") + '</div>'
+    + '<button class="btn' + (ED_PREV.all ? ' on' : '') + '" data-rdall="1">' + (ED_PREV.all ? "Hervorhebung aus" : "Alle im Bereich hervorheben") + '</button>' + (nHid ? '<button class="btn" data-rdunhide="1">Aussortierte zeigen (' + nHid + ')</button>' : '') + '</div>'
+    + '<small style="color:var(--muted)">Gefahrene Strecken, wo noch keine Straße eingezeichnet ist (ab 60 m). Vorschau – hier wird nichts an der Karte verändert. Was nicht passt: ✕ aussortieren.</small>'
+    + (rl.length ? '<div class="edrl">' + rl.map(r => '<div class="' + (ED_PREV.one === r.id ? 'on' : '') + '"><i></i><span><b>' + (r.l >= 1000 ? nf1.format(r.l / 1000) + ' km' : nf0.format(r.l) + ' m') + '</b><small>gefahren von ' + esc(r.by) + '</small></span><button class="btn" data-rdv="' + esc(r.id) + '">Ansehen</button><button class="btn rdx" data-rdhide="' + esc(r.id) + '" title="Aussortieren">✕</button></div>').join("") + '</div>' : '<div class="tunone">In diesem Bereich keine neuen Strecken.</div>') + '</div>';
+}
+function edRoadView(id){
+  const r = edRoadList().find(x => x.id === id); if (!r) return;
+  ED_PREV.one = id; ED_PREV.oneP = r.p; flyTo([{add:{line:r.p}}]); edPanel();
+}
+// Bereich zeigen: alle Strecken des Bereichs ins Bild holen
+function edRoadRegion(){
+  const l = edRoadList().filter(r => r.reg === (ED_PREV.reg || "mitte")); if (!l.length) return;
+  flyTo([{add:{line:l.flatMap(r => [r.p[0], r.p[r.p.length - 1]])}}]);
+}
+function drawRoadPrev(axS, ayS, s){
+  if (!ed.on) return;
+  const ls = (ED_PREV.all ? edRoadList().filter(r => r.reg === (ED_PREV.reg || "mitte")).map(r => r.p) : []).concat(ED_PREV.one && ED_PREV.oneP ? [ED_PREV.oneP] : []);
+  for (const p of ls) {
+    ctx.beginPath(); p.forEach((q, i) => { const [x, y] = screenOf(q[0], q[1], axS, ayS, s); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+    ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(100,210,255,.35)"; ctx.lineWidth = 9; ctx.stroke();
+    ctx.setLineDash([10, 7]); ctx.strokeStyle = "#64d2ff"; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]);
+  }
 }
 function edHelpHTML(){
   const rows = [["V", "Auswählen – Straße/Ort antippen, Punkte ziehen"], ["N", "Neue Straße zeichnen"], ["R", "Radierer"], ["P", "Ort markieren"],
@@ -9035,7 +9917,7 @@ function edFinishDraw(ok, next, quiet){
 function edTap(px, py){
   const [x, z] = screenToWorld(px, py);
   if (ed.tool === "draw") { if (ed.free) return; const sn = ed.snap && ed.draw.length === 0 ? edSnap(x, z) : null; ed.draw.push(sn || [x, z]); edPanel(); return; }
-  if (ed.tool === "poi") { const id = smId("o"); smSend([{id, k:"o", kind:"park", n:"", x:r1(x), z:r1(z)}]); edTool("select"); ed.poi = id; edPanel(); smPresence(true); setTimeout(() => { const i = $("edPoiName"); if (i) i.focus(); }, 50); return; }
+  if (ed.tool === "poi") { const id = smId("o"); smSend([{id, k:"o", kind:ed.qkind || "park", n:"", x:r1(x), z:r1(z)}]); ed.qkind = null; edTool("select"); ed.poi = id; edPanel(); smPresence(true); setTimeout(() => { const i = $("edPoiName"); if (i) i.focus(); }, 50); return; }
   if (ed.tool === "erase") return;
   const hp = LAY.pois !== false && poiHit(px, py);
   if (hp) { ed.poi = hp.id; ed.sel = null; edPanel(); smPresence(true); return; }
@@ -9165,6 +10047,7 @@ function buildSettings(){
     rg.appendChild(row("Kartenversion", "Version " + k.version + (k.signiert ? " · geprüft ✓" : "") + " · " + nf0.format(k.objekte) + " Objekte" + (k.erstellt ? " · vom " + new Date(k.erstellt).toLocaleDateString("de-DE") : "") +
       (SESS.aktiv ? " · du bearbeitest gerade (Sitzung " + sessFmt(SESS.aktiv.code) + ")" : " · nur lesen – bearbeitet wird gemeinsam in einer Sitzung"), kb));
   }
+  mg.appendChild(row("Gelände", "Hügel und Täler auf der Karte – gemessen aus den Fahrten aller Spieler (" + nf0.format(hgtMerged().size) + " Felder, " + nf0.format(HGT.m.size) + " von dir). Fortschritt: Bearbeiten → Mehr → Gelände", seg("terrain", [[true,"An"],[false,"Aus"]])));
   mg.appendChild(row("Ausrichtung", "Auch über den Kompass umschaltbar", seg("orient", [["heading","Fahrtrichtung"],["north","Norden"]])));
   mg.appendChild(row("Karten-Bildrate", "Sparsam = weniger Last für die Grafikkarte, falls Forza ruckelt", seg("mapFps", [[60,"Flüssig"],[30,"Sparsam"]])));
   mg.appendChild(row("Pfeil auf der Straße halten", "Gleicht kleine Abweichungen der Kartenausrichtung aus, damit der Pfeil nicht neben der Straße fährt", seg("carSnap", [[true,"An"],[false,"Aus"]])));
@@ -9613,7 +10496,7 @@ function setView(v){
   $("main").classList.toggle("webmode", (v === "spotify" || v === "youtube" || v === "discord")); $("main").classList.toggle("websplit", (v === "youtube" && WEB.yt === "split") || (v === "discord" && WEB.dc === "split"));
   $("v-dash").classList.toggle("active", v === "dash"); $("v-map").classList.toggle("active", v === "map");
   try { localStorage.setItem("fd.view", v); } catch (e) {}
-  GR.view = v; if (S.design === "glass") { gRail(); if (v === "friends") gFriends(true); if (v === "mods") modsOpen(true); if (v === "tune") tuOpen(); if ((v === "spotify" || v === "youtube" || v === "discord")) webShow(v); $("gweb").classList.toggle("spm", v === "spotify" && !SP.login); if (v === "spotify") spOpen(); }
+  GR.view = v; try { sessionStorage.setItem("fd.view", v); } catch (e) {} if (S.design === "glass") { gRail(); if (v === "friends") gFriends(true); if (v === "mods") modsOpen(true); if (v === "tune") tuOpen(); if ((v === "spotify" || v === "youtube" || v === "discord")) webShow(v); $("gweb").classList.toggle("spm", v === "spotify" && !SP.login); if (v === "spotify") spOpen(); }
   requestAnimationFrame(webSync);
   requestAnimationFrame(fitSide);
   if (S.design === "glass") try { gAcSet(); } catch (e) {}   // Klimaleiste: bei YouTube/Spotify zu, sonst wie eingestellt
@@ -9736,7 +10619,7 @@ function edKey(e){
     case "r": edTool(ed.tool === "erase" ? "select" : "erase"); return true;
     case "p": edTool("poi"); return true;
     case "e": edClose(); return true;
-    case "?": ed.help = !ed.help; edPanel(); return true;
+    case "?": ed.menu = ed.menu === "more" && ed.sub === "keys" ? null : "more"; ed.sub = "keys"; edPanel(); return true;
     case "f": if (ed.tool !== "draw") return false; ed.free = !ed.free; try { localStorage.setItem("fd.drawfree", ed.free ? "1" : "0"); } catch (x) {} edPanel(); return true;
     case "s": ed.snap = !ed.snap; ed.hover = null; try { localStorage.setItem("fd.drawsnap2", ed.snap ? "1" : "0"); } catch (x) {} toast("Einrasten " + (ed.snap ? "an" : "aus")); edPanel(); return true;
     case "t": ed.orig = !ed.orig; if (ed.orig) underImg(); else ed.moveUnder = false; edPanel(); return true;
@@ -9756,7 +10639,7 @@ function edKey(e){
       if (ed.tool === "select" && !ed.sel && !ed.poi) { edTool("draw"); return true; }
       return false;
     case "Escape":
-      if (ed.help) { ed.help = false; edPanel(); return true; }
+      if (ed.menu) { ed.menu = null; edPanel(); return true; }
       if (ed.tool === "draw" && ed.draw && ed.draw.length) { ed.draw = []; ed.strokes = []; edPanel(); return true; }
       if (ed.tool !== "select") { edTool("select"); return true; }
       if (ed.sel || ed.poi) { ed.sel = null; ed.poi = null; ed.hoverH = null; edPanel(); smPresence(true); return true; }
@@ -9821,6 +10704,7 @@ function updateUI(){
   for (const [w, el] of active) if (w.always) w.update(D, el, racing);
   const has = music.title !== "";
   setText("htt", has ? music.title : "Keine Musik"); setText("hta", has ? music.artist : "Spotify");
+  { const hp = $("hplay"), cv = has && music.cover ? 'center/cover no-repeat url("' + music.cover + '")' : ""; if (hp && hp.dataset.cv !== cv) { hp.dataset.cv = cv; hp.style.background = cv; hp.classList.toggle("hcov", !!cv); } }
   const hi = music.playing ? ICO.pause : ICO.play, hp = $("hplayIco"); if (hp.dataset.i !== hi) { hp.dataset.i = hi; hp.innerHTML = hi; }
 
   if (!D) return;
@@ -9889,7 +10773,14 @@ function diagTick(now){
     "\nPfeil " + (isFinite(px) ? Math.round(px) + "/" + Math.round(py) : "–") + " · Auto " + (D && D.dash ? "ja" : "nein") + " · Straße " + (CAR.road ? "ja" : "–") + " · Sicherheit " + Math.round((CAR.conf ?? 0) * 100) + " %" + " · Kartenbild " + (mapImg.T ? "ja" : "nein") + (demo ? " · Demo" : "") +
     (DIAG.err && now - DIAG.errT < 60000 ? "\nFehler: " + DIAG.err : "");
 }
+// Forza im Pausemenü und niemand bedient das Dashboard: nur noch ~8 Bilder/s zeichnen und Animationen anhalten –
+// so bleibt die Grafikkarte frei fürs Spiel (Raustabben ohne Pause bleibt unverändert)
+let G_ACT = 0; ["pointermove", "pointerdown", "wheel", "keydown"].forEach(t => addEventListener(t, () => { G_ACT = performance.now(); }, {passive:true, capture:true}));
 function frame(){
+  { const now = performance.now(), idle = live && D && !D.on && now - lastMsg < 3000 && now - G_ACT > 4000 && now - lastInteract > 4000;
+    if (document.documentElement.classList.contains("fdidle") !== idle) document.documentElement.classList.toggle("fdidle", idle);
+    if (idle && now - (frame.lt || 0) < 125) { requestAnimationFrame(frame); return; }
+    frame.lt = now; }
   diagTick(performance.now());
   if (MC.g && MC.g.isContextLost && MC.g.isContextLost()) MC.c = null;   // Zwischenspeicher verloren -> neu zeichnen, sobald möglich
   const nv = isNavi(); if ($("mapcard").classList.contains("navi") !== nv) $("mapcard").classList.toggle("navi", nv);
@@ -9944,10 +10835,15 @@ function startDemo(prewarm){
     const curv = Math.abs(da) / Math.max(0.01, v * dt); prevA = a0;
     cur += dt; rt += dt; dist += v * dt;
     if (cur > 95) { lap++; last = cur; if (!best || cur < best) best = cur; cur = 0; }
-    const ratios = [0, 3.4, 2.4, 1.8, 1.4, 1.15, 0.95];
-    let rpm = v * 60 * ratios[gear] * 3.6 / 2.1;
-    if (rpm > 7600 && gear < 6) gear++; if (rpm < 3600 && gear > 1) gear--;
-    rpm = Math.max(900, Math.min(8000, v * 60 * ratios[gear] * 3.6 / 2.1));
+    // Getriebe wie ein echtes Auto: Radumfang 2,07 m, Achse 3,7; beim Gasgeben bis ~6500 drehen,
+    // beim Mitrollen früh hochschalten (Cruisen bei 1800–3000 U/min), nie dauerhaft im Begrenzer
+    const ratios = [0, 3.6, 2.2, 1.55, 1.2, 1.0, 0.82], rpmAt = g => v / 2.07 * 60 * ratios[g] * 3.7;
+    if (rt - (step.shT || 0) > 0.45) {
+      const hi = accel === 1 ? 6500 : 3000, lo = accel === 1 ? 3200 : 1500;
+      if (rpmAt(gear) > hi && gear < 6) { gear++; step.shT = rt; }
+      else if (gear > 1 && (rpmAt(gear) < lo || (brake && rpmAt(gear - 1) < 5200))) { gear--; step.shT = rt; }
+    }
+    const rpm = Math.max(900, Math.min(7600, rpmAt(gear)));
     for (let i = 0; i < 4; i++) { temps[i] += ((150 + v * 0.7 + (brake ? 20 : 0) + (i > 1 ? 6 : 0)) - temps[i]) * 0.004; wear[i] = Math.min(0.95, wear[i] + 0.0000015 * v); }
     const lat = Math.max(-1.6, Math.min(1.6, v * v * curv / 9.81)) * Math.sign(da || 1);
     const lon = accel * 0.5 - brake * 1.1, onKerb = Math.abs(lat) > 1.3;
@@ -10289,6 +11185,14 @@ $("grail").addEventListener("click", e => { if (e.detail !== 0) return; const b 
 document.addEventListener("click", e => { if (GR.edit && !e.target.closest("#grail,#gaddPop")) { GR.edit = false; gRail(); } });
 
 /* ---- Freunde-Seite: Kolonne starten/beitreten, Kolonnen-Chat, Freundesliste ---- */
+// Profil-Id eines Freundes: gemerkt von früher, live aus der Karte oder per Namensgleichheit
+function frPid(id, n){
+  if (FR.pidOf[id]) return FR.pidOf[id];
+  const e = FR.m.get(id); if (e && e.pid) return e.pid;
+  const nn = String(n || "").trim().toLowerCase(); if (!nn) return "";
+  for (const [pid, p] of PROF.all) if (String(p.u || "").toLowerCase() === nn) return pid;
+  return "";
+}
 function fmtDist(m){ if (S.unit === "mph") return m >= 402 ? nf1.format(m / 1609.34) + " mi" : nf0.format(Math.round(m * 3.28084 / 50) * 50) + " ft"; return m >= 1000 ? nf1.format(m / 1000) + " km" : nf0.format(Math.round(m / 10) * 10) + " m"; }
 function agoTxt(t){ const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "gerade eben" : m < 60 ? "vor " + m + " Min." : m < 1440 ? "vor " + Math.round(m / 60) + " Std." : "vor " + Math.round(m / 1440) + " Tagen"; }
 const FI = {
@@ -10312,7 +11216,7 @@ function gFriends(force){
   const invited = new Set((z.invOut || []).map(i => i.id)), asked = new Set((z.raus || []).map(r => r.id)), friendIds = new Set(z.freunde.map(f => f.id));
   const nReq = (z.inv || []).length + (z.rein || []).length, tab = GR.frTab;
   const ib = (a, ic, cls, id, title, dis) => '<button class="ib' + (cls ? " " + cls : "") + '" data-a="' + a + '"' + (id ? ' data-id="' + esc(id) + '"' : "") + ' title="' + title + '" aria-label="' + title + '"' + (dis ? " disabled" : "") + ">" + FI[ic] + "</button>";
-  const av = (id, n, on) => '<span class="av' + (on ? " on" : "") + '" style="background:' + frCol(id) + '">' + esc((n || "?").trim().charAt(0).toUpperCase()) + "</span>";
+  const av = (id, n, on) => { const pid = frPid(id, n), pr = pid && PROF.all.get(pid); return '<span class="av' + (on ? " on" : "") + (pid ? ' pfl' : '') + '"' + (pid ? ' data-a="fprof" data-id="' + esc(pid) + '" title="Profil ansehen"' : '') + ' style="background:' + frCol(id) + '">' + (pr && pr.av ? '<img src="' + pfImg(pid) + '" alt="">' : esc((n || "?").trim().charAt(0).toUpperCase())) + "</span>"; };
   const row = (id, n, sub, on, trail, off) => '<div class="irow' + (off ? " off" : "") + '">' + av(id, n, on) + '<div class="tx"><b>' + esc(n) + "</b><small>" + sub + "</small></div>" + (trail || "") + "</div>";
   const spd = e => nf0.format(S.unit === "mph" ? e.v * 2.237 : e.v * 3.6) + (S.unit === "mph" ? " mph" : " km/h");
   const posOf = id => { const e = FR.m.get(id); return e && e.g ? e : null; };
@@ -10326,7 +11230,9 @@ function gFriends(force){
   if (pm && tab !== "profil") h += pm.has
     ? '<div class="pfb" data-tab="profil">' + pfAvatar(pm, 52) + '<div class="tx"><b>' + esc(pm.u) + '</b><small>Level ' + pm.lv + ' · ' + lvName(pm.lv) + ' · noch ' + nf0.format(pm.need - pm.cur) + ' EP</small><div class="pfbar"><u style="width:' + Math.round(pm.cur / pm.need * 100) + '%"></u></div></div><span class="itx">Profil</span></div>'
     : '<div class="pfb" data-tab="profil">' + pfAvatar({u:"+", id:"neu"}, 52, false) + '<div class="tx"><b>Profil erstellen</b><small>Freiwillig: Name, Bild, Level – damit dich andere finden. Level ' + pm.lv + ' hast du schon.</small></div><span class="itx">Los</span></div>';
-  h += '<div class="seg2">' + [["freunde", "Freunde"], ["kolonne", "Kolonne"], ["anfragen", "Anfragen"], ["profil", "Mein Profil"]].map(([k, t]) => '<button data-tab="' + k + '" class="' + (tab === k ? "on" : "") + '">' + t + (k === "anfragen" && nReq ? "<i>" + nReq + "</i>" : "") + "</button>").join("") + "</div>";
+  // fremdes Profil bekommt einen eigenen Reiter (mit Namen) – „Mein Profil“ zeigt immer das eigene
+  const foreign = PROF.view && (!PROF.me || PROF.view !== PROF.me.id) ? PROF.view : null, fName = foreign ? ((PFC.get(foreign) || {}).p || {}).u || "Profil" : "";
+  h += '<div class="seg2">' + [["freunde", "Freunde"], ["kolonne", "Kolonne"], ["anfragen", "Anfragen"], ["profil", "Mein Profil"]].concat(foreign ? [["fremd", "👤 " + fName]] : []).map(([k, t]) => '<button data-tab="' + k + '" class="' + ((k === "fremd" ? tab === "profil" : k === "profil" ? tab === "profil" && !foreign : tab === k) ? "on" : "") + '">' + t + (k === "anfragen" && nReq ? "<i>" + nReq + "</i>" : "") + "</button>").join("") + "</div>";
   if (tab === "freunde") {
     const fr = z.freunde.slice().sort((a, b) => ((!!posOf(b.id) || b.on) - (!!posOf(a.id) || a.on)) || a.n.localeCompare(b.n));
     h += '<div class="ilist">' + (fr.length ? fr.map(f => { const p = posOf(f.id), on = f.on || !!p; return row(f.id, f.n, p ? spd(p) + (me ? " · " + dist(p.x ?? p.tx, p.z ?? p.tz) : "") : on ? "online" : f.seen ? "zuletzt " + agoTxt(f.seen) : "offline", on, (p ? ownB(p) : "") + (on ? invB(f.id) : "") + ib("fmore", "more", "", f.id, "Mehr"), !on); }).join("")
@@ -10368,7 +11274,7 @@ function gFriends(force){
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
 }
 $("gfr").onclick = e => {
-  const t = e.target.closest("[data-tab]"); if (t) { GR.frTab = t.dataset.tab; if (t.dataset.tab === "profil") profLoad(); gFriends(true); return; }
+  const t = e.target.closest("[data-tab]"); if (t) { const k = t.dataset.tab; if (k === "fremd") { GR.frTab = "profil"; gFriends(true); return; } PROF.view = null; GR.frTab = k; if (k === "profil") profLoad(); gFriends(true); return; }
   { const pb = e.target.closest('[data-a^="pf-"]'); if (pb) { pfAction(pb.dataset.a, pb.dataset.id); return; } }
   const b = e.target.closest("[data-a]"); if (!b || b.disabled) return; const a = b.dataset.a, c = b.dataset.c, id = b.dataset.id, fr = id ? FR.m.get(id) : null;
   const done = () => gFriends(true), firstCode = () => ((FR.lobbys || []).find(l => l.an) || {}).code;
@@ -10395,7 +11301,8 @@ $("gfr").onclick = e => {
   else if (a === "acc") sozPost("/sozial/annehmen", {id});
   else if (a === "dec") sozPost("/sozial/ablehnen", {id});
   else if (a === "cancel") sozPost("/sozial/zurueckziehen", {id});
-  else if (a === "fmore") { const r = b.getBoundingClientRect(); WPM.unfriend = ["Freund entfernen", "del", () => sozPost("/sozial/entfernen", {id}), "del"]; wpMenuShow(["unfriend"], r.left + r.width / 2, r.bottom); }
+  else if (a === "fprof") { PROF.view = id; GR.frTab = "profil"; gFriends(true); }
+  else if (a === "fmore") { const r = b.getBoundingClientRect(), pid = frPid(id, nameOf(id)); WPM.unfriend = ["Freund entfernen", "del", () => sozPost("/sozial/entfernen", {id}), "del"]; WPM.fprof = ["Profil ansehen", "prof", () => { if (pid) { PROF.view = pid; GR.frTab = "profil"; gFriends(true); } else toast("Kein Profil gefunden – erscheint, sobald er einmal online war"); }]; wpMenuShow(["fprof", "unfriend"], r.left + r.width / 2, r.bottom); }
   else if (a === "invite") { const code = firstCode(); if (!code) { toast("Erst eine Kolonne starten"); return; } sozPost("/sozial/einladen", {id, code}).then(j => { if (j && j.ok) toast("Einladung an " + nameOf(id) + " geschickt – gilt 10 Minuten"); }); }
   else if (a === "invyes") sozPost("/sozial/einladung", {id, an:true}).then(j => { if (j && j.ok) toast("Kolonne beigetreten"); });
   else if (a === "invno") sozPost("/sozial/einladung", {id, an:false});

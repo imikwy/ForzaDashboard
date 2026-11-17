@@ -301,7 +301,7 @@ const D = {
 };
 // ---- Widget-Arten (Grundgröße bei 1080 Bildpunkten Höhe) ----
 const navHtml = '<div class="row"><span class="ico" data-f="ico"></span><div class="tt"><b data-f="nd">Freie Fahrt</b><small data-f="nt">Kein Ziel gesetzt</small></div></div>';
-const musHtml = '<div class="row"><span class="art">' + NOTE + '</span><div class="tt s"><b data-f="mt">Keine Musik</b><small data-f="ma">–</small></div></div>';
+const musHtml = '<div class="row"><span class="art" data-f="cov">' + NOTE + '</span><div class="tt s"><b data-f="mt">Keine Musik</b><small data-f="ma">–</small></div></div>';
 // Werte-Kacheln: alles, was die Telemetrie hergibt (s = kurze Beschriftung, k = Beschriftung je nach Lage)
 const de = (v, d) => v.toFixed(d).replace(".", ",");
 const t2 = x => { if (!(x > 0)) return "–"; const m = Math.floor(x / 60), r = x - m * 60; return m + ":" + (r < 10 ? "0" : "") + de(r, 1); };
@@ -457,7 +457,7 @@ function build(){
     const el = document.createElement("div"); el.className = "wd" + (sel === w.id ? " sel" : ""); el.dataset.id = w.id; el.dataset.t = w.t;
     const d = dims(w); el.style.width = d.w + "px"; el.style.height = d.h + "px";
     if (w.acc) el.style.setProperty("--acc", w.acc);
-    if (w.t === "lamps" && w.cfg && w.cfg.bg === "0") el.classList.add("nobg");
+    if (w.t === "lamps" && !(w.cfg && w.cfg.bg === "1")) el.classList.add("nobg");   // Standard: ohne Hintergrund-Blase
     el.innerHTML = '<div class="card"></div>' + ty.html(w) + '<i class="rs"></i>';
     st.appendChild(el);
   }
@@ -573,6 +573,7 @@ function fill(root, n){
 
   root.querySelectorAll('[data-f="ico"]').forEach(e => { const k = n ? n.k : "free"; if (e.dataset.k !== k) { e.dataset.k = k; e.innerHTML = ICON[k] || ICON.straight; e.classList.toggle("g", !n); } });
   f("nd", n ? n.d || "" : "Freie Fahrt"); f("nt", n ? n.t || "" : "Kein Ziel gesetzt");
+  root.querySelectorAll('[data-f="cov"]').forEach(e => { const c = MUS && MUS.title && MUS.cover ? MUS.cover : ""; if (e.dataset.c === c) return; e.dataset.c = c; e.style.background = c ? 'center/cover no-repeat url("' + c + '")' : ""; e.innerHTML = c ? "" : NOTE; });
   f("mt", MUS && MUS.title ? MUS.title : MUS && MUS.running ? "Pausiert" : "Keine Musik"); f("ma", MUS && MUS.artist ? MUS.artist : "–");
   root.querySelectorAll("[data-sv]").forEach(e => { const d = SV[e.dataset.sv]; if (!d) return; const v = d.v(n); if (e.textContent !== v) e.textContent = v; });
   // Drehzahl: gelb, dann rot, je näher am Begrenzer
@@ -595,7 +596,7 @@ const AHX = {n:"Anna", b:"l", d:42, col:"#5e5ce6"};   // Vorschau beim Anpassen
 let AHDEMO = 0;   // Zeitpunkt, an dem „Animation ansehen“ gedrückt wurde
 const AH_ICON = {l:AL, r:AR, h:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M12 4 21 19H3z"/><path d="M12 9.5 16.2 17H7.8z"/></svg>'};
 function ahContent(el, a){
-  const k = a.n + a.b + a.col + (a.hb ? "hb" : "");
+  const k = a.n + a.b + a.col + (a.hb ? "hb" : "") + (a.lc ? "lc" : "");
   if (el.dataset.k !== k) {
     el.dataset.k = k;
     // Pfeil links bzw. rechts (Warnblinker: beide), Kante auf dieser Seite leuchtet – alles im selben Takt neu starten
@@ -606,7 +607,7 @@ function ahContent(el, a){
     el.style.setProperty("--fc", a.col || "#5e5ce6");
     el.querySelector("[data-ahn]").textContent = a.n;
   }
-  const t = (a.hb ? "Warnblinker hinter dir" : a.b === "h" ? "Warnblinker an" : a.b === "l" ? "biegt links ab" : "biegt rechts ab") + " · " + a.d + " m";
+  const t = (a.hb ? "Warnblinker hinter dir" : a.b === "h" ? "Warnblinker an" : a.lc ? (a.b === "l" ? "wechselt nach links" : "wechselt nach rechts") : a.b === "l" ? "biegt links ab" : "biegt rechts ab") + " · " + a.d + " m";
   const sm = el.querySelector("[data-ahd]"); if (sm.textContent !== t) sm.textContent = t;
 }
 // Ablauf: auftauchen (Blase) – stehen bleiben – zerplatzen
@@ -810,7 +811,7 @@ if (EDIT) {
       h += gh("Farbe") + '<div class="grp"><div class="sw">' + ACC.map(a => '<button data-acc="' + a + '" style="background:' + a + '"' + ((w.acc || ACC[0]) === a ? ' class="on"' : '') + '></button>').join("") + '</div></div>';
       h += gf("Ziehe ≡, um die Reihenfolge zu ändern. Die Größe passt sich von selbst an.");
     } else if (w.t === "lamps") {
-      h += gh("Darstellung") + '<div class="grp"><div class="r2 plain"><span>Hintergrund</span>' + seg("bg", [["1", "Ein"], ["0", "Aus"]], (w.cfg && w.cfg.bg) || "1") + '</div></div>'
+      h += gh("Darstellung") + '<div class="grp"><div class="r2 plain"><span>Hintergrund</span>' + seg("bg", [["1", "Ein"], ["0", "Aus"]], (w.cfg && w.cfg.bg) || "0") + '</div></div>'
         + gf("Ohne Hintergrund schweben nur die Symbole über dem Spiel. Größe über den Regler unten oder die Ecke.");
     } else if (w.t === "stats") {
       h += stHtml(w) + gf("„Uhrzeit · Ankunft“ und „Drehzahl · Restzeit“ wechseln von selbst, sobald ein Ziel gesetzt ist. Rennwerte zeigen nur im Rennen etwas.");

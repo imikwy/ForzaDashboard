@@ -70,7 +70,9 @@ fn running_game() -> Option<PathBuf> {
     let o = cmd.output().ok()?; let p = String::from_utf8_lossy(&o.stdout).trim().to_string();
     if p.is_empty() { None } else { Path::new(&p).parent().map(Path::to_path_buf) }
 }
-fn detect_dir() -> Option<String> {
+fn detect_fast() -> Option<String> { detect_inner(false) }
+fn detect_dir() -> Option<String> { detect_inner(true) }
+fn detect_inner(slow: bool) -> Option<String> {
     let mut cands: Vec<PathBuf> = Vec::new();
     let drives: Vec<String> = (b'A'..=b'Z').map(|c| format!("{}:\\", c as char)).filter(|d| Path::new(d).is_dir()).collect();
     for d in &drives {
@@ -83,8 +85,9 @@ fn detect_dir() -> Option<String> {
             cands.push(PathBuf::from(d).join(n));
         }
     }
-    for l in steam_libs() { for n in ["ForzaHorizon6", "Forza Horizon 6"] { cands.push(l.join("steamapps").join("common").join(n)); } }
+    if slow { for l in steam_libs() { for n in ["ForzaHorizon6", "Forza Horizon 6"] { cands.push(l.join("steamapps").join("common").join(n)); } } }
     if let Some(p) = cands.iter().filter(|p| p.is_dir()).find_map(|p| norm_dir(p)) { return Some(p.to_string_lossy().to_string()); }
+    if !slow { return None; }
     running_game().and_then(|p| norm_dir(&p)).map(|p| p.to_string_lossy().to_string())
 }
 // Ordner per Windows-Dialog wählen (immer vorne); danach passend machen und prüfen
@@ -107,7 +110,9 @@ pub fn auto_dir(s: &Shared) -> Value {
 pub fn status(s: &Shared) -> Value {
     let c = cfg(s);
     // gespeicherter Ordner nur, wenn es ihn noch gibt – sonst selbst suchen
-    let dir = c["dir"].as_str().filter(|d| !d.is_empty() && Path::new(d).is_dir()).map(String::from).or_else(detect_dir).unwrap_or_default();
+    // gespeicherter Ordner, sonst schnelle Suche (ohne PowerShell) – Gefundenes merken, damit die Seite nicht jedes Mal sucht
+    let saved = c["dir"].as_str().filter(|d| !d.is_empty() && Path::new(d).is_dir()).map(String::from);
+    let dir = match saved { Some(d) => d, None => match detect_fast() { Some(d) => { let mut c2 = c.clone(); c2["dir"] = json!(d); save(s, &c2); d } None => String::new() } };
     json!({"key": c["key"].as_str().map(|k| !k.is_empty()).unwrap_or(false), "user": c["user"], "premium": c["premium"], "dir": dir,
         "dirOk": !dir.is_empty() && Path::new(&dir).is_dir(), "installed": c["installed"].as_array().cloned().unwrap_or_default(), "nxm": c["nxm"].as_bool().unwrap_or(false)})
 }

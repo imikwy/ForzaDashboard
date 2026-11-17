@@ -4,6 +4,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod admin;
+mod hoehen;
 mod apps;
 mod bruecke;
 mod dienst;
@@ -45,7 +46,7 @@ use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
 // Format JJJJ-MM-TT.N. BAU_VER zählt ForzaDashboard-bauen.bat hoch; Releases auf GitHub setzen FD_VERSION beim Bauen.
-const BAU_VER: &str = "2026-11-11.1";
+const BAU_VER: &str = "2026-11-17.4";
 pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => BAU_VER };
 // hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
 pub const REPO: &str = "imikwy/ForzaDashboard";
@@ -220,6 +221,7 @@ async fn start(s: Arc<Shared>) -> Result<(), String> {
     tuning::init(&s);   // Tuning-Börse (geteilte Tuning-Codes)
     profil::init(&s);   // Spieler-Profile (freiwillig): Name, Bild, Tags, Level
     admin::init(&s);    // Admin (Karte pflegen) und Straßen-Vorschläge der Spieler
+    hoehen::init(&s);   // Gelände: Höhen aller Spieler zusammenführen
     system::start(s.clone());    // PC-Leistung (CPU, Grafikkarte, Speicher) fürs Dashboard und Overlay
     lenkrad::start(s.clone());   // Lenkrad-/Gamepad-Tasten fürs Dashboard (auch im Hintergrund)
     if let Some(u) = std::env::args().find(|a| a.starts_with("nxm://")) { mods::handle_nxm(s.clone(), &u); }   // per nxm-Link gestartet
@@ -306,6 +308,7 @@ pub fn open_window(app: &AppHandle, s: &Arc<Shared>) {
         Err(e) => { log(format!("Fenster konnte nicht geöffnet werden: {e}")); return; }
     };
     if first_run { let _ = w.center(); let _ = w.set_fullscreen(true); }
+    watch_crash(&w, s);
     let _ = w.show();
     let _ = w.set_focus();
     let (nf, top) = { let c = s.cfg.lock().unwrap(); (c.kein_fokus, c.immer_oben) };
@@ -327,6 +330,35 @@ pub fn open_window(app: &AppHandle, s: &Arc<Shared>) {
     });
 }
 
+// Absturz der Anzeige sofort erkennen (WebView2 meldet ihn) und im selben Moment neu laden – kein weißer Bildschirm,
+// der erst nach Sekunden verschwindet. Ist der ganze Browser-Prozess weg, baut der Wächter das Fenster neu auf.
+#[cfg(windows)]
+fn watch_crash(w: &tauri::WebviewWindow, s: &Arc<Shared>) {
+    use webview2_com::Microsoft::Web::WebView2::Win32::*;
+    use webview2_com::ProcessFailedEventHandler;
+    let s2 = s.clone();
+    let _ = w.with_webview(move |wv| unsafe {
+        let Ok(core) = wv.controller().CoreWebView2() else { return };
+        let s3 = s2.clone();
+        let handler = ProcessFailedEventHandler::create(Box::new(move |sender, args| {
+            let mut kind = COREWEBVIEW2_PROCESS_FAILED_KIND(0);
+            if let Some(a) = args { let _ = a.ProcessFailedKind(&mut kind); }
+            if kind == COREWEBVIEW2_PROCESS_FAILED_KIND_BROWSER_PROCESS_EXITED {
+                log("Anzeige: Browser-Prozess beendet – Fenster wird neu aufgebaut");
+                s3.last_hb.store(1, Ordering::Relaxed);   // Wächter baut neu auf
+            } else {
+                log(format!("Anzeige abgestürzt (Art {}) – sofort neu geladen", kind.0));
+                if let Some(c) = sender { let _ = c.Reload(); }
+            }
+            Ok(())
+        }));
+        let mut tok = Default::default();
+        let _ = core.add_ProcessFailed(&handler, &mut tok);
+    });
+}
+#[cfg(not(windows))]
+fn watch_crash(_w: &tauri::WebviewWindow, _s: &Arc<Shared>) {}
+
 // ---------------- Wächter gegen den weißen Bildschirm ----------------
 // Die Dashboard-Seite meldet sich alle 2 s (/hb). Stürzt die Anzeige ab (WebView2-Prozess weg, Seite hängt),
 // bleibt das Fenster weiß. Dann: neu laden – und wenn auch das nicht hilft, das Fenster ganz neu aufbauen.
@@ -345,7 +377,8 @@ fn watchdog(app: AppHandle, s: Arc<Shared>) {
             let hb = s.last_hb.load(Ordering::Relaxed);
             let vis = s.hb_vis.load(Ordering::Relaxed);
             let since = now.saturating_sub(hb.max(opened_at));
-            let limit = if hb == 0 { 45_000 } else if vis { 15_000 } else { 150_000 };
+            let limit = if hb == 1 { 0 } else if hb == 0 { 45_000 } else if vis { 8_000 } else { 150_000 };
+            if hb == 1 { tries = 2; s.last_hb.store(now, Ordering::Relaxed); }
             if since < limit { if hb > last_fix { tries = 0; } continue; }
             if now.saturating_sub(last_fix) < 20_000 { continue; }
             last_fix = now;

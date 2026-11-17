@@ -171,7 +171,7 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/lobby/chat", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().send_chat(&b, &s.name())) }))
         .route("/lobby/kick", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().vote(&b, &s.name())) }))
         .route("/lobby/wegpunkt/weg", post(|State(s): S| async move { let ok = s.lobbys().clear_wp(); j(json!({"ok": ok})) }))
-        .route("/lobby/name", post(|State(s): S, b: Bytes| async move { let b = body(&b); let ok = s.lobbys().rename(b["code"].as_str().unwrap_or(""), b["name"].as_str().unwrap_or("")); lobby_resp(&s, json!({"ok": ok})) }))
+        .route("/lobby/name", post(|State(s): S, b: Bytes| async move { let b = body(&b); let old = s.lobbys().find(b["code"].as_str().unwrap_or("")).map(|x| x.0); let ok = s.lobbys().rename(b["code"].as_str().unwrap_or(""), b["name"].as_str().unwrap_or("")); if ok { if let Some(o) = old { crate::profil::activity_rename(&o, b["name"].as_str().unwrap_or("")); } } lobby_resp(&s, json!({"ok": ok})) }))
         // gelernte Straßen
         .route("/learned/version", get(|State(s): S| async move { j(json!({"v": s.lver.load(Ordering::Relaxed)})) }))
         .route("/friendlr/version", get(|State(s): S| async move { j(json!({"v": s.flr.lock().unwrap().v})) }))
@@ -234,6 +234,8 @@ pub fn router(s: Arc<Shared>) -> Router {
         }).await }))
         // Updates
         .route("/updates", get(|State(s): S| async move { j(updates::state(&s)) }))
+        .route("/hoehen", get(|| async move { j(tokio::task::spawn_blocking(crate::hoehen::alle).await.unwrap_or(json!({}))) }))
+        .route("/hoehen/mein", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let v = body(&b); j(tokio::task::spawn_blocking(move || crate::hoehen::mein(&v)).await.unwrap_or(json!({}))) }))
         .route("/hb", post(|State(s): S, b: Bytes| async move { s.last_hb.store(crate::util::now_ms(), std::sync::atomic::Ordering::Relaxed); s.hb_vis.store(&b[..] != b"hidden", std::sync::atomic::Ordering::Relaxed); j(json!({"ok": true})) }))
         .route("/updates/jetzt", post(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(tokio::task::spawn_blocking(move || updates::install_now(&s)).await.unwrap_or(json!({}))) }))
         .route("/updates/pruefen", post(|State(s): S| async move { s.upd.lock().unwrap().last = 0; j(json!({"ok": true})) }))
@@ -379,7 +381,39 @@ async fn media_get(State(s): S) -> Response {
     let mut o = serde_json::to_value(&m).unwrap_or_default();
     o["vol"] = json!(m.vol);
     o["volMode"] = json!(if m.vol.is_some() { "spotify" } else { "system" });
+    if let (Some(t), Some(a)) = (o["title"].as_str().filter(|t| !t.is_empty()), o["artist"].as_str()) { if let Some(c) = cover_of(t, a) { o["cover"] = json!(c); } }
     j(o)
+}
+
+// Albumcover zum laufenden Titel: einmal je Titel über die öffentliche iTunes-Suche (sonst Deezer) (nur Titel + Interpret, ohne Konto),
+// Ergebnis im Speicher gemerkt. Liefert sofort, was schon bekannt ist; sonst wird im Hintergrund gesucht.
+fn cover_of(title: &str, artist: &str) -> Option<String> {
+    use std::collections::HashMap;
+    use std::sync::{Mutex, OnceLock};
+    static C: OnceLock<Mutex<HashMap<String, Option<String>>>> = OnceLock::new();
+    let key = format!("{artist}\u{1}{title}");
+    let map = C.get_or_init(|| Mutex::new(HashMap::new()));
+    { let m = map.lock().unwrap(); if let Some(v) = m.get(&key) { return v.clone(); } }
+    map.lock().unwrap().insert(key.clone(), None);
+    let (t, a) = (title.to_string(), artist.to_string());
+    std::thread::spawn(move || {
+        let clean = |s: &str| s.split(['(', '[']).next().unwrap_or(s).split(" - ").next().unwrap_or(s).trim().to_string();
+        let term = format!("{} {}", clean(&a), clean(&t));
+        let mut enc = String::new();
+        for b in term.chars().take(120).collect::<String>().bytes() { if b.is_ascii_alphanumeric() { enc.push(b as char) } else if b == b' ' { enc.push('+') } else { enc.push_str(&format!("%{b:02X}")) } }
+        let url = format!("https://itunes.apple.com/search?term={enc}&entity=song&limit=1");
+        let mut ab = ureq::AgentBuilder::new().timeout(std::time::Duration::from_secs(8));
+        if let Ok(tls) = native_tls::TlsConnector::new() { ab = ab.tls_connector(std::sync::Arc::new(tls)); }
+        let agent = ab.build();
+        let found = agent.get(&url).call().ok().and_then(|r| r.into_string().ok()).and_then(|b| serde_json::from_str::<Value>(&b).ok())
+            .and_then(|v| v["results"][0]["artworkUrl100"].as_str().map(|u| u.replace("100x100bb", "400x400bb")))
+            .filter(|u| u.starts_with("https://"))
+            // nicht bei iTunes? Dann Deezer (größerer Katalog, auch Deutschrap & Co.)
+            .or_else(|| agent.get(&format!("https://api.deezer.com/search?q={}&limit=1", enc.replace('+', "%20"))).call().ok().and_then(|r| r.into_string().ok())
+                .and_then(|b| serde_json::from_str::<Value>(&b).ok()).and_then(|v| v["data"][0]["album"]["cover_big"].as_str().map(String::from)).filter(|u| u.starts_with("https://")));
+        map.lock().unwrap().insert(key, found);
+    });
+    None
 }
 
 async fn media_cmd(State(s): S, Path(cmd): Path<String>) -> Response {

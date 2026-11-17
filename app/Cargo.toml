@@ -66,3 +66,7 @@ opt-level = "s"
 lto = true
 codegen-units = 1
 strip = true
+
+# gleiche Version wie in tauri/wry: Absturz der Anzeige (ProcessFailed) direkt mitbekommen
+[target.'cfg(windows)'.dependencies.webview2-com]
+version = "0.39.1"
