@@ -9,7 +9,7 @@ use windows::Win32::Media::Audio::{
 use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED};
 use windows::Win32::System::Threading::{OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYBD_EVENT_FLAGS, VIRTUAL_KEY,
+    SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_SCANCODE, KEYBD_EVENT_FLAGS, VIRTUAL_KEY,
 };
 use windows::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, GetWindowThreadProcessId};
 
@@ -156,6 +156,32 @@ pub fn press_key(vk: u16, times: usize) {
         let inputs = [key_input(vk, KEYEVENTF_EXTENDEDKEY), key_input(vk, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP)];
         unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32); }
     }
+}
+
+// Handbremse übers Spiel halten: die Leertaste (Handbremse in Forza auf der Tastatur) bleibt gedrückt, bis sie gelöst wird.
+// Sicherung: meldet sich das Dashboard 3 s nicht mehr, wird sie von selbst losgelassen (kein hängender Tastendruck).
+static HB: std::sync::Mutex<(bool, u64)> = std::sync::Mutex::new((false, 0));
+fn space(down: bool) {
+    let flags = if down { KEYEVENTF_SCANCODE } else { KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP };
+    let inp = [INPUT { r#type: INPUT_KEYBOARD, Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: VIRTUAL_KEY(0), wScan: 0x39, dwFlags: flags, time: 0, dwExtraInfo: 0 } } }];
+    unsafe { SendInput(&inp, std::mem::size_of::<INPUT>() as i32); }
+}
+pub fn handbremse(an: bool) -> serde_json::Value {
+    let now = crate::util::now_ms();
+    let mut h = HB.lock().unwrap();
+    if an {
+        if !h.0 {
+            space(true);
+            static W: std::sync::Once = std::sync::Once::new();
+            W.call_once(|| { std::thread::spawn(|| loop {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                let mut h = HB.lock().unwrap();
+                if h.0 && crate::util::now_ms().saturating_sub(h.1) > 3000 { space(false); h.0 = false; crate::util::log("Handbremse gelöst (Dashboard meldet sich nicht mehr)".to_string()); }
+            }); });
+        }
+        *h = (true, now);
+    } else if h.0 { space(false); h.0 = false; }
+    serde_json::json!({"ok": true, "an": h.0})
 }
 
 pub fn key_for(cmd: &str) -> Option<u16> {

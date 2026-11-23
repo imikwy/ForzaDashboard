@@ -58,6 +58,11 @@ pub struct Lobbys {
     // wurde ich selbst entfernt? -> im nächsten Takt die Kolonne verlassen (nicht im Empfangs-Takt des Kanals)
     kicked_me: Mutex<Vec<String>>,
     last_chat: Mutex<u64>,
+    // Kolonnenführer per Abstimmung oder Übergabe: Kolonne -> Ziel -> Wähler, und der gewählte Führer je Kolonne
+    promo: Mutex<HashMap<String, HashMap<String, BTreeSet<String>>>>,
+    lead_ov: Mutex<HashMap<String, String>>,
+    // Event-Daten je Kolonne und Gerät (Sterne beim Tuning-Wettbewerb, Rolle und Festnahmen bei der Police Chase)
+    ev: Mutex<HashMap<String, HashMap<String, Value>>>,
 }
 
 impl Lobbys {
@@ -69,6 +74,7 @@ impl Lobbys {
             net: net.clone(), dev: dev.to_string(), file, liste: Mutex::new(liste), kanaele: Mutex::new(HashMap::new()),
             friends: Mutex::new(HashMap::new()), last_pub: Mutex::new(0), lr_sent: Mutex::new(HashMap::new()), on_roads, gwp: Mutex::new(HashMap::new()),
             chat: Mutex::new(Vec::new()), votes: Mutex::new(HashMap::new()), owner_dev: Mutex::new(HashMap::new()), kicked_me: Mutex::new(Vec::new()), last_chat: Mutex::new(0),
+            promo: Mutex::new(HashMap::new()), lead_ov: Mutex::new(HashMap::new()), ev: Mutex::new(HashMap::new()),
         })
     }
 
@@ -106,6 +112,11 @@ impl Lobbys {
         if d.is_empty() { return; }
         // Gruppen-Wegpunkt auch vom eigenen Gerät annehmen (liegt nach einem Neustart beim Vermittler)
         if o["y"] == "wp" { self.on_wp(code, &o); return; }
+        if o["y"] == "ev" && sub.strip_prefix("ev/") == Some(d) {
+            if self.is_kicked(code, d) { return; }
+            self.ev.lock().unwrap().entry(code.to_string()).or_default().insert(d.to_string(), clean_ev(&o));
+            return;
+        }
         if d == self.dev { return; }
         if self.is_kicked(code, d) { return; }
         match o["y"].as_str().unwrap_or("") {
@@ -121,6 +132,8 @@ impl Lobbys {
                 e.lobbys.insert(code.to_string());
                 drop(fr);
                 if o["own"].as_u64() == Some(1) { self.owner_dev.lock().unwrap().insert(code.to_string(), d.to_string()); }
+                // wer per Abstimmung/Übergabe führt, sagt es mit – später Gekommene übernehmen das
+                if o["lo"].as_str() == Some(d) { self.lead_ov.lock().unwrap().entry(code.to_string()).or_insert_with(|| d.to_string()); }
                 // Lobby-Name vom Ersteller übernehmen (wer beitritt, kennt erst nur den Code)
                 if let (Some(ln), true) = (o["ln"].as_str(), o["own"].as_u64() == Some(1)) {
                     let mut ls = self.liste.lock().unwrap();
@@ -148,6 +161,20 @@ impl Lobbys {
                     if on { set.insert(d.to_string()); } else { set.remove(d); }
                 }
                 self.check_votes(code, t);
+            }
+            "pvote" => {
+                let Some(t) = o["t"].as_str().filter(|t| t.len() <= 40) else { return };
+                let on = o["on"].as_bool().unwrap_or(true);
+                {
+                    let mut v = self.promo.lock().unwrap();
+                    let set = v.entry(code.to_string()).or_default().entry(t.to_string()).or_default();
+                    if on { set.insert(d.to_string()); } else { set.remove(d); }
+                }
+                self.check_promo(code, t);
+            }
+            "lead" => {
+                let Some(t) = o["t"].as_str().filter(|t| t.len() <= 40) else { return };
+                if self.leader(code).as_deref() == Some(d) { self.set_lead(code, t, "übergeben"); } else { self.check_promo(code, t); }
             }
             "kick" => {
                 let Some(t) = o["t"].as_str() else { return };
@@ -214,9 +241,11 @@ impl Lobbys {
     // Kolonnenführer: wer die Kolonne erstellt hat; ist der nicht (mehr) da, der mit der kleinsten Geräte-Id
     // (alle rechnen gleich, also sind sich alle einig, ohne zu verhandeln)
     pub fn leader(&self, code: &str) -> Option<String> {
+        let mem = self.members(code);
+        let ov = self.lead_ov.lock().unwrap().get(code).cloned();
+        if let Some(t) = ov { if t == self.dev || mem.iter().any(|(d, _, _)| *d == t) { return Some(t); } }
         let mine = self.liste.lock().unwrap().iter().any(|l| l.code == code && l.owner);
         if mine { return Some(self.dev.clone()); }
-        let mem = self.members(code);
         if let Some(o) = self.owner_dev.lock().unwrap().get(code) {
             if mem.iter().any(|(d, _, _)| d == o) { return Some(o.clone()); }
         }
@@ -236,6 +265,70 @@ impl Lobbys {
         let n = self.votes.lock().unwrap().get(code).and_then(|v| v.get(t)).map(|s| s.iter().filter(|d| online.contains(*d) && d.as_str() != t).count()).unwrap_or(0);
         let (voters, need) = self.need(code, t);
         if voters >= 2 && n >= need { self.apply_kick(code, t, "Abstimmung"); }
+    }
+
+    fn check_promo(&self, code: &str, t: &str) {
+        let online: BTreeSet<String> = self.members(code).into_iter().map(|(d, _, _)| d).chain(std::iter::once(self.dev.clone())).collect();
+        if !online.contains(t) { return; }
+        let n = self.promo.lock().unwrap().get(code).and_then(|v| v.get(t)).map(|s| s.iter().filter(|d| online.contains(*d) && d.as_str() != t).count()).unwrap_or(0);
+        let (voters, need) = self.need(code, t);
+        if voters >= 2 && n >= need { self.set_lead(code, t, "Abstimmung"); }
+    }
+
+    fn set_lead(&self, code: &str, t: &str, by: &str) {
+        if let Some(v) = self.promo.lock().unwrap().get_mut(code) { v.remove(t); }
+        {
+            let mut lo = self.lead_ov.lock().unwrap();
+            if lo.get(code).map(|x| x == t).unwrap_or(false) { return; }
+            lo.insert(code.to_string(), t.to_string());
+        }
+        let who = if t == self.dev { "Du bist".to_string() } else { format!("{} ist", self.friends.lock().unwrap().get(t).map(|f| f.f.n.clone()).unwrap_or_else(|| "Ein Fahrer".into())) };
+        self.push_chat(json!({"l": code, "sys": 1, "m": format!("{who} jetzt Kolonnenführer ({by})"), "t": now_ms()}));
+    }
+
+    // Kolonnenführer wählen (oder Stimme zurück); der Führer übergibt direkt
+    pub fn promote(&self, b: &Value, name: &str) -> Value {
+        let Some(code) = self.first_open(b["code"].as_str().unwrap_or("")) else { return json!({"ok": false, "why": "Keine Kolonne offen"}) };
+        let Some(t) = b["t"].as_str().filter(|t| !t.is_empty() && *t != self.dev) else { return json!({"ok": false}) };
+        if !self.members(&code).iter().any(|(d, _, _)| d == t) { return json!({"ok": false, "why": "Der Fahrer ist nicht mehr in der Kolonne"}); }
+        let on = b["on"].as_bool().unwrap_or(true);
+        if on && self.leader(&code).as_deref() == Some(self.dev.as_str()) {
+            if let Some(k) = self.kanaele.lock().unwrap().get(&code) { k.send(&json!({"y": "lead", "d": self.dev, "n": name, "t": t})); }
+            self.set_lead(&code, t, "übergeben");
+            return json!({"ok": true, "lead": true});
+        }
+        if let Some(k) = self.kanaele.lock().unwrap().get(&code) { k.send(&json!({"y": "pvote", "d": self.dev, "t": t, "on": on})); }
+        {
+            let mut v = self.promo.lock().unwrap();
+            let set = v.entry(code.clone()).or_default().entry(t.to_string()).or_default();
+            if on { set.insert(self.dev.clone()); } else { set.remove(&self.dev); }
+        }
+        let before = self.leader(&code).as_deref() == Some(t);
+        self.check_promo(&code, t);
+        let now = self.leader(&code).as_deref() == Some(t);
+        if now && !before { if let Some(k) = self.kanaele.lock().unwrap().get(&code) { k.send(&json!({"y": "lead", "d": self.dev, "n": name, "t": t, "v": 1})); } }
+        json!({"ok": true, "lead": now && !before})
+    }
+
+    // eigene Event-Daten ändern (Sterne, Rolle, gefangen) und für alle hinterlegen
+    pub fn ev_set(&self, b: &Value, name: &str) -> Value {
+        let Some(code) = self.first_open(b["code"].as_str().unwrap_or("")) else { return json!({"ok": false, "why": "Keine Kolonne offen"}) };
+        let mut st = self.ev.lock().unwrap().get(&code).and_then(|m| m.get(&self.dev)).cloned().unwrap_or_else(|| clean_ev(&json!({})));
+        if let Some(t) = b["rate"].as_str().filter(|t| !t.is_empty() && t.len() <= 40 && *t != self.dev) {
+            let s = b["s"].as_u64().unwrap_or(0).min(5);
+            if let Some(r) = st["r"].as_object_mut() { if s == 0 { r.remove(t); } else { r.insert(t.to_string(), json!(s)); } }
+        }
+        if let Some(r) = b["role"].as_str() { st["role"] = json!(if r == "cop" || r == "run" { r } else { "" }); }
+        if let Some(by) = b["caught"].as_str().filter(|x| !x.is_empty() && x.len() <= 40) {
+            if let Some(a) = st["caught"].as_array_mut() { a.push(json!({"by": by, "t": now_ms()})); }
+        }
+        st["n"] = json!(take_chars(name, 24));
+        if let Some(c) = b["c"].as_u64() { st["c"] = json!(c % 100_000); }
+        let st = clean_ev(&st);
+        self.ev.lock().unwrap().entry(code.clone()).or_default().insert(self.dev.clone(), st.clone());
+        let mut msg = st.clone(); msg["y"] = json!("ev"); msg["d"] = json!(self.dev);
+        if let Some(k) = self.kanaele.lock().unwrap().get(&code) { k.send_to(&msg, &format!("ev/{}", self.dev), true); }
+        json!({"ok": true})
     }
 
     fn apply_kick(&self, code: &str, t: &str, by: &str) {
@@ -329,8 +422,22 @@ impl Lobbys {
                 }
             }
             for (t, v) in votes.iter_mut() { v["need"] = json!(self.need(c, t).1); }
-            json!({"code": fmt_code(c), "leader": self.leader(c), "me": self.dev,
-                "mem": mem.iter().map(|(d, n, p)| json!({"d": d, "n": n, "pid": p})).collect::<Vec<_>>(), "votes": votes})
+            let mut promo = serde_json::Map::new();
+            if let Some(v) = self.promo.lock().unwrap().get(c) {
+                for (t, s) in v {
+                    let n = s.iter().filter(|d| online.contains(*d) && *d != t).count();
+                    if n == 0 || !online.contains(t) { continue; }
+                    promo.insert(t.clone(), json!({"n": n, "mine": s.contains(&self.dev)}));
+                }
+            }
+            for (t, v) in promo.iter_mut() { v["need"] = json!(self.need(c, t).1); }
+            let memj: Vec<Value> = {
+                let fr = self.friends.lock().unwrap();
+                mem.iter().map(|(d, n, p)| { let f = fr.get(d); json!({"d": d, "n": n, "pid": p, "c": f.map(|f| f.f.c), "v": f.map(|f| f.f.v), "g": f.map(|f| f.f.g), "x": f.filter(|f| f.pos).map(|f| f.f.x), "z": f.filter(|f| f.pos).map(|f| f.f.z)}) }).collect()
+            };
+            let ev = self.ev.lock().unwrap().get(c).cloned().unwrap_or_default();
+            let ev: serde_json::Map<String, Value> = ev.into_iter().filter(|(d, _)| online.contains(d)).collect();
+            json!({"code": fmt_code(c), "leader": self.leader(c), "me": self.dev, "mem": memj, "votes": votes, "promo": promo, "ev": ev})
         }).collect();
         let chat: Vec<Value> = self.chat.lock().unwrap().iter()
             .filter(|m| (m["me"] == 1 && m["sys"] == 1) || open.iter().any(|c| m["l"] == c.as_str())).cloned().collect();
@@ -372,6 +479,7 @@ impl Lobbys {
                 None => json!({"y": "pos", "d": self.dev, "n": name}),
             };
             if l.owner { m["ln"] = json!(l.name); m["own"] = json!(1); }
+            if self.lead_ov.lock().unwrap().get(&l.code).map(|x| *x == self.dev).unwrap_or(false) { m["lo"] = json!(self.dev); }
             if fresh { let b = crate::state::blink_now(); if !b.is_empty() { m["b"] = json!(b); } }
             if let Some(pid) = crate::profil::my_id() { m["pid"] = json!(pid); }
             k.send(&m);
@@ -414,6 +522,7 @@ impl Lobbys {
         let name = take_chars(name.trim(), 30);
         let l = Lobby { code: code.clone(), name: if name.is_empty() { format!("Lobby von {my_name}") } else { name }, owner: true, an: true, created: now_ms(), kick: vec![] };
         log(format!("Lobby erstellt: {} ({})", l.name, fmt_code(&code)));
+        self.leave_others(&code);
         self.liste.lock().unwrap().push(l);
         self.save();
         self.open(&code);
@@ -423,6 +532,7 @@ impl Lobbys {
     pub fn join(self: &Arc<Self>, code: &str) -> Value {
         if !valid_code(code) { return json!({"ok": false, "why": "Der Code hat 9 Zeichen, z. B. K7M-2QX-9PA"}); }
         let code = norm_code(code);
+        self.leave_others(&code);
         {
             let mut ls = self.liste.lock().unwrap();
             match ls.iter_mut().find(|l| l.code == code) {
@@ -442,13 +552,24 @@ impl Lobbys {
         // eigene gespeicherte Straßen beim Vermittler entfernen
         let ch = crate::kanal::channel("play", &code);
         self.net.publish(&format!("{}/lr/{}", ch.topic, self.dev), &[], true);
+        self.net.publish(&format!("{}/ev/{}", ch.topic, self.dev), &[], true);
+        self.ev.lock().unwrap().remove(&code);
+        self.promo.lock().unwrap().remove(&code);
+        self.lead_ov.lock().unwrap().remove(&code);
         self.liste.lock().unwrap().retain(|l| l.code != code);
         self.save();
         true
     }
 
+    // man ist immer nur in einer Kolonne: beim Starten/Beitreten/Fortsetzen die anderen offenen verlassen
+    fn leave_others(&self, keep: &str) {
+        let others: Vec<String> = self.liste.lock().unwrap().iter().filter(|l| l.an && l.code != keep).map(|l| l.code.clone()).collect();
+        for c in others { log(format!("Kolonne {} verlassen (nur eine gleichzeitig)", fmt_code(&c))); self.leave(&c); }
+    }
+
     pub fn set_on(self: &Arc<Self>, code: &str, on: bool) -> bool {
         let code = norm_code(code);
+        if on { self.leave_others(&code); }
         {
             let mut ls = self.liste.lock().unwrap();
             let Some(l) = ls.iter_mut().find(|l| l.code == code) else { return false };
@@ -496,6 +617,15 @@ impl Lobbys {
             json!({"id": id, "n": f.n, "x": f.x, "z": f.z, "h": f.h, "v": f.v, "c": f.c, "g": f.g, "b": f.b, "pid": f.pid, "age": now.saturating_sub(f.seen)})
         }).collect()
     }
+}
+
+// Event-Daten eines Geräts: Sterne (Ziel -> 1–5), Rolle (cop/run), Festnahmen (von wem, wann), Name, Auto
+fn clean_ev(o: &Value) -> Value {
+    let mut r = serde_json::Map::new();
+    if let Some(m) = o["r"].as_object() { for (k, v) in m.iter().take(60) { if k.len() <= 40 { if let Some(s) = v.as_u64().filter(|s| (1..=5).contains(s)) { r.insert(k.clone(), json!(s)); } } } }
+    let role = o["role"].as_str().filter(|r| *r == "cop" || *r == "run").unwrap_or("");
+    let caught: Vec<Value> = o["caught"].as_array().map(|a| { let skip = a.len().saturating_sub(50); a.iter().skip(skip).filter_map(|x| Some(json!({"by": take_chars(x["by"].as_str()?, 40), "t": x["t"].as_u64().unwrap_or(0)}))).collect() }).unwrap_or_default();
+    json!({"r": r, "role": role, "caught": caught, "n": take_chars(o["n"].as_str().unwrap_or(""), 24), "c": o["c"].as_u64().unwrap_or(0) % 100_000})
 }
 
 // Chat-Text: keine Steuerzeichen, Leerraum zusammengefasst, begrenzt

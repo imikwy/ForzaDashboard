@@ -169,26 +169,38 @@ fn progress(s: &Shared, state: &str, pct: f64, msg: &str, mod_id: u64) {
     s.emit(Some("mods"), json!({"state": state, "pct": (pct * 1000.0).round() / 10.0, "msg": msg, "mod": mod_id}).to_string());
 }
 
+// Download über die Nexus-API (Premium direkt, sonst mit dem nxm-Link von „Mod Manager Download“) und danach
+// genau wie „Mod hinzufügen“ einbauen: import_stage erkennt Autos, Felgen, media-Overrides, ReShade …, import_apply legt
+// alles mit Sicherung ab. Mehrere Varianten → das Dashboard fragt (Ereignis „wahl“), sonst ohne Rückfrage.
 pub fn install(s: Arc<Shared>, mod_id: u64, file_id: u64, nxm: Option<(String, String)>) {
     std::thread::spawn(move || {
-        let r = install_inner(&s, mod_id, file_id, nxm.as_ref().map(|(a, b)| (a.as_str(), b.as_str())));
-        match r {
-            Ok(n) => { progress(&s, "fertig", 1.0, &format!("Installiert ({n} Dateien)"), mod_id); log(format!("Mod {mod_id}/{file_id} installiert ({n} Dateien)")); }
-            Err(e) => { progress(&s, "fehler", 0.0, &e, mod_id); log(format!("Mod {mod_id}/{file_id}: {e}")); }
+        if let Err(e) = install_inner(&s, mod_id, file_id, nxm.as_ref().map(|(a, b)| (a.as_str(), b.as_str()))) {
+            progress(&s, "fehler", 0.0, &e, mod_id); log(format!("Mod {mod_id}/{file_id}: {e}"));
         }
     });
 }
 
-fn install_inner(s: &Shared, mod_id: u64, file_id: u64, nxm: Option<(&str, &str)>) -> Result<usize, String> {
+// %XX in Dateinamen aus Download-Links zurückwandeln
+fn pct_decode(t: &str) -> String {
+    let b = t.as_bytes(); let mut out = Vec::with_capacity(b.len()); let mut i = 0;
+    while i < b.len() {
+        if b[i] == b'%' && i + 2 < b.len() { if let Some(v) = std::str::from_utf8(&b[i + 1..i + 3]).ok().and_then(|h| u8::from_str_radix(h, 16).ok()) { out.push(v); i += 3; continue; } }
+        out.push(if b[i] == b'+' { b' ' } else { b[i] }); i += 1;
+    }
+    String::from_utf8_lossy(&out).to_string()
+}
+
+fn install_inner(s: &Shared, mod_id: u64, file_id: u64, nxm: Option<(&str, &str)>) -> Result<(), String> {
     let st = status(s);
-    let game = PathBuf::from(st["dir"].as_str().unwrap_or(""));
-    if !game.is_dir() { return Err("Erst den Spielordner festlegen".into()); }
-    if cfg(s)["installed"].as_array().map(|a| a.iter().any(|x| x["mod"].as_u64() == Some(mod_id))).unwrap_or(false) { return Err("Diese Mod ist schon installiert – erst deinstallieren".into()); }
+    if !PathBuf::from(st["dir"].as_str().unwrap_or("")).is_dir() { return Err("Erst den Spielordner festlegen (Mods → Einrichtung)".into()); }
     progress(s, "laden", 0.0, "Download-Link holen …", mod_id);
     let url = link(s, mod_id, file_id, nxm)?;
-    let name = url.split('?').next().unwrap_or("").rsplit('/').next().unwrap_or("mod").replace("%20", " ");
-    let ext = name.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
-    if ext == "rar" { return Err("RAR-Archive kann das Dashboard nicht entpacken – bitte von Hand installieren".into()); }
+    // Name und Version von Nexus (für „Meine Mods“), Dateiname wie beim Download im Browser
+    let detail = get(s, &format!("/games/{GAME}/mods/{mod_id}.json")).unwrap_or(json!({}));
+    let finfo = get(s, &format!("/games/{GAME}/mods/{mod_id}/files/{file_id}.json")).unwrap_or(json!({}));
+    let url_name = pct_decode(url.split('?').next().unwrap_or("").rsplit('/').next().unwrap_or("mod"));
+    let fname = finfo["file_name"].as_str().filter(|n| n.contains('.')).map(String::from).unwrap_or(url_name);
+    let ext = fname.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
     let dl = root(s).join("downloads"); std::fs::create_dir_all(&dl).map_err(|e| e.to_string())?;
     let arch = dl.join(format!("{mod_id}-{file_id}.{ext}"));
     // herunterladen mit Fortschritt
@@ -203,41 +215,123 @@ fn install_inner(s: &Shared, mod_id: u64, file_id: u64, nxm: Option<(&str, &str)
         if now_ms() - last > 300 { last = now_ms(); progress(s, "laden", if total > 0 { got as f64 / total as f64 * 0.8 } else { 0.4 }, &format!("Lädt … {} MB", got / 1_048_576), mod_id); }
     }
     drop(out);
-    // entpacken
-    progress(s, "entpacken", 0.82, "Entpacken …", mod_id);
-    let stage = root(s).join("staging").join(format!("{mod_id}-{file_id}"));
-    let _ = std::fs::remove_dir_all(&stage); std::fs::create_dir_all(&stage).map_err(|e| e.to_string())?;
-    match ext.as_str() {
-        "zip" => unzip(&arch, &stage)?,
-        "7z" => sevenz_rust::decompress_file(&arch, &stage).map_err(|e| format!("7z: {e}"))?,
-        _ => { let f = stage.join(&name); std::fs::copy(&arch, &f).map_err(|e| e.to_string())?; }
-    }
-    // gemeinsamen Oberordner abschneiden (z. B. „MeineMod/media/…“ → „media/…“)
-    let mut base = stage.clone();
-    for _ in 0..2 {
-        let items: Vec<_> = std::fs::read_dir(&base).map_err(|e| e.to_string())?.flatten().collect();
-        if items.len() == 1 && items[0].path().is_dir() && !matches!(items[0].file_name().to_string_lossy().to_ascii_lowercase().as_str(), "media" | "mods" | "content") { base = items[0].path(); } else { break; }
-    }
-    // kopieren mit Sicherung
-    progress(s, "installieren", 0.9, "In den Spielordner kopieren …", mod_id);
-    // ReShade-Presets in reshade-presets\ einsortieren
-    { let mut all = Vec::new(); walk(&base, &base, &mut all);
-      for (rel, _) in all { let lc = rel.to_ascii_lowercase(); if lc.ends_with(".ini") && !lc.ends_with("reshade.ini") && !lc.starts_with("reshade-presets/") && is_preset_file(&base.join(&rel)) {
-          let to = base.join("reshade-presets").join(rel.rsplit('/').next().unwrap_or(&rel)); let _ = std::fs::create_dir_all(to.parent().unwrap()); let _ = move_file(&base.join(&rel), &to); } } }
-    let backup = root(s).join("backup").join(mod_id.to_string());
-    let mut files = Vec::new();
-    copy_tree(&base, &base, &game, &backup, &mut files)?;
-    let _ = rs_after(&game, &stage, &mut files);
-    let mut c = cfg(s);
-    let detail = get(s, &format!("/games/{GAME}/mods/{mod_id}.json")).unwrap_or(json!({}));
-    let entry = json!({"mod": mod_id, "file": file_id, "name": detail["name"], "version": detail["version"], "pic": detail["picture_url"], "time": now_ms(), "files": files});
-    if !c["installed"].is_array() { c["installed"] = json!([]); }
-    c["installed"].as_array_mut().unwrap().push(entry);
-    save(s, &c);
-    let _ = std::fs::remove_dir_all(&stage);
-    rs_sync(s);
-    Ok(files.len())
+    if total > 0 && got < total { let _ = std::fs::remove_file(&arch); return Err("Download abgebrochen – bitte nochmal versuchen".into()); }
+    let nx = json!({"id": mod_id, "file": file_id, "name": detail["name"], "pic": detail["picture_url"], "fname": finfo["name"], "ver": finfo["version"]});
+    let r = install_file(s, &arch, &fname, &nx);
+    let _ = std::fs::remove_file(&arch);
+    r
 }
+
+// heruntergeladene Datei einbauen (aus der API oder aus dem Download-Ordner)
+fn install_file(s: &Shared, arch: &Path, fname: &str, nx: &Value) -> Result<(), String> {
+    let mod_id = nx["id"].as_u64().unwrap_or(0);
+    progress(s, "entpacken", 0.84, "Entpacken und prüfen …", mod_id);
+    let plan = stage(s, fname, &|to: &Path| std::fs::copy(arch, to).map(|_| ()), nx);
+    if plan["ok"] != json!(true) { return Err(plan["why"].as_str().unwrap_or("Die Datei ließ sich nicht prüfen").to_string()); }
+    let id = plan["id"].as_str().unwrap_or("").to_string();
+    if plan["variants"].as_array().map(|a| a.len()).unwrap_or(0) > 1 {
+        // Varianten: das Dashboard zeigt die Auswahl (wie bei „Mod hinzufügen“)
+        s.emit(Some("mods"), json!({"state": "wahl", "mod": mod_id, "msg": "Bitte eine Variante wählen", "plan": plan}).to_string());
+        log(format!("Mod {mod_id}: {} Varianten – Auswahl im Dashboard", plan["variants"].as_array().map(|a| a.len()).unwrap_or(0)));
+        return Ok(());
+    }
+    progress(s, "installieren", 0.93, "In den Spielordner kopieren …", mod_id);
+    let r = import_apply(s, &id, "", "");
+    if r["ok"] != json!(true) { let _ = std::fs::remove_dir_all(import_dir(s, &id)); return Err(r["why"].as_str().unwrap_or("Installieren hat nicht geklappt").to_string()); }
+    let name = r["name"].as_str().unwrap_or("Mod").to_string();
+    s.emit(Some("mods"), json!({"state": "fertig", "pct": 100, "mod": mod_id, "key": r["key"], "n": r["n"], "note": r["note"], "name": name, "msg": format!("„{name}“ installiert ✓")}).to_string());
+    log(format!("Mod {mod_id} von Nexus installiert: {name} ({} Dateien)", r["n"]));
+    Ok(())
+}
+
+// ---- „Manuell“: Datei im Browser laden – das Dashboard wartet im Download-Ordner darauf und baut sie dann ein ----
+static WATCH: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+fn download_dirs() -> Vec<PathBuf> {
+    let home = std::env::var("USERPROFILE").unwrap_or_default();
+    let mut v: Vec<PathBuf> = Vec::new();
+    // verschobener Download-Ordner (Explorer → Eigenschaften → Pfad)
+    let mut cmd = std::process::Command::new("reg");
+    crate::util::no_window(&mut cmd).args(["query", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders", "/v", "{374DE290-123F-4565-9164-39C4925E467B}"]);
+    if let Ok(o) = cmd.output() {
+        let t = String::from_utf8_lossy(&o.stdout);
+        if let Some(p) = t.lines().find_map(|l| l.split("REG_EXPAND_SZ").nth(1).or_else(|| l.split("REG_SZ").nth(1))) {
+            let p = p.trim().replace("%USERPROFILE%", &home).replace("%userprofile%", &home);
+            if !p.is_empty() { v.push(PathBuf::from(p)); }
+        }
+    }
+    let d = PathBuf::from(&home).join("Downloads");
+    if !v.iter().any(|x| x.to_string_lossy().eq_ignore_ascii_case(&d.to_string_lossy())) { v.push(d); }
+    v.into_iter().filter(|p| p.is_dir()).collect()
+}
+// gehört die Datei zu dieser Nexus-Mod? Nexus-Dateinamen: „Name <Mod> <Version> <Datum>T… <Kennung>.zip“ oder „Name-<Mod>-<Version>-<Zeit>.7z“
+fn nexus_file_of(name: &str, mod_id: u64) -> bool {
+    let lc = name.to_ascii_lowercase();
+    if !(lc.ends_with(".zip") || lc.ends_with(".7z") || lc.ends_with(".rar")) { return false; }
+    src_nexus(&clean_dup(name)).map(|(id, _)| id == mod_id).unwrap_or(false)
+}
+// „Name (1).zip“ (doppelt geladen) → „Name.zip“
+fn clean_dup(fname: &str) -> String {
+    let (stem, ext) = fname.rsplit_once('.').unwrap_or((fname, ""));
+    let st = stem.trim_end();
+    let st = match st.strip_suffix(')').and_then(|a| a.rsplit_once(" (")) { Some((a, n)) if !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()) => a, _ => st };
+    if ext.is_empty() { st.to_string() } else { format!("{st}.{ext}") }
+}
+pub fn watch(s: Arc<Shared>, nx: Value) -> Value {
+    let mod_id = nx["id"].as_u64().unwrap_or(0);
+    if mod_id == 0 { return json!({"ok": false, "why": "Keine Mod"}); }
+    if !PathBuf::from(status(&s)["dir"].as_str().unwrap_or("")).is_dir() { return json!({"ok": false, "why": "Erst den Spielordner festlegen (Mods → Einrichtung)"}); }
+    let dirs = download_dirs();
+    if dirs.is_empty() { return json!({"ok": false, "why": "Download-Ordner nicht gefunden"}); }
+    let gen = WATCH.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+    let shown: Vec<String> = dirs.iter().map(|d| d.to_string_lossy().to_string()).collect();
+    // genau diese Datei (Name und Version passen) liegt schon im Download-Ordner → gleich nehmen, nicht nochmal laden
+    let want = nx["fname"].as_str().unwrap_or("").to_ascii_lowercase().replace('_', " ");
+    let ver = nx["ver"].as_str().unwrap_or("").to_ascii_lowercase();
+    let pre: Option<PathBuf> = if want.is_empty() { None } else { dirs.iter().flat_map(|d| std::fs::read_dir(d).into_iter().flatten().flatten()).filter(|e| {
+        let n = e.file_name().to_string_lossy().to_string(); let lc = n.to_ascii_lowercase().replace('_', " ");
+        nexus_file_of(&n, mod_id) && lc.starts_with(&want) && (ver.is_empty() || lc.split(|c: char| c == ' ' || c == '-').any(|t| t == ver))
+            && e.metadata().map(|m| m.is_file() && m.len() > 0).unwrap_or(false) && !e.path().with_file_name(format!("{n}.part")).exists()
+    }).max_by_key(|e| e.metadata().and_then(|m| m.modified()).ok()).map(|e| e.path()) };
+    let have = pre.is_some();
+    log(format!("Warte auf Download von Mod {mod_id} in {}{}", shown.join(", "), if have { " – Datei liegt schon da" } else { "" }));
+    std::thread::spawn(move || {
+        let start = std::time::SystemTime::now() - Duration::from_secs(3);
+        let mut sizes: HashMap<PathBuf, u64> = HashMap::new();
+        let mut hit = pre;
+        for _ in 0..(25 * 60) {
+            if WATCH.load(std::sync::atomic::Ordering::SeqCst) != gen { return; }
+            if hit.is_none() {
+                'dirs: for d in &dirs {
+                    for e in std::fs::read_dir(d).into_iter().flatten().flatten() {
+                        let n = e.file_name().to_string_lossy().to_string();
+                        if !nexus_file_of(&n, mod_id) { continue; }
+                        let p = e.path();
+                        let Ok(md) = e.metadata() else { continue };
+                        if !md.is_file() || md.len() == 0 { continue; }
+                        // Firefox legt die Datei leer an und lädt in „….part“ – erst fertig, wenn die weg ist
+                        if p.with_file_name(format!("{n}.part")).exists() { continue; }
+                        if !md.modified().map(|m| m >= start).unwrap_or(false) { continue; }
+                        // Größe muss zwischen zwei Blicken gleich bleiben (Download fertig)
+                        if sizes.insert(p.clone(), md.len()) == Some(md.len()) { hit = Some(p); break 'dirs; }
+                    }
+                }
+            }
+            if let Some(p) = hit.take() {
+                if WATCH.compare_exchange(gen, gen + 1, std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst).is_err() { return; }
+                let fname = p.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+                // „Name (1).zip“ (doppelt geladen) → Originalname für Erkennung und „Neu installieren“
+                let clean = clean_dup(&fname);
+                log(format!("Download gefunden: {}", p.display()));
+                if let Err(e) = install_file(&s, &p, &clean, &nx) { progress(&s, "fehler", 0.0, &e, mod_id); log(format!("Mod {mod_id} (Download-Ordner): {e}")); }
+                return;
+            }
+            std::thread::sleep(Duration::from_secs(1));
+        }
+        if WATCH.load(std::sync::atomic::Ordering::SeqCst) == gen { progress(&s, "fehler", 0.0, "Keine Datei im Download-Ordner angekommen – bitte nochmal auf Installieren tippen", mod_id); }
+    });
+    json!({"ok": true, "dirs": shown, "have": have})
+}
+pub fn watch_stop() -> Value { WATCH.fetch_add(1, std::sync::atomic::Ordering::SeqCst); json!({"ok": true}) }
 
 fn safe_rel(rel: &Path) -> bool { rel.components().all(|c| matches!(c, Component::Normal(_))) }
 
@@ -256,33 +350,23 @@ fn unzip(arch: &Path, dest: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn copy_tree(base: &Path, dir: &Path, game: &Path, backup: &Path, files: &mut Vec<Value>) -> Result<(), String> {
-    for e in std::fs::read_dir(dir).map_err(|e| e.to_string())?.flatten() {
-        let p = e.path();
-        if p.is_dir() { copy_tree(base, &p, game, backup, files)?; continue; }
-        let rel = p.strip_prefix(base).map_err(|e| e.to_string())?.to_path_buf();
-        if !safe_rel(&rel) { continue; }
-        let to = game.join(&rel);
-        let existed = to.exists();
-        if existed { let b = backup.join(&rel); if let Some(d) = b.parent() { std::fs::create_dir_all(d).map_err(|e| e.to_string())?; } if !b.exists() { std::fs::copy(&to, &b).map_err(|e| format!("Sicherung: {e}"))?; } }
-        if let Some(d) = to.parent() { std::fs::create_dir_all(d).map_err(|e| format!("Spielordner: {e}"))?; }
-        std::fs::copy(&p, &to).map_err(|e| format!("Kopieren nach {}: {e}", to.display()))?;
-        files.push(json!({"rel": rel.to_string_lossy(), "new": !existed}));
-    }
-    Ok(())
-}
 
 pub fn uninstall(s: &Shared, mod_id: u64) -> Value {
     let mut c = cfg(s);
     let game = PathBuf::from(status(s)["dir"].as_str().unwrap_or(""));
+    let norm = |v: &Value| v["rel"].as_str().map(|r| r.replace('\\', "/").to_ascii_lowercase());
+    // Dateien, die (inzwischen) einer anderen Mod gehören: nicht löschen und nicht zurücksetzen
+    let mut taken: HashSet<String> = c["disabled"].as_array().cloned().unwrap_or_default().iter().flat_map(|m| m["files"].as_array().cloned().unwrap_or_default()).filter_map(|f| norm(&f)).collect();
     let Some(list) = c["installed"].as_array_mut() else { return json!({"ok": false, "why": "nicht installiert"}) };
     let Some(i) = list.iter().position(|x| x["mod"].as_u64() == Some(mod_id)) else { return json!({"ok": false, "why": "nicht installiert"}) };
     let entry = list.remove(i);
+    taken.extend(list.iter().flat_map(|m| m["files"].as_array().cloned().unwrap_or_default()).filter_map(|f| norm(&f)));
     let backup = root(s).join("backup").join(mod_id.to_string());
     let mut bad = 0;
     for f in entry["files"].as_array().cloned().unwrap_or_default() {
         let rel = PathBuf::from(f["rel"].as_str().unwrap_or(""));
         if !safe_rel(&rel) || rel.as_os_str().is_empty() { continue; }
+        if norm(&f).map(|r| taken.contains(&r)).unwrap_or(false) { continue; }
         let to = game.join(&rel);
         if f["new"].as_bool().unwrap_or(false) { if to.exists() && std::fs::remove_file(&to).is_err() { bad += 1; } }
         else if std::fs::copy(backup.join(&rel), &to).is_err() { bad += 1; }
@@ -419,10 +503,18 @@ pub fn local(s: &Shared) -> Value {
     let mut out: Vec<Value> = Vec::new();
     for m in c["installed"].as_array().cloned().unwrap_or_default() {   // Dashboard-Mods (auch wenn sie nur Originale ersetzen)
         let id = m["mod"].as_u64().unwrap_or(0); let key = format!("nx:{id}");
-        let files = groups.remove(&key).unwrap_or_default();
+        let mut files = groups.remove(&key).unwrap_or_default();
         if disabled.iter().any(|d| d["key"] == json!(key)) { continue; }
+        // ersetzte Originaldateien gehören auch dazu (sonst sähe die Mod wie „0 Dateien“ aus)
+        for f in m["files"].as_array().cloned().unwrap_or_default() {
+            if f["new"].as_bool().unwrap_or(true) { continue; }
+            let rel = f["rel"].as_str().unwrap_or("").replace('\\', "/");
+            if rel.is_empty() || files.iter().any(|x| x["rel"].as_str().map(|r| r.eq_ignore_ascii_case(&rel)).unwrap_or(false)) { continue; }
+            let size = game.join(&rel).metadata().map(|m| m.len()).unwrap_or(0);
+            files.push(json!({"rel": rel, "size": size, "over": true}));
+        }
         let size: u64 = files.iter().map(|f| f["size"].as_u64().unwrap_or(0)).sum();
-        out.push(json!({"key": key, "state": "an", "dash": true, "imp": m["imp"], "src": m["src"], "mod": id, "name": m["name"], "pic": m["pic"], "version": m["version"], "files": files, "size": size, "time": m["time"]}));
+        out.push(json!({"key": key, "state": "an", "dash": true, "imp": m["imp"], "src": m["src"], "nx": m["nx"], "nxf": m["nxf"], "mod": id, "name": m["name"], "pic": m["pic"], "version": m["version"], "files": files, "size": size, "time": m["time"]}));
     }
     for (key, files) in groups {
         let size: u64 = files.iter().map(|f| f["size"].as_u64().unwrap_or(0)).sum();
@@ -498,7 +590,8 @@ fn toggle_inner(s: &Shared, key: &str, on: bool) -> Value {
     if g["dash"].as_bool().unwrap_or(false) {
         if let Some(m) = c["installed"].as_array().and_then(|a| a.iter().find(|m| m["mod"] == g["mod"])) {
             for f in m["files"].as_array().cloned().unwrap_or_default() {
-                if !f["new"].as_bool().unwrap_or(true) { files.push(json!({"rel": f["rel"].as_str().unwrap_or("").replace('\\', "/"), "over": true})); }
+                let rel = f["rel"].as_str().unwrap_or("").replace('\\', "/");
+                if !f["new"].as_bool().unwrap_or(true) && !files.iter().any(|x| x["rel"].as_str().map(|r| r.eq_ignore_ascii_case(&rel)).unwrap_or(false)) { files.push(json!({"rel": rel, "over": true})); }
             }
         }
     }
@@ -527,7 +620,7 @@ fn toggle_inner(s: &Shared, key: &str, on: bool) -> Value {
     }
     if moved.is_empty() { return json!({"ok": false, "why": "Keine Dateien zum Pausieren"}); }
     let size: u64 = moved.iter().map(|f| f["size"].as_u64().unwrap_or(0)).sum();
-    let entry = json!({"key": key, "dash": g["dash"], "imp": g["imp"], "mod": g["mod"], "name": g["name"], "pic": g["pic"], "version": g["version"], "files": moved, "size": size, "time": now_ms()});
+    let entry = json!({"key": key, "dash": g["dash"], "imp": g["imp"], "src": g["src"], "nx": g["nx"], "nxf": g["nxf"], "mod": g["mod"], "name": g["name"], "pic": g["pic"], "version": g["version"], "files": moved, "size": size, "time": now_ms()});
     if !c["disabled"].is_array() { c["disabled"] = json!([]); }
     c["disabled"].as_array_mut().unwrap().push(entry);
     save(s, &c);
@@ -744,10 +837,14 @@ fn unpack_any(arch: &Path, ext: &str, dest: &Path) -> Result<(), String> {
 
 // Schritt 1: Datei annehmen, entpacken, untersuchen → Vorschau mit Varianten
 pub fn import_stage(s: &Shared, filename: &str, data: &[u8]) -> Value {
+    if data.is_empty() { return json!({"ok": false, "why": "Leere Datei"}); }
+    stage(s, filename, &|to: &Path| std::fs::write(to, data), &Value::Null)
+}
+// nx: Nexus-Herkunft (id, file, name, pic, fname, ver) – wird im Plan gemerkt und beim Einbauen mitgespeichert
+fn stage(s: &Shared, filename: &str, put: &dyn Fn(&Path) -> std::io::Result<()>, nx: &Value) -> Value {
     let st = status(s);
     let game = PathBuf::from(st["dir"].as_str().unwrap_or(""));
     if !game.is_dir() { return json!({"ok": false, "why": "Erst den Spielordner festlegen (Mods → Einrichtung)"}); }
-    if data.is_empty() { return json!({"ok": false, "why": "Leere Datei"}); }
     let fname: String = filename.chars().filter(|c| !"\\/:*?\"<>|".contains(*c)).take(120).collect();
     let ext = fname.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
     let is_rs = ext == "exe" && fname.to_ascii_lowercase().contains("reshade");
@@ -757,7 +854,7 @@ pub fn import_stage(s: &Shared, filename: &str, data: &[u8]) -> Value {
     let x = dir.join("x");
     if std::fs::create_dir_all(&x).is_err() { return json!({"ok": false, "why": "Datenordner nicht beschreibbar"}); }
     let arch = dir.join(format!("archiv.{ext}"));
-    if let Err(e) = std::fs::write(&arch, data) { return json!({"ok": false, "why": e.to_string()}); }
+    if let Err(e) = put(&arch) { let _ = std::fs::remove_dir_all(&dir); return json!({"ok": false, "why": e.to_string()}); }
     if is_rs { return reshade_stage(&game, &dir, &x, &arch, &fname, &id); }
     if let Err(e) = unpack_any(&arch, &ext, &x) { let _ = std::fs::remove_dir_all(&dir); return json!({"ok": false, "why": e}); }
     let mut all = Vec::new(); walk(&x, &x, &mut all);
@@ -776,6 +873,23 @@ pub fn import_stage(s: &Shared, filename: &str, data: &[u8]) -> Value {
             if !car_roots.iter().any(|(r, _)| *r == d) { car_roots.push((d, real[..real.len() - 4].to_string())); }
         }
     }
+    // Felgen-Mods: <Felge>_Wheel….modelbin gehört als <Felge>.zip nach mediapc\cars\_library\scene\wheels – nicht entpackt
+    // (z. B. „ROT_WLD.zip … mediapc\cars\_library\scene\wheels“, so beschreiben es die Autoren)
+    let wheels_dir = game.join("media").join("cars").join("_library").join("scene").join("wheels");
+    let wheel_names: Vec<String> = std::fs::read_dir(&wheels_dir).into_iter().flatten().flatten().map(|e| e.file_name().to_string_lossy().to_string()).collect();
+    let mut wheel_roots: Vec<(String, String)> = Vec::new();
+    for (rel, _) in &all {
+        let lc = rel.to_ascii_lowercase();
+        if is_junk(&lc) || !lc.ends_with(".modelbin") || lc.split('/').any(|p| p == "mediapc" || p == "media") { continue; }
+        let (d, fnm) = rel.rsplit_once('/').map(|(d, f)| (format!("{d}/"), f.to_string())).unwrap_or((String::new(), rel.clone()));
+        let Some(i) = fnm.to_ascii_lowercase().find("_wheel") else { continue };
+        let stem = fnm[..i].to_string();
+        if stem.is_empty() || car_roots.iter().any(|(r, _)| d.to_ascii_lowercase().starts_with(&r.to_ascii_lowercase())) { continue; }
+        let known = wheel_names.iter().find(|n| n.eq_ignore_ascii_case(&format!("{stem}.zip"))).map(|n| n[..n.len() - 4].to_string());
+        let looks = stem.len() > 4 && stem.as_bytes()[3] == b'_' && stem.as_bytes()[..3].iter().all(|b| b.is_ascii_alphabetic());
+        let Some(real) = known.or_else(|| looks.then(|| stem.clone())) else { continue };
+        if !wheel_roots.iter().any(|(r, _)| *r == d) { wheel_roots.push((d, real)); }
+    }
     let mut car_size: BTreeMap<String, u64> = BTreeMap::new();
     // Pakete mit eigenem Programmteil (DLL/ASI): alles daneben gehört unverändert in den Spielordner (z. B. „version.dll“ + „spotify-radio…“)
     let mut plug_roots: Vec<String> = all.iter().filter_map(|(rel, _)| {
@@ -790,7 +904,7 @@ pub fn import_stage(s: &Shared, filename: &str, data: &[u8]) -> Value {
     for (rel, size) in &all {
         let lc = rel.to_ascii_lowercase();
         if is_junk(&lc) { continue; }
-        if let Some((r, _)) = car_roots.iter().filter(|(r, _)| lc.starts_with(&r.to_ascii_lowercase())).max_by_key(|(r, _)| r.len()) { *car_size.entry(r.clone()).or_default() += size; continue; }
+        if let Some((r, _)) = car_roots.iter().chain(wheel_roots.iter()).filter(|(r, _)| lc.starts_with(&r.to_ascii_lowercase())).max_by_key(|(r, _)| r.len()) { *car_size.entry(r.clone()).or_default() += size; continue; }
         let explicit = lc.split('/').any(|p| p == "mediapc" || p == "media");
         let plug = if explicit { None } else { plug_roots.iter().filter(|r| lc.starts_with(&r.to_ascii_lowercase())).max_by_key(|r| r.len()).cloned() };
         // ReShade-Preset (eine .ini mit „Techniques=“) → reshade-presets\
@@ -809,6 +923,11 @@ pub fn import_stage(s: &Shared, filename: &str, data: &[u8]) -> Value {
         let parent = r.trim_end_matches('/').rsplit_once('/').map(|(p, _)| format!("{p}/")).unwrap_or_default();
         variants.entry(parent).or_default().push(json!({"from": r, "to": to, "size": car_size.get(r).copied().unwrap_or(0), "exists": game.join(&to).exists(), "pack": true, "car": car}));
     }
+    for (r, w) in &wheel_roots {
+        let to = format!("mediapc/cars/_library/scene/wheels/{w}.zip");
+        let parent = r.trim_end_matches('/').rsplit_once('/').map(|(p, _)| format!("{p}/")).unwrap_or_default();
+        variants.entry(parent).or_default().push(json!({"from": r, "to": to, "size": car_size.get(r).copied().unwrap_or(0), "exists": game.join(&to).exists(), "pack": true, "wheel": w}));
+    }
     if variants.is_empty() { let _ = std::fs::remove_dir_all(&dir); return json!({"ok": false, "why": "In dieser Datei wurde nichts gefunden, das ins Spiel gehört", "skipped": skipped}); }
     // Wurzeln, die nur Unterordner einer anderen sind, zur übergeordneten zählen (ein Paket mit Unterordnern = eine Variante)
     let roots: Vec<String> = variants.keys().cloned().collect();
@@ -822,12 +941,13 @@ pub fn import_stage(s: &Shared, filename: &str, data: &[u8]) -> Value {
     let stem = fname.rsplit_once('.').map(|(a, _)| a).unwrap_or(&fname).to_string();
     let toks: Vec<&str> = stem.split(' ').collect();
     let cut = (1..toks.len()).find(|&i| toks[i].chars().all(|c| c.is_ascii_digit()) && toks[i..].iter().any(|t| t.len() > 10 && t.as_bytes()[..4].iter().all(|b| b.is_ascii_digit()) && t.contains('T'))).unwrap_or(toks.len());
-    let name = if car_roots.len() == 1 { format!("Auto: {}", car_roots[0].1.replace('_', " ")) } else { toks[..cut].join(" ").replace(['_', '-'], " ").split_whitespace().collect::<Vec<_>>().join(" ") };
+    let name = if let Some(n) = nx["name"].as_str().filter(|n| !n.trim().is_empty()) { n.trim().to_string() }
+        else if car_roots.len() == 1 { format!("Auto: {}", car_roots[0].1.replace('_', " ")) } else if car_roots.is_empty() && wheel_roots.len() == 1 { format!("Felgen: {}", wheel_roots[0].1.replace('_', " ")) } else { toks[..cut].join(" ").replace(['_', '-'], " ").split_whitespace().collect::<Vec<_>>().join(" ") };
     let list: Vec<Value> = variants.iter().map(|(r, f)| {
         let label = r.trim_end_matches('/').rsplit('/').next().unwrap_or("").to_string();
         json!({"root": r, "name": if label.is_empty() { "Standard".to_string() } else { label }, "files": f, "n": f.len(), "size": f.iter().map(|x| x["size"].as_u64().unwrap_or(0)).sum::<u64>()})
     }).collect();
-    let plan = json!({"id": id, "name": name, "file": fname, "variants": list, "skipped": skipped, "t": now_ms()});
+    let plan = json!({"id": id, "name": name, "file": fname, "variants": list, "skipped": skipped, "t": now_ms(), "nx": nx});
     write_json(&dir.join("plan.json"), &plan);
     let mut out = plan.clone(); out["ok"] = json!(true);
     out
@@ -844,13 +964,24 @@ pub fn import_apply(s: &Shared, id: &str, variant: &str, name: &str) -> Value {
     let mod_id = 9_000_000_000_000u64 + now_ms() % 1_000_000_000_000;
     let backup = root(s).join("backup").join(mod_id.to_string());
     let mut files = Vec::new();
+    // liegt am Ziel die Datei einer anderen Dashboard-Mod (kein Original), übernimmt die neue Mod sie:
+    // keine Sicherung der fremden Mod-Datei als „Original“, und die alte Mod gibt die Datei ab
+    let mut c0 = cfg(s);
+    let mut takeover: Vec<String> = Vec::new();
+    // Datei → (Mod, hat die Mod damit ein Original ersetzt?)
+    let owned: HashMap<String, (u64, bool)> = c0["installed"].as_array().cloned().unwrap_or_default().iter().flat_map(|m| { let id = m["mod"].as_u64().unwrap_or(0); m["files"].as_array().cloned().unwrap_or_default().into_iter().filter_map(move |f| f["rel"].as_str().map(|r| (r.replace('\\', "/").to_ascii_lowercase(), (id, !f["new"].as_bool().unwrap_or(true))))) }).collect();
     for f in v["files"].as_array().cloned().unwrap_or_default() {
         let (Some(from), Some(to)) = (f["from"].as_str(), f["to"].as_str()) else { continue };
         let pack = f["pack"].as_bool().unwrap_or(false);
         if !safe_rel(Path::new(to)) || (!from.is_empty() && !safe_rel(Path::new(from.trim_end_matches('/')))) { continue; }
         let src = dir.join("x").join(from);
         let dst = game.join(to);
-        let existed = dst.exists();
+        let prev = owned.get(&to.to_ascii_lowercase()).copied().filter(|_| dst.exists());
+        let theirs = prev.is_some();
+        if theirs { takeover.push(to.to_ascii_lowercase()); }
+        // hatte die alte Mod ein Original ersetzt, wandert dessen Sicherung mit – sonst ginge das Original beim Löschen verloren
+        let carried = match prev { Some((old, true)) => { let ob = root(s).join("backup").join(old.to_string()).join(to); let nb = backup.join(to); ob.is_file() && { if let Some(d) = nb.parent() { let _ = std::fs::create_dir_all(d); } nb.exists() || std::fs::copy(&ob, &nb).is_ok() } } _ => false };
+        let existed = (dst.exists() && !theirs) || carried;
         if pack {
             if existed { let b = backup.join(to); if let Some(d) = b.parent() { let _ = std::fs::create_dir_all(d); } if !b.exists() { let _ = std::fs::copy(&dst, &b); } }
             if let Some(d) = dst.parent() { if let Err(e) = std::fs::create_dir_all(d) { return json!({"ok": false, "why": format!("Spielordner: {e}")}); } }
@@ -868,18 +999,187 @@ pub fn import_apply(s: &Shared, id: &str, variant: &str, name: &str) -> Value {
         files.push(json!({"rel": to, "new": !existed}));
     }
     let fx_note = rs_after(&game, &dir, &mut files);
+    if !takeover.is_empty() {
+        if let Some(a) = c0["installed"].as_array_mut() { for m in a.iter_mut() { if let Some(f) = m["files"].as_array_mut() { f.retain(|x| !x["rel"].as_str().map(|y| takeover.contains(&y.replace('\\', "/").to_ascii_lowercase())).unwrap_or(false)); } } }
+        save(s, &c0);
+        log(format!("Import übernimmt Dateien anderer Mods: {}", takeover.join(", ")));
+    }
     let nm = take_name(if name.trim().is_empty() { plan["name"].as_str().unwrap_or("Mod") } else { name });
-    let vname = if plan["variants"].as_array().map(|a| a.len()).unwrap_or(0) > 1 { v["name"].as_str().unwrap_or("").to_string() } else { String::new() };
+    let nx = &plan["nx"];
+    let vname = if plan["variants"].as_array().map(|a| a.len()).unwrap_or(0) > 1 { v["name"].as_str().unwrap_or("").to_string() } else { nx["ver"].as_str().filter(|x| !x.is_empty()).map(|x| format!("v{}", x.trim_start_matches(['v', 'V']))).unwrap_or_default() };
+    let pic = nx["pic"].as_str().filter(|p| p.starts_with("https://")).map(|p| json!(p)).unwrap_or(Value::Null);
     let mut c = cfg(s);
     if !c["installed"].is_array() { c["installed"] = json!([]); }
-    c["installed"].as_array_mut().unwrap().push(json!({"mod": mod_id, "file": 0, "imp": true, "name": nm, "version": vname, "src": plan["file"], "pic": null, "time": now_ms(), "files": files}));
+    let mut entry = json!({"mod": mod_id, "file": 0, "imp": true, "name": nm, "version": vname, "src": plan["file"], "pic": pic, "time": now_ms(), "files": files, "root": v["root"]});
+    if let Some(nid) = nx["id"].as_u64() { entry["nx"] = json!(nid); entry["nxf"] = nx["file"].clone(); entry["nxn"] = nx["fname"].clone(); }
+    c["installed"].as_array_mut().unwrap().push(entry);
     save(s, &c);
+    keep_archive(s, &dir, mod_id);
     let _ = std::fs::remove_dir_all(&dir);
+    // dieselbe Nexus-Datei war schon da (neu geladen oder neue Version): die alte Fassung ersetzen
+    if let Some(nid) = nx["id"].as_u64() { replace_old(s, mod_id, nid, nx["file"].as_u64().unwrap_or(0), nx["fname"].as_str().unwrap_or("")); }
     rs_sync(s);
     log(format!("Mod importiert: {nm} ({} Dateien)", files.len()));
-    json!({"ok": true, "n": files.len(), "key": format!("nx:{mod_id}"), "note": fx_note})
+    json!({"ok": true, "n": files.len(), "key": format!("nx:{mod_id}"), "note": fx_note, "name": nm})
+}
+
+// Nexus-Mod-Nummer und Dateiname aus einem Nexus-Dateinamen („BMW_M5_12 1114 1.3 2026-…T… X.zip“ bzw. „Name-85-1-1779207129.rar“)
+fn src_nexus(src: &str) -> Option<(u64, String)> {
+    let stem = src.rsplit_once('.').map(|(a, _)| a).unwrap_or(src);
+    let t: Vec<&str> = stem.split(' ').collect();
+    if let Some(i) = (1..t.len()).find(|&i| t[i].chars().all(|c| c.is_ascii_digit()) && t.get(i + 2).map(|d| d.len() > 10 && d.as_bytes()[..4].iter().all(|b| b.is_ascii_digit()) && d.contains('T')).unwrap_or(false)) {
+        return t[i].parse().ok().map(|id| (id, t[..i].join(" ")));
+    }
+    let d: Vec<&str> = stem.split('-').collect();
+    if d.len() >= 4 && d[d.len() - 1].len() >= 9 && d[d.len() - 1].chars().all(|c| c.is_ascii_digit()) {
+        let i = (1..d.len() - 2).find(|&i| d[i].chars().all(|c| c.is_ascii_digit()) && !d[i].is_empty())?;
+        return d[i].parse().ok().map(|id| (id, d[..i].join("-")));
+    }
+    None
+}
+fn replace_old(s: &Shared, new_id: u64, nid: u64, fid: u64, fname: &str) {
+    let norm = |x: &str| x.to_ascii_lowercase().replace('_', " ").trim().to_string();
+    let same = |m: &Value| -> bool {
+        if m["mod"].as_u64() == Some(new_id) { return false; }
+        if m["nx"].as_u64() == Some(nid) { return (fid > 0 && m["nxf"].as_u64() == Some(fid)) || (!fname.is_empty() && m["nxn"].as_str().map(|n| norm(n) == norm(fname)).unwrap_or(false)); }
+        // früher aus Datei hinzugefügt (ohne Nexus-Angaben): am Dateinamen erkennen
+        m["imp"].as_bool().unwrap_or(false) && m["nx"].is_null() && !fname.is_empty() && m["src"].as_str().and_then(src_nexus).map(|(i, n)| i == nid && norm(&n) == norm(fname)).unwrap_or(false)
+    };
+    let c = cfg(s);
+    let paused: Vec<String> = c["disabled"].as_array().cloned().unwrap_or_default().iter().filter(|d| d["mod"].as_u64().and_then(|id| c["installed"].as_array().and_then(|a| a.iter().find(|m| m["mod"].as_u64() == Some(id))).cloned()).map(|m| same(&m)).unwrap_or(false)).filter_map(|d| d["key"].as_str().map(String::from)).collect();
+    let live: Vec<u64> = c["installed"].as_array().cloned().unwrap_or_default().iter().filter(|m| same(m) && !paused.iter().any(|k| *k == format!("nx:{}", m["mod"].as_u64().unwrap_or(0)))).filter_map(|m| m["mod"].as_u64()).collect();
+    for k in paused { let r = remove_inner(s, &k); log(format!("Alte Fassung (pausiert) ersetzt: {k} → {}", r["ok"])); }
+    for id in live {
+        let r = uninstall(s, id);
+        let _ = std::fs::remove_file(root(s).join("archiv").join(format!("{id}.zip")));
+        for e in ["7z", "rar", "exe"] { let _ = std::fs::remove_file(root(s).join("archiv").join(format!("{id}.{e}"))); }
+        log(format!("Alte Fassung ersetzt: nx:{id} → {}", r["ok"]));
+    }
 }
 fn take_name(s: &str) -> String { s.trim().chars().take(80).collect() }
+
+// Original-Archiv einer importierten Mod aufheben (für „Neu installieren“ mit Prüfung)
+fn keep_archive(s: &Shared, dir: &Path, mod_id: u64) {
+    let Some(a) = std::fs::read_dir(dir).into_iter().flatten().flatten().map(|e| e.path()).find(|p| p.is_file() && p.file_stem().map(|n| n == "archiv").unwrap_or(false)) else { return };
+    let ext = a.extension().map(|e| e.to_string_lossy().to_string()).unwrap_or_default();
+    let keep = root(s).join("archiv");
+    let _ = std::fs::create_dir_all(&keep);
+    let _ = std::fs::copy(&a, keep.join(format!("{mod_id}.{ext}")));
+}
+
+// „Neu installieren“: das Original-Archiv nochmal auspacken, jede Datei mit dem Spielordner vergleichen und alles,
+// was fehlt oder abweicht, neu hinlegen. Archiv: aufgehobene Kopie, sonst die Datei im Download-Ordner.
+pub fn reinstall(s: &Shared, key: &str) -> Value {
+    let Some(id) = key.strip_prefix("nx:").and_then(|x| x.parse::<u64>().ok()) else { return json!({"ok": false, "why": "Geht nur bei Mods, die über das Dashboard installiert wurden"}) };
+    let c = cfg(s);
+    let Some(entry) = c["installed"].as_array().and_then(|a| a.iter().find(|m| m["mod"].as_u64() == Some(id))).cloned() else { return json!({"ok": false, "why": "Die Mod ist pausiert – erst aktivieren"}) };
+    let game = PathBuf::from(status(s)["dir"].as_str().unwrap_or(""));
+    if !game.is_dir() { return json!({"ok": false, "why": "Spielordner nicht gefunden"}); }
+    let src = entry["src"].as_str().unwrap_or("").to_string();
+    let kept = std::fs::read_dir(root(s).join("archiv")).into_iter().flatten().flatten().map(|e| e.path()).find(|p| p.file_stem().map(|n| n.to_string_lossy() == id.to_string()).unwrap_or(false));
+    let dl = std::env::var("USERPROFILE").ok().map(|h| PathBuf::from(h).join("Downloads").join(&src)).filter(|p| !src.is_empty() && p.is_file());
+    let had_kept = kept.is_some();
+    let Some(arch) = kept.or(dl) else { return json!({"ok": false, "why": format!("Die Mod-Datei „{src}“ wurde nicht gefunden – bitte über „Mod hinzufügen“ nochmal auswählen")}) };
+    let Ok(data) = std::fs::read(&arch) else { return json!({"ok": false, "why": "Mod-Datei konnte nicht gelesen werden"}) };
+    let fname = if src.is_empty() { arch.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default() } else { src.clone() };
+    let plan = import_stage(s, &fname, &data);
+    if plan["ok"] != json!(true) { return json!({"ok": false, "why": plan["why"].as_str().unwrap_or("Mod-Datei ließ sich nicht prüfen")}); }
+    let dir = import_dir(s, plan["id"].as_str().unwrap_or(""));
+    let norm = |r: &str| r.replace('\\', "/").to_ascii_lowercase();
+    let mine: HashSet<String> = entry["files"].as_array().cloned().unwrap_or_default().iter().filter_map(|f| f["rel"].as_str().map(norm)).collect();
+    let vars = plan["variants"].as_array().cloned().unwrap_or_default();
+    let hits = |v: &Value| v["files"].as_array().map(|f| f.iter().filter(|x| x["to"].as_str().map(|t| mine.contains(&norm(t))).unwrap_or(false)).count()).unwrap_or(0);
+    let v = vars.iter().find(|v| entry["root"].is_string() && v["root"] == entry["root"]).or_else(|| vars.iter().max_by_key(|v| hits(v))).cloned();
+    let Some(v) = v else { let _ = std::fs::remove_dir_all(&dir); return json!({"ok": false, "why": "Keine passende Variante gefunden"}) };
+    let arch_zip = dir.join("archiv.zip");
+    let (mut checked, mut fixed, mut errs) = (0usize, Vec::<String>::new(), Vec::<String>::new());
+    for f in v["files"].as_array().cloned().unwrap_or_default() {
+        let (Some(from), Some(to)) = (f["from"].as_str(), f["to"].as_str()) else { continue };
+        if !safe_rel(Path::new(to)) || (!from.is_empty() && !safe_rel(Path::new(from.trim_end_matches('/')))) { continue; }
+        let dst = game.join(to);
+        let pack = f["pack"].as_bool().unwrap_or(false);
+        checked += 1;
+        // erwarteter Inhalt: bei Auto-/Felgen-Paketen, die schon als ZIP kamen, das Archiv selbst; sonst die entpackte Datei
+        let want: Option<Vec<u8>> = if pack { if from.is_empty() && arch_zip.is_file() { std::fs::read(&arch_zip).ok() } else { None } } else { std::fs::read(dir.join("x").join(from)).ok() };
+        let ok = match (&want, std::fs::read(&dst)) {
+            (Some(w), Ok(have)) => *w == have,
+            (None, Ok(have)) => !have.is_empty() && zip::ZipArchive::new(std::io::Cursor::new(have)).map(|z| z.len() > 0).unwrap_or(false),
+            _ => false,
+        };
+        if ok { continue; }
+        if let Some(d) = dst.parent() { let _ = std::fs::create_dir_all(d); }
+        let r = match &want { Some(w) => std::fs::write(&dst, w).map_err(|e| e.to_string()), None => zip_dir(&dir.join("x").join(from), &dst) };
+        match r { Ok(_) => fixed.push(to.to_string()), Err(e) => errs.push(format!("{to}: {}", busy_msg(&e))) }
+    }
+    // Dateien, die bisher nicht zur Mod gezählt wurden (z. B. nach einem Fehler), mit aufnehmen
+    let add: Vec<String> = fixed.iter().filter(|t| !mine.contains(&norm(t))).cloned().collect();
+    if !add.is_empty() {
+        let mut c = cfg(s);
+        if let Some(m) = c["installed"].as_array_mut().and_then(|a| a.iter_mut().find(|m| m["mod"].as_u64() == Some(id))) {
+            if let Some(fl) = m["files"].as_array_mut() { for t in &add { fl.push(json!({"rel": t, "new": true})); } }
+        }
+        save(s, &c);
+    }
+    if !had_kept { keep_archive(s, &dir, id); }
+    let _ = std::fs::remove_dir_all(&dir);
+    rs_sync(s);
+    log(format!("Mod neu installiert/geprüft: {} – {checked} geprüft, {} repariert{}", entry["name"].as_str().unwrap_or(""), fixed.len(), if errs.is_empty() { String::new() } else { format!(", Fehler: {}", errs.join("; ")) }));
+    json!({"ok": errs.is_empty(), "checked": checked, "fixed": fixed, "why": errs.join("; ")})
+}
+
+// „Prüfen“ (Kreispfeil in „Meine Mods“): Dateien da und lesbar? Dashboard-Mods zusätzlich mit dem Original-Archiv
+// vergleichen und reparieren. Danach der Start: wird die Mod beim Spielstart überhaupt geladen (Loader, ReShade, Platz)?
+pub fn check(s: &Shared, key: &str) -> Value {
+    let loc = local(s);
+    if loc["ok"] != json!(true) { return json!({"ok": false, "why": loc["why"].as_str().unwrap_or("Spielordner nicht gefunden")}); }
+    let game = PathBuf::from(loc["dir"].as_str().unwrap_or(""));
+    let Some(g) = loc["mods"].as_array().and_then(|a| a.iter().find(|m| m["key"].as_str() == Some(key))).cloned() else {
+        return json!({"ok": false, "why": "Die Mod liegt nicht mehr im Spielordner"});
+    };
+    let paused = g["state"].as_str() == Some("aus");
+    let files: Vec<String> = g["files"].as_array().cloned().unwrap_or_default().iter().filter_map(|f| f["rel"].as_str().map(|r| r.replace('\\', "/"))).collect();
+    let (mut issues, mut notes, mut fixed, mut checked) = (Vec::<String>::new(), Vec::<String>::new(), Vec::<String>::new(), 0usize);
+    // 1) Installation: Dashboard-Mods gegen das Archiv prüfen und reparieren
+    if !paused && g["dash"].as_bool().unwrap_or(false) && key.starts_with("nx:") {
+        let r = reinstall(s, key);
+        if let Some(n) = r["checked"].as_u64() { checked = n as usize; }
+        for f in r["fixed"].as_array().cloned().unwrap_or_default() { if let Some(t) = f.as_str() { fixed.push(t.to_string()); } }
+        if r["ok"] != json!(true) { let w = r["why"].as_str().unwrap_or(""); if w.contains("nicht gefunden") { notes.push("Original-Datei fehlt – nur die vorhandenen Dateien geprüft".into()); } else if !w.is_empty() { issues.push(w.to_string()); } }
+    }
+    // 2) Dateien: vorhanden, nicht leer, lesbar (pausierte liegen im Datenordner)
+    let base = if paused { aus_dir(s, key) } else { game.clone() };
+    let mut missing = Vec::new();
+    for rel in &files {
+        let p = base.join(rel);
+        let ok = p.metadata().map(|m| m.is_file() && m.len() > 0).unwrap_or(false) && std::fs::File::open(&p).is_ok();
+        if !ok { missing.push(rel.clone()); }
+    }
+    if checked == 0 { checked = files.len(); }
+    if !missing.is_empty() { issues.push(format!("{} {} fehlt oder ist leer: {}", missing.len(), if missing.len() == 1 { "Datei" } else { "Dateien" }, missing.iter().take(3).cloned().collect::<Vec<_>>().join(", "))); }
+    // 3) Start: wird die Mod beim Spielstart geladen?
+    if !paused {
+        let lc: Vec<String> = files.iter().map(|f| f.to_ascii_lowercase()).collect();
+        let root_has = |n: &str| game.join(n).is_file();
+        let exe_dir = |dir: &Path| std::fs::read_dir(dir).into_iter().flatten().flatten().any(|e| { let n = e.file_name().to_string_lossy().to_ascii_lowercase(); n.ends_with(".exe") && n != "gamelaunchhelper.exe" });
+        const LOADERS: [&str; 8] = ["dinput8.dll", "version.dll", "winmm.dll", "dsound.dll", "winhttp.dll", "xinput1_3.dll", "xinput1_4.dll", "d3d11.dll"];
+        let needs_loader = lc.iter().any(|f| f.ends_with(".asi") || f.starts_with("plugins/") || f.starts_with("scripts/"));
+        if needs_loader && !LOADERS.iter().any(|l| root_has(l)) { issues.push("Kein ASI-/DLL-Loader im Spielordner (z. B. dinput8.dll) – die Mod wird beim Start nicht geladen".into()); }
+        let is_rs = key == "ReShade" || lc.iter().any(|f| f.starts_with("reshade"));
+        if is_rs {
+            if !["dxgi.dll", "d3d11.dll", "d3d12.dll", "opengl32.dll"].iter().any(|l| root_has(l)) { issues.push("ReShade-DLL (dxgi.dll) fehlt neben dem Spiel – ReShade startet nicht".into()); }
+            if !root_has("ReShade.ini") && !root_has("reshade.ini") { notes.push("Keine ReShade.ini – ReShade legt sie beim ersten Start neu an".into()); }
+        }
+        // Programmteile (DLL/ASI) müssen neben der Spiel-exe liegen, sonst lädt das Spiel sie nicht
+        for f in files.iter().filter(|f| { let l = f.to_ascii_lowercase(); (l.ends_with(".dll") || l.ends_with(".asi")) && !l.contains('/') }) {
+            if !exe_dir(&game) { issues.push(format!("{f} liegt nicht neben der Spiel-exe – wird nicht geladen")); break; }
+        }
+        if running_game().is_some() { notes.push("Forza läuft gerade – Änderungen wirken nach einem Neustart des Spiels".into()); }
+    } else {
+        notes.push("Pausiert – beim Spielstart nicht aktiv".into());
+    }
+    log(format!("Mod geprüft: {key} – {checked} Dateien, {} repariert, {} Probleme", fixed.len(), issues.len()));
+    json!({"ok": issues.is_empty(), "checked": checked, "fixed": fixed, "issues": issues, "notes": notes, "paused": paused, "version": g["version"], "mod": g["mod"]})
+}
 
 pub fn import_cancel(s: &Shared, id: &str) -> Value { let _ = std::fs::remove_dir_all(import_dir(s, id)); json!({"ok": true}) }
 

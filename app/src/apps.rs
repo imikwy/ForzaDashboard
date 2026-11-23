@@ -1,4 +1,4 @@
-// Spotify und YouTube als eingebettete Webseiten im Dashboard-Fenster (nur in der exe, nicht auf Handy/Tablet).
+// Spotify, YouTube, Discord und Twitch als eingebettete Webseiten im Dashboard-Fenster (nur in der exe, nicht auf Handy/Tablet).
 // Das Dashboard meldet, wo der Platz für die App ist (CSS-Pixel = logische Pixel); hier wird die Seite genau dort
 // angezeigt, versteckt oder bedient. Anmeldungen bleiben im Profil des Dashboard-Fensters gespeichert.
 use crate::util::log;
@@ -14,6 +14,7 @@ fn start_url(id: &str) -> Option<&'static str> {
         "spotify" => Some("https://open.spotify.com/"),
         "youtube" => Some("https://www.youtube.com/"),
         "discord" => Some("https://discord.com/app"),
+        "twitch" => Some("https://www.twitch.tv/"),
         _ => None,
     }
 }
@@ -25,6 +26,7 @@ fn allowed(id: &str, url: &str) -> bool {
         "spotify" => host == "open.spotify.com" || host == "accounts.spotify.com",
         "youtube" => host == "www.youtube.com" || host == "m.youtube.com" || host == "youtube.com",
         "discord" => host == "discord.com" || host == "www.discord.com" || host == "ptb.discord.com" || host == "canary.discord.com",
+        "twitch" => host == "www.twitch.tv" || host == "twitch.tv" || host == "m.twitch.tv",
         _ => false,
     }
 }

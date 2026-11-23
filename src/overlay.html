@@ -356,9 +356,10 @@ const LAMP_SVG = {
   tc:'<svg viewBox="0 0 24 24"><path d="M6.5 12.5 8 8.5h8l1.5 4"/><path d="M5.5 12.5h13v3h-13z"/><path d="M7 15.5v1.5M17 15.5v1.5"/><path d="M6 20.5c1.2-1.4 2.4 1.4 3.6 0M14.4 20.5c1.2-1.4 2.4 1.4 3.6 0"/></svg>',
   li:'<svg viewBox="0 0 24 24"><path d="M12.5 6c-4.5 0-7 2.7-7 6s2.5 6 7 6c.8 0 1.5-.6 1.5-1.4V7.4c0-.8-.7-1.4-1.5-1.4z"/><path d="M16.5 8.5l4.5 1.5M16.5 12l4.5 1.5M16.5 15.5l4.5 1.5"/></svg>',
   fuel:'<svg viewBox="0 0 24 24"><path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M5 10h9M14 8h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V9l-3-3"/></svg>',
+  pb:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.2"/><path d="M5 6.5a8.5 8.5 0 0 0 0 11M19 6.5a8.5 8.5 0 0 1 0 11"/><path d="M10.4 15.2V8.8h2a1.9 1.9 0 0 1 0 3.8h-2"/></svg>',
 };
-const LAMPS = ["mkl", "tc", "li", "fuel"];
-const lampHtml = cls => '<div class="lmp ' + (cls || "") + '">' + LAMPS.map(k => '<i data-lamp="' + k + '" title="' + {mkl:"Motorkontrolle", tc:"Traktionskontrolle", li:"Licht", fuel:"Tank"}[k] + '">' + LAMP_SVG[k] + '</i>').join("") + '</div>';
+const LAMPS = ["mkl", "tc", "li", "pb", "fuel"];
+const lampHtml = cls => '<div class="lmp ' + (cls || "") + '">' + LAMPS.map(k => '<i data-lamp="' + k + '" title="' + {mkl:"Motorkontrolle", tc:"Traktionskontrolle", li:"Licht", pb:"Handbremse", fuel:"Tank"}[k] + '">' + LAMP_SVG[k] + '</i>').join("") + '</div>';
 // Zustand: TC blinkt bei durchdrehenden Antriebsrädern, MKL blinkt beim Verschalten/Begrenzer und leuchtet bei Schaden,
 // Tank gelb/rot bei wenig Sprit, Licht grün (per Lenkradtaste mitgeschaltet – Forza meldet das Licht nicht)
 const LS = {tc:-1e9, mkl:-1e9, lim:0, gear:0, gT:0};
@@ -380,6 +381,7 @@ function lampFill(root){
     mkl: now - LS.mkl < 2500 ? "o" : lm && lm.dm >= 45 ? "r" : lm && lm.dm >= 15 ? "y" : "",
     tc: now - LS.tc < 450 ? "o" : "",
     li: lm && lm.li ? "g" : "",
+    pb: lm && lm.pb ? "r" : "",
     fuel: lm && typeof lm.fu === "number" ? (lm.fu < .07 ? "r" : lm.fu < .15 ? "y" : "") : "",
   };
   els.forEach(e => { const c = st[e.dataset.lamp] || ""; if (e.className !== c) e.className = c; });
@@ -425,7 +427,7 @@ const TYPES = {
     return '<div class="pad cmb' + (c.map === "r" ? " r" : "") + '"' + (lm ? ' style="bottom:46px"' : '') + '>' + map + col + '</div>' + (lm ? lampHtml("cmbl").replace('class="lmp cmbl"', 'class="lmp cmbl" style="' + lpos + '"') : '');
   }},
   perf:{n:"PC-Leistung", d:"CPU, GPU, Speicher", w:300, h:96, html:() => '<div class="pad pcw" style="inset:12px 16px">' + ["cpu", "gpu", "ram", "vram"].map(k => '<div class="pcr"><div><small>' + SV[k].s + '</small><b data-sv="' + k + '">–</b></div><i><u data-pc="' + k + '"></u></i></div>').join("") + '</div>'},
-  lamps:{n:"Kontrollleuchten", d:"MKL, TC, Licht, Tank", w:210, h:56, html:() => '<div class="pad" style="inset:0">' + lampHtml("lmw") + '</div>'},
+  lamps:{n:"Kontrollleuchten", d:"MKL, TC, Licht, Handbremse, Tank", w:250, h:56, html:() => '<div class="pad" style="inset:0">' + lampHtml("lmw") + '</div>'},
   map:{n:"Minikarte", d:"Karte mit Route", w:230, h:230, html:() => '<div class="pad" style="inset:10px"><div class="map"><canvas data-map></canvas>' + BLK + (spdW() ? '' : '<div class="bub"><b data-f="kmh">0</b><small>km/h</small></div>') + '</div></div>'},
   blink:{n:"Blinker", d:"Dein Blinker", w:200, h:76, html:() => '<div class="pad blw" style="inset:10px" data-blw><i data-b="l">' + AL + '</i><i data-b="r">' + AR + '</i></div>'},
   nav:{n:"Abbiegen", d:"Nächster Hinweis", w:320, h:74, html:() => '<div class="pad" style="inset:14px">' + navHtml + '</div>'},
