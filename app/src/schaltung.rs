@@ -203,11 +203,15 @@ pub fn hb_pad(down: bool) -> bool {
     } else { false }
 }
 
-// Probe-Druck zum Belegen in Forza: nach 3 s (Zeit, um in Forza aufs Belegen-Feld zu gehen) 0,4 s drücken – auch wenn Forza nicht vorne ist
+// Probe-Druck zum Belegen in Forza: 12 s lang jede Sekunde kurz drücken (erst nach 2 s) – man muss in Forza nur das Feld
+// auswählen, irgendein Druck in dieser Zeit wird erkannt. Läuft auch, wenn Forza nicht vorne ist.
 pub fn probe(which: &str) -> Value {
     let b = match which { "up" => Btn::Up, "dn" => Btn::Dn, "hb" => Btn::Hb, _ => return json!({"ok": false}) };
     let via = with(|s| s.via);
-    std::thread::spawn(move || { std::thread::sleep(std::time::Duration::from_millis(3000)); press(via, b, true); std::thread::sleep(std::time::Duration::from_millis(400)); press(via, b, false); });
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(2000));
+        for _ in 0..12 { press(via, b, true); std::thread::sleep(std::time::Duration::from_millis(250)); press(via, b, false); std::thread::sleep(std::time::Duration::from_millis(750)); }
+    });
     json!({"ok": true})
 }
 

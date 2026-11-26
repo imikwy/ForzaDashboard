@@ -444,6 +444,8 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .uipop .btn{height:36px;border-radius:11px;background:var(--surface3);font-weight:700;margin-top:4px}
 .toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-90px);z-index:20;background:rgba(28,30,34,.96);color:var(--text);padding:12px 18px;border-radius:14px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .35s;pointer-events:none;max-width:90vw}
 .toast.on{transform:translate(-50%,0)}
+.toast.warn{background:rgba(52,42,6,.97);color:#ffd60a;box-shadow:inset 0 0 0 1px rgba(255,214,10,.45),0 10px 30px rgba(0,0,0,.5)}
+.toast.warn::before{content:"⚠";margin-right:8px}
 .frchip{pointer-events:auto;border:0;cursor:pointer;background:rgba(255,55,95,.18);color:#ff8fa8;font-weight:800;white-space:nowrap}
 .frchip::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff375f;margin-right:7px;vertical-align:1px}
 .frrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
@@ -576,6 +578,17 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .whr .plus{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--surface3);color:var(--accent);font-size:22px;font-weight:500;flex:none}
 /* Wählhebel-Anzeige der eigenen Automatik: kommt nur kurz, wenn eine Fahrstufe eingelegt wird */
 #gsel{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:9000;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;pointer-events:none;  background:rgba(28,30,36,.78);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:inset 0 0 0 1.5px var(--gc),0 8px 24px rgba(0,0,0,.35);  opacity:0;transform:translate(-50%,-8px) scale(.9);transition:opacity .3s ease,transform .4s cubic-bezier(.2,.9,.25,1.15)}#gsel.on{opacity:1;transform:translate(-50%,0) scale(1)}#gsel b{font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--gc);line-height:1}
+.gsprobe{display:flex;gap:8px;margin-top:2px}
+.gsprobe button{flex:1;height:34px;border-radius:10px;background:var(--surface);color:var(--accent);font-weight:700;font-size:13px}
+.gsprobe button.pri{background:var(--accent);color:#fff}
+.gswarn{padding:0 16px 12px;color:#ff453a;font-weight:600;font-size:12.5px}
+.gswiz{padding:4px 16px 14px;display:grid;gap:10px}
+.gsst{display:flex;gap:10px;align-items:flex-start;opacity:.45}
+.gsst.on,.gsst.ok{opacity:1}
+.gsst i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;background:var(--surface);color:var(--muted)}
+.gsst.on i{background:var(--accent);color:#fff}.gsst.ok i{background:#30d158;color:#fff}
+.gsst b{display:block;font-size:14px;font-weight:650}
+.gsst small{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
 .gico[data-ac="off"]{filter:grayscale(.85) brightness(.7)}
 .gico[data-ac="pin"]::after{content:"";position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#30d158;box-shadow:0 0 0 2px rgba(0,0,0,.35)}
 .whdev{display:flex;gap:6px;padding:12px 14px 0}
@@ -3019,7 +3032,20 @@ function checkVer(){
   fetch("/info", {cache:"no-store"}).then(r => r.json()).then(i => { if (i.ver && window.serverVer && i.ver !== window.serverVer) location.reload(); }).catch(() => {});
 }
 let toastT = 0;
-function toast(t){ const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 5000); }
+// Meldungen: Fehler/Warnungen gelb und lange (9 s), normale Hinweise kurz (3 s). Gleiche Meldung nicht gleich nochmal,
+// und ein Hinweis verdrängt keinen gerade sichtbaren Fehler. toast(t, "err") / toast(t, "info") erzwingt die Art.
+const TOAST_ERR = /⚠|antwortet nicht|geht nur|erst anhalten|geht nicht|ging nicht|fehlgeschlagen|fehler|nicht installiert|schaltet nicht|nicht erreichbar|keine verbindung|kein internet|abgelehnt|ungültig|nicht gefunden|konnte nicht|klappt nicht|nicht möglich|funktioniert nicht/i;
+const TOAST = {last:"", lt:0, errUntil:0};
+function toast(t, kind){
+  const el = $("toast"); if (!el || !t) return;
+  const now = Date.now(), err = kind === "err" || (kind !== "info" && TOAST_ERR.test(t));
+  if (t === TOAST.last && now - TOAST.lt < (err ? 30000 : 4000)) return;
+  if (!err && now < TOAST.errUntil) return;   // ein Fehler bleibt mindestens 3,5 s sicher lesbar
+  TOAST.last = t; TOAST.lt = now;
+  el.textContent = String(t).replace(/^⚠\s*/, ""); el.classList.toggle("warn", err); el.classList.add("on");
+  if (err) TOAST.errUntil = now + 3500;
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), err ? 9000 : 3000);
+}
 function connect(){
   if (location.protocol === "file:") { startDemo(true); return; }
   fetch("/info", {cache:"no-store"}).then(r => { if (!r.ok) throw 0; return r.json(); }).then(info => {
@@ -4928,7 +4954,7 @@ const padBtn = (b, dev) => b >= 2000 ? kbName(b - 2000) : b > 1000 ? "Steuerkreu
   : dev && dev.startsWith("045E:") && PAD_XBOX[b - 1] ? PAD_XBOX[b - 1] : dev && dev.startsWith("054C:") && PAD_PS[b - 1] ? PAD_PS[b - 1] : "Taste " + b;
 const padName = b => !b ? "–" : (b.name || "Controller") + " · " + (b.how === "+" ? padBtn(b.mod, b.dev) + " + " + padBtn(b.btn, b.dev) : padBtn(b.btn, b.dev) + (b.how === "2" ? " · 2×" : ""));
 const padHow = b => (b && b.how) || "1";
-const padActive = a => !(!S.blinkOn && /^(blink|hazard)/.test(a)) && !(!S.gsOn && /^gs/.test(a)) && !(/^wip/.test(a) && !(S.gsOn && S.gsBtn === "vj"));
+const padActive = a => !(!S.blinkOn && /^(blink|hazard)/.test(a)) && !(!S.gsOn && /^gs/.test(a)) && !/^wip/.test(a);   // Wippen lernt der Einrichten-Assistent, das Programm wertet sie selbst aus
 const padFire = a => {
   const b = S.binds && S.binds[a];
   if (!(b && b.tab) && !PAD_ACT[a]) return;
@@ -5083,10 +5109,11 @@ const GS_BTN = {bx:[0x2000, 0x4000, "B / X"], rl:[0x0200, 0x0100, "RB / LB"], vj
 const gsL = m => m === "S" ? "S+" : m;
 function gsIco(t){ return '<text x="12" y="16.3" text-anchor="middle" font-size="' + (t.length > 1 ? 10.5 : 13) + '" font-weight="800" fill="#fff" stroke="none" font-family="-apple-system,Segoe UI,system-ui,sans-serif">' + t + '</text>'; }
 function gsPost(b){
-  return fetch("/schaltung", {method:"POST", body:JSON.stringify(b)}).then(r => r.ok ? r.json() : null).then(v => { if (v) GS.st = v; return v; }).catch(() => null);
+  return fetch("/schaltung", {method:"POST", body:JSON.stringify(b)}).then(r => r.ok ? r.json() : null).then(v => { if (v) { GS.st = v; const was = !!GS.vj; GS.vj = !!v.vjoy; if (GS.vj !== was) gsSync(); } return v; }).catch(() => null);
 }
 function gsCfg(){
-  const k = GS_BTN[S.gsBtn] ? S.gsBtn : "bx", p = GS_BTN[k], bd = a => { const b = (S.binds || {})[a]; return b && (b.how || "1") === "1" && b.dev !== "KBD" ? {dev:b.dev, btn:b.btn} : {}; };
+  // vJoy wird automatisch genommen, wenn installiert (GS.vj kommt vom Programm) – sonst unsichtbarer Controller B/X
+  const k = GS.vj ? "vj" : "bx", p = GS_BTN[k], bd = a => { const b = (S.binds || {})[a]; return b && (b.how || "1") === "1" && b.dev !== "KBD" ? {dev:b.dev, btn:b.btn} : {}; };
   return Object.assign(k === "vj" ? {an:!!S.gsOn, via:"vjoy"} : {an:!!S.gsOn, via:"pad", pup:p[0], pdn:p[1]}, {wup:bd("wipUp"), wdn:bd("wipDn")});
 }
 // Belegung geändert (z. B. Wippe neu gelernt) -> ans Programm schicken
@@ -5123,22 +5150,40 @@ function gsTick(d){
   }
   // Hinweise vom Programm (z. B. „Forza schaltet selbst – auf Manuell stellen“) einmal anzeigen
   const now = performance.now();
-  if (m && now - GS.poll > 3000) { GS.poll = now; fetch("/schaltung", {cache:"no-store"}).then(r => r.json()).then(v => { GS.st = v; if (v.hint && v.hint !== GS.hint) toast(v.hint); GS.hint = v.hint || ""; }).catch(() => {}); }
+  if (m && now - GS.poll > 3000) { GS.poll = now; fetch("/schaltung", {cache:"no-store"}).then(r => r.json()).then(v => { GS.st = v; if (v.hint && v.hint !== GS.hint && !/^Selbst geschaltet/.test(v.hint)) toast(v.hint, "err"); GS.hint = v.hint || ""; }).catch(() => {}); }
 }
-// Einstellungen der eigenen Automatik: nur An/Aus und auf welchen Knöpfen geschaltet wird (der Durchschalt-Knopf folgt darunter)
+// Einstellungen der eigenen Automatik: An/Aus und ein „Einrichten“-Assistent (einmalig, etwa 1 Minute).
+// Mit vJoy (wird automatisch erkannt): Wippen einmal drücken, dann in Forza Hoch/Runter auf vJoy legen – fertig, kein Ruck.
+// Ohne vJoy: unsichtbarer Controller mit B/X (Forza-Standard), nichts einzustellen.
 function gsSettings(grp){
-  const mk = (txt, fn, on) => { const b = document.createElement("button"); b.textContent = txt; if (on) b.className = "on"; b.onclick = fn; return b; };
+  const mk = (txt, fn, cls) => { const b = document.createElement("button"); b.textContent = txt; if (cls) b.className = cls; b.onclick = fn; return b; };
   const sw = document.createElement("span"); sw.className = "sw" + (S.gsOn ? " on" : "");
-  sw.onclick = () => { S.gsOn = !S.gsOn; saveSettings(); gsPost(gsCfg()).then(v => { if (S.gsOn && v) GS.mode = ""; buildWheelSettings(); }); if (!S.gsOn && PB.on && GS.mode === "P") pbSet(false); toast(S.gsOn ? "Eigene Automatik an" : "Eigene Automatik aus"); };
+  sw.onclick = () => { S.gsOn = !S.gsOn; if (!S.gsOn) { GS.wiz = 0; if (PAD.learn && /^wip/.test(PAD.learn)) PAD.learn = null; } saveSettings(); gsPost(gsCfg()).then(v => { if (S.gsOn && v) GS.mode = ""; buildWheelSettings(); }); if (!S.gsOn && PB.on && GS.mode === "P") pbSet(false); toast(S.gsOn ? "Eigene Automatik an" : "Eigene Automatik aus"); };
   grp.appendChild(row("Eigene Automatik", "In Forza das Getriebe auf „Manuell“ stellen", sw));
   if (!S.gsOn) return;
-  const cur = GS_BTN[S.gsBtn] ? S.gsBtn : "bx", seg = document.createElement("div"); seg.className = "seg";
-  for (const k of Object.keys(GS_BTN)) seg.appendChild(mk(GS_BTN[k][2], () => { S.gsBtn = k; saveSettings(); gsPost(gsCfg()).then(() => buildWheelSettings()); }, cur === k));
-  grp.appendChild(row("Schalttasten", cur === "vj" ? "In Forza Hoch/Runter auf vJoy legen – deine Wippen unten als „Schaltwippe“ belegen" : "In Forza beim Controller so belegen (hoch / runter)", seg));
-  if (cur === "vj") {
-    const pr = document.createElement("div"); pr.className = "gsprobe";
-    for (const [k, t] of [["up", "Hoch"], ["dn", "Runter"]]) pr.appendChild(mk(t + " belegen", () => { fetch("/schaltung/probe", {method:"POST", body:JSON.stringify({k})}).catch(() => {}); toast("In 3 s wird „" + t + "“ gedrückt – jetzt in Forza aufs Belegen-Feld"); }));
-    grp.appendChild(pr);
+  const b = S.binds || {}, vj = !!GS.vj, ok = !vj || (b.wipUp && b.wipDn && S.gsForza);
+  // Assistent weiterschalten, sobald eine Wippe gelernt wurde
+  if (GS.wiz === 1 && PAD.learn !== "wipUp") { GS.wiz = 2; PAD.learn = "wipDn"; }
+  else if (GS.wiz === 2 && PAD.learn !== "wipDn") GS.wiz = 3;
+  const head = document.createElement("button"); head.className = "whr";
+  head.innerHTML = '<span class="wt">Einrichten</span><span class="wv">' + (GS.wiz ? "läuft …" : ok ? "✓ fertig" : "noch nicht") + '</span><svg class="chev" viewBox="0 0 8 13" style="transform:rotate(' + (GS.wiz ? 90 : 0) + 'deg)"><path d="m1.5 1.5 5 5-5 5"/></svg>';
+  head.onclick = () => { if (GS.wiz) { GS.wiz = 0; if (PAD.learn && /^wip/.test(PAD.learn)) PAD.learn = null; } else { GS.wiz = vj ? 1 : 9; if (vj) PAD.learn = "wipUp"; } buildWheelSettings(); };
+  grp.appendChild(head);
+  if (GS.wiz) {
+    const box = document.createElement("div"); box.className = "gswiz";
+    const step = (n, t, s) => '<div class="gsst' + (GS.wiz === n ? " on" : GS.wiz > n ? " ok" : "") + '"><i>' + (GS.wiz > n ? "✓" : n) + '</i><div><b>' + t + '</b>' + (s && GS.wiz === n ? '<small>' + s + '</small>' : '') + '</div></div>';
+    if (GS.wiz === 9) box.innerHTML = '<div class="gsst on"><i>✓</i><div><b>Nichts zu tun</b><small>Geschaltet wird über einen unsichtbaren Controller (B / X, Forza-Standard). Dabei springt Forza kurz vom Lenkrad um. Ganz ohne Ruck geht es mit vJoy (github.com/BrunnerInnovation/vJoy) – danach hier nochmal „Einrichten“.</small></div></div>';
+    else box.innerHTML = step(1, "Hochschalt-Wippe drücken", "Am Lenkrad jetzt die Wippe drücken, mit der du hochschaltest.")
+      + step(2, "Runterschalt-Wippe drücken", "Jetzt die Wippe zum Runterschalten.")
+      + step(3, "In Forza einmal verbinden", "Forza › Einstellungen › Steuerung › Lenkrad › eigenes Profil. Hier „Hoch“ tippen, zu Forza wechseln und „Hochschalten“ auswählen – das Programm drückt 12 s lang immer wieder. Dann dasselbe mit „Runter“.");
+    if (GS.wiz === 3) {
+      const pr = document.createElement("div"); pr.className = "gsprobe";
+      for (const [k, t] of [["up", "Hoch"], ["dn", "Runter"]]) pr.appendChild(mk(t, () => { fetch("/schaltung/probe", {method:"POST", body:JSON.stringify({k})}).catch(() => {}); toast("„" + t + "“ wird gleich 12 s lang gedrückt – jetzt in Forza das Feld auswählen"); }));
+      pr.appendChild(mk("Fertig", () => { S.gsForza = true; GS.wiz = 0; saveSettings(); toast("Automatik eingerichtet ✓"); buildWheelSettings(); }, "pri"));
+      box.appendChild(pr);
+    }
+    if (GS.wiz === 9) { const pr = document.createElement("div"); pr.className = "gsprobe"; pr.appendChild(mk("OK", () => { GS.wiz = 0; buildWheelSettings(); }, "pri")); box.appendChild(pr); }
+    grp.appendChild(box);
   }
   const st = GS.st || {}, warn = st.err || st.hint || "";
   if (warn) { const w = document.createElement("div"); w.className = "gswarn"; w.textContent = "⚠ " + warn; grp.appendChild(w); }
@@ -7508,7 +7553,7 @@ function pbToggle(){
   if (PB.on) { pbSet(false, "Handbremse gelöst"); return; }
   if (!carLive()) { toast("Geht nur im Auto – nicht im Menü oder im Haus"); return; }
   if (Math.abs(D.spd || 0) * 3.6 > 5) { toast("Erst anhalten"); return; }
-  pbSet(true, "Handbremse angezogen – lösen: Taste kurz drücken, Handbremse am Lenkrad ziehen oder Gas geben");
+  pbSet(true, "Handbremse angezogen");
 }
 // Taste für die Handbremse: angezogen wird sie erst nach der eingestellten Haltezeit (3–15 s), gelöst mit kurzem Druck.
 // Während des Haltens zählt ein Hinweis herunter; früher loslassen = nichts passiert.
