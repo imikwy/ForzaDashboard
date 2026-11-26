@@ -7326,13 +7326,13 @@ function kolTuning(l, mem, ev, mine){
 }
 // ---- Police Chase: Polizei gegen Flüchtige (Kolonnen-Spiel) ----
 // Der Kolonnenführer startet die Runde (ab 4 Fahrern, 15/20/30 min). Teams: bis 6 Fahrer 2 Polizisten, bis 12 Fahrer 4 … – wer Polizei wünscht, zuerst.
-// Nach 60 s Vorsprung: Flüchtige sehen um jeden Polizisten den roten Suchkreis (350 m) und den Fangkreis (40 m).
+// Nach 15 s Vorsprung: Flüchtige sehen um jeden Polizisten den roten Suchkreis (350 m) und den Fangkreis (40 m).
 // Polizisten sehen Flüchtige nur live, solange die im Suchkreis irgendeines Polizisten sind – sonst nur den Ping
 // (alle 30 s, ab 4 Sternen alle 20 s, bei 6 Sternen alle 15 s; vom Rundenstart gerechnet, damit alle gleichzeitig pingen).
 // Jeder neue Eintritt in einen Suchkreis gibt einen Stern (max. 6; neu erst nach > 400 m Abstand und 15 s).
 // Gefasst: insgesamt 10 s (ab 3 Sternen 8 s, bei 6 Sternen 6 s) im Fangkreis; draußen läuft der Zähler doppelt so schnell zurück.
 // Das Gerät des Flüchtigen misst selbst und meldet Sterne/Festnahme über die Event-Daten. Ende: alle gefasst = Polizei, Zeit um = Flüchtige.
-const PCR = {see:350, far:400, cat:40, head:60e3, min:4, gap:15e3};
+const PCR = {see:350, far:400, cat:40, head:15e3, min:4, gap:15e3};
 const pcCops = n => Math.min(n - 1, 2 * Math.ceil(n / 6));
 const pcNeed = st => st >= 6 ? 6 : st >= 3 ? 8 : 10;
 const pcEvery = st => (st >= 6 ? 15 : st >= 4 ? 20 : 30) * 1000;
@@ -7417,7 +7417,7 @@ function pcReset(c){
   PC.pings.clear(); PC.outs.clear();
   if (c.role === "run" && c.ph !== "end") pcSend(c);
   if (c.ph === "head" && c.now - c.p.start < 15000)
-    toast(c.role === "cop" ? "🚓 Police Chase: Du bist Polizei – die Jagd beginnt in 60 s" : c.role === "run" ? "🏃 Police Chase: Du bist auf der Flucht – 60 s Vorsprung!" : "🚨 Police Chase gestartet – du schaust zu");
+    toast(c.role === "cop" ? "🚓 Police Chase: Du bist Polizei – die Jagd beginnt in " + PCR.head / 1000 + " s" : c.role === "run" ? "🏃 Police Chase: Du bist auf der Flucht – " + PCR.head / 1000 + " s Vorsprung!" : "🚨 Police Chase gestartet – du schaust zu");
 }
 // als Flüchtiger: Suchkreise (Sterne) und Fangkreis (Festnahme) messen
 function pcRunner(c, dt){
@@ -7583,7 +7583,7 @@ function kolPolice(l, mem, ev, mine){
       + (lead ? '<div class="seg2 sm pcseg">' + [15, 20, 30].map(m => '<button data-a="pcdur" data-s="' + m + '" class="' + (PC.dur === m ? "on" : "") + '">' + m + '′</button>').join("") + '</div><button class="kbtn pri" data-a="pcstart" data-c="' + code + '"' + (ok ? '' : ' disabled') + '>Start</button>' : '') + '</div>';
     if (p) { const res = pcResOf(c), got = p.runs.filter(id => pcRun(c, id).out).length;
       s += '<div class="irow"><div class="tx"><b>' + (res === "cop" ? "🚓 Polizei hat gewonnen" : res === "run" ? "🏃 Flüchtige haben gewonnen" : "Letzte Runde abgebrochen") + '</b><small>' + got + ' von ' + p.runs.length + ' gefasst · ' + Math.round(p.dur / 60000) + ' min</small></div></div>'; }
-    else s += '<div class="irow"><div class="tx"><small>60 s Vorsprung · Suchkreis 350 m · Ping alle 30 s · 6 Sterne · 10 s im Fangkreis (40 m) = gefasst</small></div></div>';
+    else s += '<div class="irow"><div class="tx"><small>' + PCR.head / 1000 + ' s Vorsprung · Suchkreis 350 m · Ping alle 30 s · 6 Sterne · 10 s im Fangkreis (40 m) = gefasst</small></div></div>';
   }
   s += '</div>';
   if (!p) return s;

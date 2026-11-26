@@ -21,7 +21,7 @@ function mk(me, leader){
   ctx.FR.kc = {kol:[kk]};
   return {ctx, kk, toasts, posts, pill, run:s => vm.runInContext(s, ctx)};
 }
-const START = T;
+const START = T, H = mk("X", "X").run("PCR.head");   // Vorsprung aus dem Dashboard
 const round = (o) => Object.assign({rid:"AB12CD", start:START, dur:20 * 60e3, cops:["C1", "C2"], runs:["R1", "R2"], nm:{C1:"Cop1", C2:"Cop2", R1:"Run1", R2:"Run2"}, end:0, res:""}, o || {});
 // Zeit vorspulen und jede 100 ms einen Schritt rechnen; f(t) kann Positionen setzen
 function adv(w, ms, f){ const end = T + ms; while (T < end) { T += 100; if (f) f(T); w.run("pcStep()"); } }
@@ -38,10 +38,10 @@ t("Polizisten je Spielerzahl", () => {
 t("Flüchtiger: Vorsprung zählt nicht, Sterne beim Eintritt, erst nach >400 m und 15 s neu", () => {
   T = START; const w = mk("R1", "C1"); w.kk.mem = [{d:"C1"}, {d:"C2"}, {d:"R2"}]; w.kk.pc = round();
   const cop = {tx:100, tz:0, g:1, n:"Cop1"}; w.ctx.FR.m.set("C1", cop);
-  adv(w, 30e3);                                     // Vorsprung: Polizist 100 m entfernt
+  adv(w, H - 2e3);                                  // Vorsprung: Polizist 100 m entfernt
   assert.strictEqual(w.run("PC.st"), 0, "kein Stern im Vorsprung");
-  assert.ok(w.toasts[0].includes("60 s Vorsprung"));
-  adv(w, 31e3);                                     // Jagd läuft
+  assert.ok(w.toasts[0].includes(H / 1000 + " s Vorsprung"), w.toasts[0]);
+  adv(w, 3e3);                                      // Jagd läuft
   assert.strictEqual(w.run("PC.st"), 1, "erster Stern");
   adv(w, 20e3);                                     // drin bleiben: kein weiterer Stern
   assert.strictEqual(w.run("PC.st"), 1);
@@ -62,7 +62,7 @@ t("Flüchtiger: Vorsprung zählt nicht, Sterne beim Eintritt, erst nach >400 m u
 t("Flüchtiger: 10 s im Fangkreis = gefasst, draußen läuft der Zähler doppelt zurück", () => {
   T = START; const w = mk("R1", "C1"); w.kk.mem = [{d:"C1"}, {d:"C2"}, {d:"R2"}]; w.kk.pc = round();
   const cop = {tx:30, tz:0, g:1, n:"Cop1"}; w.ctx.FR.m.set("C1", cop);
-  adv(w, 61e3, () => { if (T < START + 60e3) cop.tx = 1000; else cop.tx = 30; });
+  adv(w, H + 1e3, () => { if (T < START + H) cop.tx = 1000; else cop.tx = 30; });
   assert.strictEqual(w.run("PC.st"), 1);             // Stern zählt -> Fangzeit noch 10 s (ab 3 Sternen 8 s)
   adv(w, 6e3); assert.ok(Math.abs(w.run("PC.ct") - 6.9) < 0.3, "≈6–7 s gesammelt: " + w.run("PC.ct"));
   cop.tx = 60; adv(w, 2e3);                          // 2 s draußen: -4 s
@@ -94,18 +94,18 @@ t("Polizist: Flüchtige nur im Suchkreis sichtbar, Ping alle 30 s (ab 4 Sternen 
   let R1x = 200;
   const vis = () => w.ctx.pcFilter(list(), w.ctx.FR.kc).map(f => f.id).join(",");
   assert.strictEqual(vis(), "C2", "im Vorsprung niemand sichtbar");
-  T = START + 61e3;
+  T = START + H + 1e3;
   assert.strictEqual(vis(), "C2,R1,R2", "R1 in meinem, R2 im Kreis von Cop2 (300 m)");
   R1x = 500; assert.strictEqual(vis(), "C2,R2", "R1 draußen = verborgen");
   assert.strictEqual(w.run('pcHid("R1")'), true);
-  // Pings: Positionen zu den gemeinsamen Zeitpunkten (Start + 60 s + k·30 s)
-  T = START + 60e3; w.run("PC.lastT = 0; PC.rid = ''"); R1x = 500;
+  // Pings: Positionen zu den gemeinsamen Zeitpunkten (Start + Vorsprung + k·30 s)
+  T = START + H; w.run("PC.lastT = 0; PC.rid = ''"); R1x = 500;
   const pingAt = [];
   adv(w, 95e3, () => { R1x = 500 + (T - START) / 100; w.ctx.pcFilter(list(), w.ctx.FR.kc); const g = w.run("PC.pings.get(\"R1\")"); if (g && !pingAt.includes(g.at)) pingAt.push(g.at); });
-  assert.deepStrictEqual(pingAt.map(x => Math.round((x - START) / 1000)), [60, 90, 120, 150], "Pings bei 60/90/120/150 s");
+  assert.deepStrictEqual(pingAt.map(x => Math.round((x - START) / 1000)), [0, 30, 60, 90].map(x => x + H / 1000), "Pings alle 30 s ab Ende des Vorsprungs");
   w.kk.ev.R1 = {pc:{rid:"AB12CD", st:4, out:false}};
   const n0 = pingAt.length; adv(w, 41e3, () => { w.ctx.pcFilter(list(), w.ctx.FR.kc); const g = w.run("PC.pings.get(\"R1\")"); if (g && !pingAt.includes(g.at)) pingAt.push(g.at); });
-  assert.deepStrictEqual(pingAt.slice(n0).map(x => Math.round((x - START) / 1000)), [155, 160, 180], "Wechsel auf 20-s-Raster (sofort neuer Ping, dann 160, 180)");
+  assert.deepStrictEqual(pingAt.slice(n0).map(x => Math.round((x - START) / 1000)), [95, 100, 120].map(x => x + H / 1000), "Wechsel auf 20-s-Raster (sofort neuer Ping, dann 160, 180)");
   assert.ok(w.pill.innerHTML.includes("Ping") && w.pill.className.includes("cop"), w.pill.innerHTML);
 });
 
