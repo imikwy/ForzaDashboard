@@ -89,18 +89,10 @@ body.edit{background:#16181d}
 #note small{display:block;font-size:12.5px;color:rgba(255,255,255,.65);margin-top:1px}
 #note.hid{opacity:0}
 /* Wählhebel der eigenen Automatik: unten in der Mitte, nur kurz beim Einlegen einer Fahrstufe */
-#gsel{position:absolute;left:50%;bottom:0;transform-origin:50% 100%;z-index:7;pointer-events:none;display:flex;align-items:center;gap:13px;padding:7px 20px 7px 7px;border-radius:40px;
-  background:linear-gradient(160deg,rgba(66,70,82,.84),rgba(22,24,30,.9));box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 1px 0 rgba(255,255,255,.24),0 14px 40px rgba(0,0,0,.4);
-  opacity:0;transition:opacity .35s ease}
+#gsel{position:absolute;left:50%;bottom:0;transform-origin:50% 100%;z-index:7;pointer-events:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(28,30,36,.8);box-shadow:inset 0 0 0 1.5px var(--gc),0 8px 24px rgba(0,0,0,.35);opacity:0;transition:opacity .3s ease}
 #gsel.on{opacity:1}
-#gsel .gsc{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;flex:none;background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--gc) 70%,#fff),var(--gc) 62%);box-shadow:0 0 0 3px rgba(255,255,255,.1),0 4px 18px color-mix(in srgb,var(--gc) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
-#gsel .gsc b{font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1}
-#gsel .gst{display:flex;flex-direction:column;gap:5px}
-#gsel .gsn b{font-size:16px;font-weight:700}
-#gsel .gsn small{font-size:12px;color:rgba(255,255,255,.6);margin-left:7px}
-#gsel .gsr{display:flex;gap:3px}
-#gsel .gsr i{font-style:normal;font-size:11.5px;font-weight:750;min-width:22px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;display:grid;place-items:center;color:rgba(255,255,255,.42)}
-#gsel .gsr i.on{background:var(--gc);color:#fff}
+#gsel b{font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--gc);line-height:1}
 /* PC-Leistung */
 .pcw{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;height:100%;align-content:center}
 .pcr{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -265,7 +257,7 @@ body.edit{background:#16181d}
 #gx{width:1px;top:0;bottom:0}#gy{height:1px;left:0;right:0}
 </style></head><body>
 <div id="stage"></div>
-<div id="gsel"><div class="gsc"><b></b></div><div class="gst"><span class="gsn"></span><span class="gsr"></span></div></div>
+<div id="gsel"><b></b></div>
 <div id="note" class="hid"><div class="ahb"><div class="ahc"><span class="ni"></span><div><b></b><small></small></div></div></div></div>
 <i class="guide" id="gx"></i><i class="guide" id="gy"></i>
 <div id="bar">
@@ -379,19 +371,15 @@ const lampHtml = cls => '<div class="lmp ' + (cls || "") + '">' + LAMPS.map(k =>
 const LS = {tc:-1e9, mkl:-1e9, lim:0, gear:0, gT:0};
 // Wählhebel der eigenen Automatik (kommt mit jedem Paket als d.gsel): nur beim Wechsel 2 s einblenden
 const GSO = {m:"", h:0};
-const GSO_N = {P:["Parken", "Handbremse angezogen"], R:["Rückwärts", ""], D:["Drive", "Automatik"], E:["Eco", "früh schalten"], S:["Sport+", "spät schalten"], M:["Manuell", "du schaltest selbst"]};
 const GSO_C = {P:"#ff453a", R:"#ff9f0a", D:"#0a84ff", E:"#30d158", S:"#ff375f", M:"#bf5af2"};
 function gsoTick(d){
   const m = (d && d.gsel) || "";
   if (m === GSO.m) return; GSO.m = m; if (!m) return;
-  const el = $("gsel"), L2 = x => x === "S" ? "S+" : x, n = GSO_N[m] || [m, ""];
-  if (!el.dataset.b) { el.dataset.b = 1; el.querySelector(".gsr").innerHTML = "PRDESM".split("").map(x => '<i data-m="' + x + '">' + L2(x) + '</i>').join(""); }
+  const el = $("gsel");
   el.style.setProperty("--gc", GSO_C[m] || "#0a84ff");
   el.style.transform = "translateX(-50%) translateY(-" + Math.round(VH() * .12) + "px) scale(" + kf() + ")";
-  el.querySelector(".gsc b").textContent = L2(m);
-  el.querySelector(".gsn").innerHTML = "<b>" + n[0] + "</b><small>" + n[1] + "</small>";
-  el.querySelectorAll(".gsr i").forEach(i => i.classList.toggle("on", i.dataset.m === m));
-  el.classList.add("on"); clearTimeout(GSO.h); GSO.h = setTimeout(() => el.classList.remove("on"), 2200);
+  el.querySelector("b").textContent = m === "S" ? "S+" : m;
+  el.classList.add("on"); clearTimeout(GSO.h); GSO.h = setTimeout(() => el.classList.remove("on"), 1600);
 }
 function lampTick(d){
   const now = performance.now();

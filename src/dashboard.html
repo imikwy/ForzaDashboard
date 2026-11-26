@@ -575,19 +575,7 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .whi.wapp svg{width:20px;height:20px}
 .whr .plus{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--surface3);color:var(--accent);font-size:22px;font-weight:500;flex:none}
 /* Wählhebel-Anzeige der eigenen Automatik: kommt nur kurz, wenn eine Fahrstufe eingelegt wird */
-#gsel{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:9000;display:flex;align-items:center;gap:13px;padding:7px 20px 7px 7px;border-radius:40px;pointer-events:none;color:#fff;
-  background:linear-gradient(160deg,rgba(66,70,82,.82),rgba(22,24,30,.88));-webkit-backdrop-filter:blur(26px) saturate(1.6);backdrop-filter:blur(26px) saturate(1.6);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 1px 0 rgba(255,255,255,.24),0 14px 40px rgba(0,0,0,.4);
-  opacity:0;transform:translate(-50%,-14px) scale(.94);transition:opacity .35s ease,transform .45s cubic-bezier(.2,.9,.25,1.15)}
-#gsel.on{opacity:1;transform:translate(-50%,0) scale(1)}
-#gsel .gsc{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;flex:none;background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--gc) 70%,#fff),var(--gc) 62%);box-shadow:0 0 0 3px rgba(255,255,255,.1),0 4px 18px color-mix(in srgb,var(--gc) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
-#gsel .gsc b{font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1}
-#gsel .gst{display:flex;flex-direction:column;gap:5px;min-width:0}
-#gsel .gsn b{font-size:16px;font-weight:700;letter-spacing:-.01em}
-#gsel .gsn small{font-size:12px;color:rgba(255,255,255,.6);margin-left:7px}
-#gsel .gsr{display:flex;gap:3px}
-#gsel .gsr i{font-style:normal;font-size:11.5px;font-weight:750;min-width:22px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;display:grid;place-items:center;color:rgba(255,255,255,.42);transition:background .3s,color .3s}
-#gsel .gsr i.on{background:var(--gc);color:#fff}
+#gsel{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:9000;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;pointer-events:none;  background:rgba(28,30,36,.78);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:inset 0 0 0 1.5px var(--gc),0 8px 24px rgba(0,0,0,.35);  opacity:0;transform:translate(-50%,-8px) scale(.9);transition:opacity .3s ease,transform .4s cubic-bezier(.2,.9,.25,1.15)}#gsel.on{opacity:1;transform:translate(-50%,0) scale(1)}#gsel b{font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--gc);line-height:1}
 .gico[data-ac="off"]{filter:grayscale(.85) brightness(.7)}
 .gico[data-ac="pin"]::after{content:"";position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#30d158;box-shadow:0 0 0 2px rgba(0,0,0,.35)}
 .whdev{display:flex;gap:6px;padding:12px 14px 0}
@@ -2694,7 +2682,7 @@ if (S.voice !== undefined) { if (S.voice && S.voiceMode === "off") S.voiceMode =
 const voiceOn = () => S.voiceMode === "on" || S.voiceMode === "turns";
 // alte Stufen der Untergrund-Erkennung umrechnen
 if (S.lrSens === 1) S.lrSens = 1.4; else if (S.lrSens === 1.5) S.lrSens = 2.2; else if (S.lrSens === 0.7) S.lrSens = 0.8;
-function saveSettings(){ try { localStorage.setItem("fd.settings", JSON.stringify(S)); } catch (e) {} }
+function saveSettings(){ try { localStorage.setItem("fd.settings", JSON.stringify(S)); } catch (e) {} try { gsSync(); } catch (e) {} }
 // neue Tank-Kachel einmalig einschalten
 if (!S.fuelSeen) { S.w.fuel = true; S.fuelSeen = 1; saveSettings(); }
 // neue Kachel PC-Leistung einmalig einschalten
@@ -4887,7 +4875,9 @@ const PAD_ACT = {
   blinkR:["Blinker rechts", () => blPress("r")],
   hazard:["Warnblinker", () => blSet(BL.m === "h" ? "" : "h")],
   pbrake:["Handbremse (halten = anziehen, antippen = lösen)", () => pbPress()],
-  gsCyc:["Fahrmodus durchschalten (D → S+ → E → M)", () => gselSet({D:"S", S:"E", E:"M"}[GS.mode] || "D")],
+  gsCyc:["Fahrmodus durchschalten (E → D → S+)", () => gselSet({E:"D", D:"S", S:"E"}[GS.mode] || "D")],
+  wipUp:["Schaltwippe hoch", () => {}],   // wertet das Programm direkt beim Lenkrad-Lesen aus (ohne Verzögerung)
+  wipDn:["Schaltwippe runter", () => {}],
 };
 // Belegung: einfach drücken, doppelt drücken (2× schnell) oder Kombination (eine Taste halten + andere drücken)
 // S.binds[aktion] = {dev, name, btn, how:"1"|"2"|"+", mod:<gehaltene Taste bei Kombi>}
@@ -4924,7 +4914,7 @@ const padBtn = (b, dev) => b >= 2000 ? kbName(b - 2000) : b > 1000 ? "Steuerkreu
   : dev && dev.startsWith("045E:") && PAD_XBOX[b - 1] ? PAD_XBOX[b - 1] : dev && dev.startsWith("054C:") && PAD_PS[b - 1] ? PAD_PS[b - 1] : "Taste " + b;
 const padName = b => !b ? "–" : (b.name || "Controller") + " · " + (b.how === "+" ? padBtn(b.mod, b.dev) + " + " + padBtn(b.btn, b.dev) : padBtn(b.btn, b.dev) + (b.how === "2" ? " · 2×" : ""));
 const padHow = b => (b && b.how) || "1";
-const padActive = a => !(!S.blinkOn && /^(blink|hazard)/.test(a)) && !(!S.gsOn && /^gs/.test(a));
+const padActive = a => !(!S.blinkOn && /^(blink|hazard)/.test(a)) && !(!S.gsOn && /^gs/.test(a)) && !(/^wip/.test(a) && !(S.gsOn && S.gsBtn === "vj"));
 const padFire = a => {
   const b = S.binds && S.binds[a];
   if (!(b && b.tab) && !PAD_ACT[a]) return;
@@ -4992,12 +4982,13 @@ const WH_GROUPS = [
   ["Navigation", "#30d158", ["home", "voice"]],
   ["Blinker", "#ff9f0a", ["blinkL", "blinkR", "hazard"]],
   ["Auto", "#30d158", ["pbrake"]],
-  ["Wählhebel", "#0a84ff", ["gsCyc"]],
+  ["Wählhebel", "#0a84ff", ["gsCyc", "wipUp", "wipDn"]],
 ];
 const WH_ICO = {playpause:'<path d="M7 5v14l11-7z"/>', next:'<path d="M6 5v14l9-7zM18 5v14"/>', prev:'<path d="M18 5v14l-9-7zM6 5v14"/>', volup:'<path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>', voldown:'<path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7"/>',
   perf:'<path d="M4.5 17a8.5 8.5 0 1 1 15 0"/><path d="m12 13 4-4"/>', map:'<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>', overlay:'<rect x="3" y="5" width="18" height="13" rx="2.5"/><rect x="12" y="11" width="6" height="4" rx="1"/>',
   pbrake:'<circle cx="12" cy="12" r="8.5"/><path d="M10 16.5v-9h2.8a2.6 2.6 0 0 1 0 5.2H10"/>', home:'<path d="M3 11 12 4l9 7M5.5 9.5V20h13V9.5"/>', voice:'<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/>',
   gsCyc:'<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+  wipUp:'<path d="m6 15 6-6 6 6"/>', wipDn:'<path d="m6 9 6 6 6-6"/>',
   lights:'<path d="M12.5 6c-4.5 0-7 2.7-7 6s2.5 6 7 6c.8 0 1.5-.6 1.5-1.4V7.4c0-.8-.7-1.4-1.5-1.4zM16.5 8.5 21 10M16.5 12 21 13.5M16.5 15.5 21 17"/>', blinkL:'<path d="M14 6l-6 6 6 6"/>', blinkR:'<path d="M10 6l6 6-6 6"/>', hazard:'<path d="M12 4 21 19H3z"/>'};
 // Belegung kurz: „Taste 5“ + „2×“ bzw. „Taste 3 + Taste 5“
 const padShort = b => !b ? '<u>Nicht belegt</u>' : (b.dev === "KBD" ? '<u class="pdev">⌨</u>' : '') + (b.how === "+" ? '<em>' + padBtn(b.mod, b.dev).replace("Taste ", "") + '</em>+<em>' + padBtn(b.btn, b.dev).replace("Taste ", "") + '</em>' : '<em>' + padBtn(b.btn, b.dev).replace("Taste ", "") + '</em>' + (b.how === "2" ? '<u>2×</u>' : ''));
@@ -5073,13 +5064,19 @@ const GS = {mode:"", t:0, hide:0, st:null, hint:"", poll:0};
 const GS_NAME = {P:"Parken", R:"Rückwärts", D:"Drive", E:"Eco", S:"Sport+", M:"Manuell"};
 const GS_SUB = {P:"Handbremse angezogen", R:"Rückwärtsgang", D:"Automatik", E:"früh schalten, sparsam", S:"spät schalten, hält den Gang", M:"du schaltest selbst"};
 const GS_COL = {P:"#ff453a", R:"#ff9f0a", D:"#0a84ff", E:"#30d158", S:"#ff375f", M:"#bf5af2"};
-const GS_KEYS = {pad:[0, 0, "Controller RB / LB"], eq:[0x12, 0x10, "Tastatur E / Q"], rf:[0x13, 0x21, "R / F"]};
+// Schalttasten: Controller B/X oder RB/LB (unsichtbarer Xbox-Controller) oder vJoy (im Lenkrad-Profil, ganz ohne Ruck)
+const GS_BTN = {bx:[0x2000, 0x4000, "B / X"], rl:[0x0200, 0x0100, "RB / LB"], vj:[0, 0, "vJoy"]};
 const gsL = m => m === "S" ? "S+" : m;
 function gsIco(t){ return '<text x="12" y="16.3" text-anchor="middle" font-size="' + (t.length > 1 ? 10.5 : 13) + '" font-weight="800" fill="#fff" stroke="none" font-family="-apple-system,Segoe UI,system-ui,sans-serif">' + t + '</text>'; }
 function gsPost(b){
   return fetch("/schaltung", {method:"POST", body:JSON.stringify(b)}).then(r => r.ok ? r.json() : null).then(v => { if (v) GS.st = v; return v; }).catch(() => null);
 }
-function gsCfg(){ const id = GS_KEYS[S.gsKeys] ? S.gsKeys : "pad", k = GS_KEYS[id]; return id === "pad" ? {an:!!S.gsOn, via:"pad"} : {an:!!S.gsOn, via:"key", up:k[0], dn:k[1]}; }
+function gsCfg(){
+  const k = GS_BTN[S.gsBtn] ? S.gsBtn : "bx", p = GS_BTN[k], bd = a => { const b = (S.binds || {})[a]; return b && (b.how || "1") === "1" && b.dev !== "KBD" ? {dev:b.dev, btn:b.btn} : {}; };
+  return Object.assign(k === "vj" ? {an:!!S.gsOn, via:"vjoy"} : {an:!!S.gsOn, via:"pad", pup:p[0], pdn:p[1]}, {wup:bd("wipUp"), wdn:bd("wipDn")});
+}
+// Belegung geändert (z. B. Wippe neu gelernt) -> ans Programm schicken
+function gsSync(){ if (!window.FD_EXE) return; const c = JSON.stringify(gsCfg()); if (c !== GS.sent) { GS.sent = c; gsPost(JSON.parse(c)); } }
 if (window.FD_EXE) gsPost(gsCfg());
 async function gselSet(m){
   if (!window.FD_EXE) { toast("Geht nur im ForzaDashboard-Programm am PC"); return; }
@@ -5094,20 +5091,14 @@ async function gselSet(m){
   if (v && v.err) { toast(v.err); return; }
   if (v && v.ok) { GS.mode = v.mode; gsShow(v.mode); }
 }
-// Anzeige: Glas-Kapsel oben in der Mitte – Kreis mit der Fahrstufe, daneben P R D E S+ M; nach 2 s weg
+// Anzeige: kleiner Glas-Kreis oben in der Mitte, nur die eingelegte Fahrstufe; nach 1,6 s weg
 function gsShow(m){
   let el = $("gsel");
-  if (!el) {
-    el = document.createElement("div"); el.id = "gsel";
-    el.innerHTML = '<div class="gsc"><b></b></div><div class="gst"><span class="gsn"></span><span class="gsr">' + "PRDESM".split("").map(x => '<i data-m="' + x + '">' + gsL(x) + '</i>').join("") + '</span></div>';
-    document.body.appendChild(el);
-  }
+  if (!el) { el = document.createElement("div"); el.id = "gsel"; el.innerHTML = "<b></b>"; document.body.appendChild(el); }
   el.style.setProperty("--gc", GS_COL[m] || "#0a84ff");
-  el.querySelector(".gsc b").textContent = gsL(m);
-  el.querySelector(".gsn").innerHTML = '<b>' + (GS_NAME[m] || m) + '</b><small>' + (GS_SUB[m] || "") + '</small>';
-  el.querySelectorAll(".gsr i").forEach(i => i.classList.toggle("on", i.dataset.m === m));
+  el.querySelector("b").textContent = gsL(m);
   el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
-  clearTimeout(GS.hide); GS.hide = setTimeout(() => el.classList.remove("on"), 2200);
+  clearTimeout(GS.hide); GS.hide = setTimeout(() => el.classList.remove("on"), 1600);
 }
 function gsTick(d){
   const m = d.gsel || "";
@@ -5120,27 +5111,23 @@ function gsTick(d){
   const now = performance.now();
   if (m && now - GS.poll > 3000) { GS.poll = now; fetch("/schaltung", {cache:"no-store"}).then(r => r.json()).then(v => { GS.st = v; if (v.hint && v.hint !== GS.hint) toast(v.hint); GS.hint = v.hint || ""; }).catch(() => {}); }
 }
+// Einstellungen der eigenen Automatik: nur An/Aus und auf welchen Knöpfen geschaltet wird (der Durchschalt-Knopf folgt darunter)
 function gsSettings(grp){
+  const mk = (txt, fn, on) => { const b = document.createElement("button"); b.textContent = txt; if (on) b.className = "on"; b.onclick = fn; return b; };
   const sw = document.createElement("span"); sw.className = "sw" + (S.gsOn ? " on" : "");
-  sw.onclick = () => { S.gsOn = !S.gsOn; saveSettings(); gsPost(gsCfg()).then(v => { if (S.gsOn && v) { GS.mode = ""; } }); if (!S.gsOn && PB.on && GS.mode === "P") pbSet(false); toast(S.gsOn ? "Eigene Automatik an – Fahrstufe D" : "Eigene Automatik aus"); buildWheelSettings(); };
-  grp.appendChild(row("Eigene Automatik", "Schaltet für dich – schnell und sanft, bei der Drehzahl, bei der ein echtes Auto schalten würde. Lernt die Gänge jedes Autos beim Fahren.", sw));
-  if (!S.gsOn) {
-    const x = document.createElement("div"); x.className = "info"; x.style.padding = "4px 16px 12px";
-    x.textContent = "Dafür im Spiel unter Einstellungen › Fahrhilfen das Getriebe auf „Manuell“ stellen. Dann Wählhebel-Tasten (P, R, D, E, S+, M) aufs Lenkrad legen.";
-    grp.appendChild(x); return;
+  sw.onclick = () => { S.gsOn = !S.gsOn; saveSettings(); gsPost(gsCfg()).then(v => { if (S.gsOn && v) GS.mode = ""; buildWheelSettings(); }); if (!S.gsOn && PB.on && GS.mode === "P") pbSet(false); toast(S.gsOn ? "Eigene Automatik an" : "Eigene Automatik aus"); };
+  grp.appendChild(row("Eigene Automatik", "In Forza das Getriebe auf „Manuell“ stellen", sw));
+  if (!S.gsOn) return;
+  const cur = GS_BTN[S.gsBtn] ? S.gsBtn : "bx", seg = document.createElement("div"); seg.className = "seg";
+  for (const k of Object.keys(GS_BTN)) seg.appendChild(mk(GS_BTN[k][2], () => { S.gsBtn = k; saveSettings(); gsPost(gsCfg()).then(() => buildWheelSettings()); }, cur === k));
+  grp.appendChild(row("Schalttasten", cur === "vj" ? "In Forza Hoch/Runter auf vJoy legen – deine Wippen unten als „Schaltwippe“ belegen" : "In Forza beim Controller so belegen (hoch / runter)", seg));
+  if (cur === "vj") {
+    const pr = document.createElement("div"); pr.className = "gsprobe";
+    for (const [k, t] of [["up", "Hoch"], ["dn", "Runter"]]) pr.appendChild(mk(t + " belegen", () => { fetch("/schaltung/probe", {method:"POST", body:JSON.stringify({k})}).catch(() => {}); toast("In 3 s wird „" + t + "“ gedrückt – jetzt in Forza aufs Belegen-Feld"); }));
+    grp.appendChild(pr);
   }
-  const seg = document.createElement("div"); seg.className = "seg";
-  for (const m of "DSEM") { const b = document.createElement("button"); b.textContent = gsL(m); b.className = GS.mode === m ? "on" : ""; b.onclick = () => gselSet(m).then(() => buildWheelSettings()); seg.appendChild(b); }
-  grp.appendChild(row("Fahrmodus", "D = normal · S+ = spät hoch, hält den Gang in Kurven · E = früh hoch, sparsam · M = selbst schalten (geht auch von allein, sobald du selbst schaltest). Am Lenkrad: ein Knopf schaltet durch. Rückwärts: im Stand die Bremse 1 s halten (nochmal = wieder vorwärts). P: Handbremse.", seg));
-  const ks = document.createElement("div"); ks.className = "seg";
-  for (const k of Object.keys(GS_KEYS)) { const b = document.createElement("button"); b.textContent = GS_KEYS[k][2]; b.className = (GS_KEYS[S.gsKeys] ? S.gsKeys : "pad") === k ? "on" : ""; b.onclick = () => { S.gsKeys = k; saveSettings(); gsPost(gsCfg()); buildWheelSettings(); }; ks.appendChild(b); }
-  grp.appendChild(row("Schalten über", "Controller (empfohlen): ein unsichtbarer Xbox-Controller drückt RB = hoch, LB = runter (in Forza beim Controller so belegen) – Forza bleibt beim Lenkrad, kein Ruck. Tastatur nur als Notlösung: Forza springt dabei kurz aufs Keyboard um.", ks));
-  const st = GS.st || {}, x = document.createElement("div"); x.className = "info"; x.style.padding = "4px 16px 12px";
-  x.textContent = "Im Spiel Getriebe auf „Manuell“ stellen (nicht „mit Kupplung“). Geschaltet wird nur, wenn Forza im Vordergrund ist."
-    + (st.pad_err ? " ⚠ Virtueller Controller geht nicht – ViGEmBus-Treiber installiert?" : "")
-    + (st.geschaltet ? " Bisher " + st.geschaltet + "× geschaltet" + (st.gelernt ? ", " + st.gelernt + " Gänge dieses Autos gelernt." : ".") : "")
-    + (st.hint ? " ⚠ " + st.hint : "");
-  grp.appendChild(x);
+  const st = GS.st || {}, warn = st.err || st.hint || "";
+  if (warn) { const w = document.createElement("div"); w.className = "gswarn"; w.textContent = "⚠ " + warn; grp.appendChild(w); }
 }
 
 // ---- Blinker: links/rechts per Taste, beide zusammen = Warnblinker; schaltet sich nach dem Abbiegen selbst aus ----

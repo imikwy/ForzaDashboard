@@ -111,6 +111,7 @@ unsafe fn handle(lp: windows::Win32::Foundation::LPARAM) {
     drop(prev);
     // „held“: alle gerade gedrückten Tasten (für Kombinationen wie „Taste A halten + B“); „padup“: losgelassen
     for b in pressed.iter().filter(|b| !old.contains(b)) {
+        crate::schaltung::wippe_btn(&id, *b);   // Schaltwippe sofort an vJoy (eigene Automatik)
         if let Some(s) = STATE.get() { s.emit(Some("pad"), json!({"dev": id, "name": name, "btn": b, "held": pressed}).to_string()); }
     }
     for b in old.iter().filter(|b| !pressed.contains(b)) {

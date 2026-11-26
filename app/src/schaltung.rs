@@ -1,11 +1,16 @@
-// Eigene Automatik: Forza steht auf "Manuell", das Programm schaltet für dich – über einen unsichtbaren Xbox-Controller
-// (ViGEmBus, RB = hoch, LB = runter), damit Forza beim Lenkrad bleibt. Notlösung ohne Treiber: Tastatur (E/Q).
+// Eigene Automatik: Forza steht auf "Manuell", das Programm schaltet für dich.
+// Schaltwege (bester zuerst):
+//  - vJoy: virtueller Joystick, in Forza im SELBEN eigenen Lenkrad-Profil wie das echte Lenkrad belegt
+//    (Knopf 1 = hoch, 2 = runter, 3 = Handbremse) – Forza wechselt dabei kein Eingabegerät, kein Ruck am Lenkrad.
+//  - Controller: unsichtbarer Xbox-Controller (ViGEmBus, Standard B = hoch, X = runter) – Forza springt kurz um.
+//  - Tastatur (E/Q): Notlösung, Forza springt aufs Keyboard um.
 // Fahrstufen wie im Automatik-Wagen: P (Handbremse, macht das Dashboard), R, D, E (Eco), S (S+), M (selbst schalten).
-// Schaltpunkte wie im echten Auto: wenig Gas = früh hoch (D ≈ 2.500/min), Vollgas = spät hoch, Kickdown, beim Bremsen
-// sanft zurück. Die Übersetzungen lernt es pro Auto aus Drehzahl/Tempo, damit nach dem Schalten die Drehzahl passt
-// und nichts hin- und herpendelt. Schaltet man selbst (Wippen/Tasten), geht es von allein auf M.
+// Schaltpunkte wie im echten Auto: wenig Gas = früh hoch, Vollgas = spät hoch, Kickdown, beim Bremsen sanft zurück.
+// Die Übersetzungen lernt es pro Auto aus Drehzahl/Tempo, damit nach dem Schalten die Drehzahl passt und nichts
+// hin- und herpendelt. Schaltet man selbst (Wippen/Tasten), geht es von allein auf M.
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, AtomicU16, Ordering::Relaxed};
 use std::sync::Mutex;
 use windows::Win32::UI::Input::KeyboardAndMouse::{SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_SCANCODE, VIRTUAL_KEY};
 
@@ -35,7 +40,9 @@ struct St {
     prev: char,
     hold_t: u64,
     hold_done: bool,
-    pad: bool,
+    via: char,      // 'v' = vJoy, 'p' = Controller, 'k' = Tastatur
+    pup: u16,       // Controller-Knopf hoch
+    pdn: u16,       // Controller-Knopf runter
 }
 
 static ST: Mutex<Option<St>> = Mutex::new(None);
@@ -44,12 +51,13 @@ fn with<R>(f: impl FnOnce(&mut St) -> R) -> R {
     let mut g = ST.lock().unwrap();
     let s = g.get_or_insert_with(|| St {
         an: false, mode: 'D', up: 0x12, dn: 0x10, car: 0, ratio: HashMap::new(), top: HashMap::new(), peak: HashMap::new(),
-        gear: 255, seen: 0, pend: None, last_up: 0, last_dn: 0, ok_shifts: 0, miss: 0, hint: String::new(), hint_t: 0, spd: 0.0, thr0: 0.0, kick_t: 0, prev: 'D', hold_t: 0, hold_done: false, pad: true,
+        gear: 255, seen: 0, pend: None, last_up: 0, last_dn: 0, ok_shifts: 0, miss: 0, hint: String::new(), hint_t: 0, spd: 0.0, thr0: 0.0, kick_t: 0, prev: 'D', hold_t: 0, hold_done: false,
+        via: 'p', pup: 0x2000, pdn: 0x4000,
     });
     f(s)
 }
 
-// nur ins Spiel tippen – nicht ins Dashboard, Discord oder den Browser
+// nur schalten, wenn das Spiel vorne ist – nicht ins Dashboard, Discord oder den Browser
 fn spiel_vorne() -> bool {
     use windows::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowTextW};
     unsafe {
@@ -61,22 +69,75 @@ fn spiel_vorne() -> bool {
     }
 }
 
+// ---- Tastatur (Notlösung) ----
 fn key(scan: u16, down: bool) {
     let flags = if down { KEYEVENTF_SCANCODE } else { KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP };
     let inp = [INPUT { r#type: INPUT_KEYBOARD, Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: VIRTUAL_KEY(0), wScan: scan, dwFlags: flags, time: 0, dwExtraInfo: 0 } } }];
     unsafe { SendInput(&inp, std::mem::size_of::<INPUT>() as i32); }
 }
-// kurzer Tipp (35 ms) – lang genug, dass Forza ihn sicher sieht, kurz genug für schnelle Schaltvorgänge
-fn tap(scan: u16) {
-    std::thread::spawn(move || { key(scan, true); std::thread::sleep(std::time::Duration::from_millis(35)); key(scan, false); });
-}
 
+// ---- vJoy (virtueller DirectInput-Joystick, Gerät 1) ----
+// vJoyInterface.dll wird zur Laufzeit geladen – ohne installiertes vJoy läuft alles andere normal weiter.
+struct Vj {
+    enabled: unsafe extern "C" fn() -> i32,
+    status: unsafe extern "C" fn(u32) -> i32,
+    acquire: unsafe extern "C" fn(u32) -> i32,
+    relinquish: unsafe extern "C" fn(u32),
+    reset: unsafe extern "C" fn(u32) -> i32,
+    set_btn: unsafe extern "C" fn(i32, u32, u8) -> i32,
+}
+static VJ: std::sync::OnceLock<Vj> = std::sync::OnceLock::new();
+static VJ_ON: AtomicBool = AtomicBool::new(false);
+static DEV_ERR: Mutex<String> = Mutex::new(String::new());
+fn vj_lib() -> Option<&'static Vj> {
+    // nicht dauerhaft „fehlt“ merken: wird vJoy erst nach dem Start installiert, klappt es beim nächsten Versuch
+    if let Some(v) = VJ.get() { return Some(v); }
+    let v = (|| -> Option<Vj> { unsafe {
+        use windows::core::{s, w};
+        use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryW};
+        for p in [w!("vJoyInterface.dll"), w!("C:\\Program Files\\vJoy\\x64\\vJoyInterface.dll")] {
+            let Ok(h) = LoadLibraryW(p) else { continue };
+            let (Some(a), Some(b), Some(c), Some(d), Some(e), Some(f)) = (
+                GetProcAddress(h, s!("vJoyEnabled")), GetProcAddress(h, s!("GetVJDStatus")), GetProcAddress(h, s!("AcquireVJD")),
+                GetProcAddress(h, s!("RelinquishVJD")), GetProcAddress(h, s!("ResetVJD")), GetProcAddress(h, s!("SetBtn")),
+            ) else { continue };
+            return Some(Vj {
+                enabled: std::mem::transmute(a), status: std::mem::transmute(b), acquire: std::mem::transmute(c),
+                relinquish: std::mem::transmute(d), reset: std::mem::transmute(e), set_btn: std::mem::transmute(f),
+            });
+        }
+        None
+    } })();
+    let v = v?;
+    let _ = VJ.set(v);
+    VJ.get()
+}
+fn dev_err(t: &str) { *DEV_ERR.lock().unwrap() = t.to_string(); }
+fn vj_on() -> bool {
+    if VJ_ON.load(Relaxed) { return true; }
+    let Some(v) = vj_lib() else { dev_err("vJoy ist nicht installiert"); return false };
+    unsafe {
+        if (v.enabled)() == 0 { dev_err("vJoy ist installiert, aber ausgeschaltet (vJoy Config: Enable vJoy)"); return false; }
+        match (v.status)(1) {
+            0 => {}
+            1 => { if (v.acquire)(1) == 0 { dev_err("vJoy-Gerät 1 ließ sich nicht übernehmen"); return false; } }
+            2 => { dev_err("vJoy-Gerät 1 wird von einem anderen Programm benutzt"); return false; }
+            _ => { dev_err("vJoy-Gerät 1 fehlt (in „Configure vJoy“ Gerät 1 mit mindestens 3 Knöpfen anlegen)"); return false; }
+        }
+        (v.reset)(1);
+    }
+    VJ_ON.store(true, Relaxed);
+    DEV_ERR.lock().unwrap().clear();
+    crate::util::log("Schaltung: vJoy-Gerät 1 übernommen");
+    true
+}
+fn vj_off() {
+    if VJ_ON.swap(false, Relaxed) { if let Some(v) = vj_lib() { unsafe { (v.reset)(1); (v.relinquish)(1); } } crate::util::log("Schaltung: vJoy-Gerät 1 freigegeben"); }
+}
+fn vj_btn(n: u8, down: bool) { if vj_on() { if let Some(v) = vj_lib() { unsafe { (v.set_btn)(down as i32, 1, n); } } } }
 
 // ---- unsichtbarer Xbox-Controller (ViGEmBus) ----
-// Tastatur-Eingaben lassen Forza kurz vom Lenkrad auf die Tastatur umschalten (Ruck, Lenkrad neu ausgerichtet).
-// Ein Controller-Knopf tut das nicht in gleicher Weise; der Controller wird nur angesteckt, solange die Automatik an ist.
 static PAD: Mutex<Option<vigem_client::Xbox360Wired<vigem_client::Client>>> = Mutex::new(None);
-static PAD_ERR: Mutex<String> = Mutex::new(String::new());
 fn pad_on() -> bool {
     let mut g = PAD.lock().unwrap();
     if g.is_some() { return true; }
@@ -89,41 +150,91 @@ fn pad_on() -> bool {
         Ok(t)
     })();
     match r {
-        Ok(t) => { *g = Some(t); PAD_ERR.lock().unwrap().clear(); crate::util::log("Schaltung: virtueller Controller angesteckt"); true }
-        Err(e) => { *PAD_ERR.lock().unwrap() = format!("{e:?}"); crate::util::log(format!("Schaltung: virtueller Controller ging nicht ({e:?})")); false }
+        Ok(t) => { *g = Some(t); DEV_ERR.lock().unwrap().clear(); crate::util::log("Schaltung: virtueller Controller angesteckt"); true }
+        Err(e) => { dev_err("Virtueller Controller geht nicht – ViGEmBus-Treiber installiert?"); crate::util::log(format!("Schaltung: virtueller Controller ging nicht ({e:?})")); false }
     }
 }
 fn pad_off() { if PAD.lock().unwrap().take().is_some() { crate::util::log("Schaltung: virtueller Controller abgesteckt"); } }
+// gehaltene Controller-Knöpfe (Handbremse = A) – werden bei jedem Schalt-Tipp mitgeschickt
+static HELD: AtomicU16 = AtomicU16::new(0);
 fn pad_set(btn: u16) {
     if let Some(t) = PAD.lock().unwrap().as_mut() {
-        let raw = btn | HELD.load(std::sync::atomic::Ordering::Relaxed);
+        let raw = btn | HELD.load(Relaxed);
         let _ = t.update(&vigem_client::XGamepad { buttons: vigem_client::XButtons { raw }, ..Default::default() });
     }
 }
-// gehaltene Knöpfe (Handbremse = A) – werden bei jedem Schalt-Tipp mitgeschickt
-static HELD: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(0);
-static HB_PAD: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-// Handbremse übers Dashboard (P): läuft die Automatik über den Controller, dort A halten statt der Leertaste (kein Gerätewechsel).
-// Gibt true zurück, wenn der Controller es übernommen hat.
+
+// ---- ein Knopf drücken/loslassen, je nach Schaltweg ----
+#[derive(Clone, Copy)]
+enum Btn { Up, Dn, Hb }
+fn press(via: char, b: Btn, down: bool) {
+    let (pup, pdn, kup, kdn) = with(|s| (s.pup, s.pdn, s.up, s.dn));
+    match via {
+        'v' => vj_btn(match b { Btn::Up => 1, Btn::Dn => 2, Btn::Hb => 3 }, down),
+        'p' => {
+            if !pad_on() { return; }
+            match b {
+                Btn::Hb => { if down { HELD.fetch_or(0x1000, Relaxed); } else { HELD.fetch_and(!0x1000, Relaxed); } pad_set(0); }
+                _ => pad_set(if down { if matches!(b, Btn::Up) { pup } else { pdn } } else { 0 }),
+            }
+        }
+        _ => key(match b { Btn::Up => kup, Btn::Dn => kdn, Btn::Hb => 0x39 }, down),
+    }
+}
+// kurz drücken: 40 ms reichen, Forza liest die Geräte jedes Bild
+fn tap(via: char, b: Btn, ms: u64) {
+    std::thread::spawn(move || { press(via, b, true); std::thread::sleep(std::time::Duration::from_millis(ms)); press(via, b, false); });
+}
+
+// Handbremse übers Dashboard (P): läuft die Automatik über vJoy/Controller, dort halten statt der Leertaste.
+// Gibt true zurück, wenn es übernommen wurde (sonst drückt media.rs die Leertaste).
+static HB_VIA: Mutex<Option<char>> = Mutex::new(None);
 pub fn hb_pad(down: bool) -> bool {
-    use std::sync::atomic::Ordering::Relaxed;
     if down {
-        let use_pad = with(|s| s.an && s.pad) && pad_on();
-        HB_PAD.store(use_pad, Relaxed);
-        if use_pad { HELD.fetch_or(0x1000, Relaxed); pad_set(0); }
-        use_pad
-    } else if HB_PAD.swap(false, Relaxed) {
-        HELD.fetch_and(!0x1000, Relaxed); pad_set(0); true
+        let via = with(|s| if s.an && s.via != 'k' { Some(s.via) } else { None });
+        let Some(via) = via else { return false };
+        let ok = if via == 'v' { vj_on() } else { pad_on() };
+        if !ok { return false; }
+        press(via, Btn::Hb, true);
+        *HB_VIA.lock().unwrap() = Some(via);
+        true
+    } else if let Some(via) = HB_VIA.lock().unwrap().take() {
+        press(via, Btn::Hb, false); true
     } else { false }
 }
-// Knopf 40 ms drücken – Forza liest den Controller pro Bild, das reicht sicher für einen Schaltvorgang
-fn pad_tap(btn: u16) {
-    std::thread::spawn(move || {
-        if !pad_on() { return; }
-        pad_set(btn);
-        std::thread::sleep(std::time::Duration::from_millis(40));
-        pad_set(0);
+
+// Probe-Druck zum Belegen in Forza: nach 3 s (Zeit, um in Forza aufs Belegen-Feld zu gehen) 0,4 s drücken – auch wenn Forza nicht vorne ist
+pub fn probe(which: &str) -> Value {
+    let b = match which { "up" => Btn::Up, "dn" => Btn::Dn, "hb" => Btn::Hb, _ => return json!({"ok": false}) };
+    let via = with(|s| s.via);
+    std::thread::spawn(move || { std::thread::sleep(std::time::Duration::from_millis(3000)); press(via, b, true); std::thread::sleep(std::time::Duration::from_millis(400)); press(via, b, false); });
+    json!({"ok": true})
+}
+
+
+// Belegung der Wippen (vom Dashboard geschickt): direkt beim Lesen des Lenkrads ausgewertet – kein Umweg übers Fenster
+static WIP: Mutex<[Option<(String, u16)>; 2]> = Mutex::new([None, None]);
+pub fn wippe_btn(dev: &str, btn: u16) -> bool {
+    let hit = { let w = WIP.lock().unwrap(); w.iter().position(|x| x.as_ref().is_some_and(|(d, b)| d == dev && *b == btn)) };
+    let Some(i) = hit else { return false };
+    if !with(|s| s.an && s.via == 'v') { return false; }
+    wippe(if i == 0 { 1 } else { -1 });
+    true
+}
+// Schaltwippe am Lenkrad (über das Dashboard belegt): Forza hört beim Schalten auf vJoy, also reicht das Programm
+// die Wippe dorthin durch. Wer selbst schaltet, ist im Modus M (wie bei einer echten Automatik mit Wippen).
+pub fn wippe(dir: i64) -> Value {
+    let now = clock();
+    let via = with(|s| {
+        if s.an && matches!(s.mode, 'D' | 'E' | 'S') { s.prev = s.mode; s.mode = 'M'; }
+        s.pend = Some(Pend { dir: if dir > 0 { 1 } else { -1 }, t: now, from: s.gear });
+        s.via
     });
+    #[cfg(not(test))]
+    tap(via, if dir > 0 { Btn::Up } else { Btn::Dn }, 40);
+    #[cfg(test)]
+    let _ = via;
+    json!({"ok": true})
 }
 #[cfg(test)]
 static SIM: Mutex<Vec<i8>> = Mutex::new(Vec::new());
@@ -132,8 +243,9 @@ fn shift(s: &mut St, dir: i8, now: u64) -> bool {
     #[cfg(not(test))]
     {
         if !spiel_vorne() { return false; }
-        // Controller: RB = hoch, LB = runter
-        if s.pad { pad_tap(if dir > 0 { 0x0200 } else { 0x0100 }); } else { tap(if dir > 0 { s.up } else { s.dn }); }
+        let via = s.via;
+        // erst nach dem Lock-Ende drücken (press liest selbst die Einstellungen)
+        std::thread::spawn(move || tap(via, if dir > 0 { Btn::Up } else { Btn::Dn }, 40));
     }
     #[cfg(test)]
     SIM.lock().unwrap().push(dir);
@@ -170,6 +282,7 @@ pub fn tick(d: &Value) -> Option<String> {
         let fresh_kick = now.saturating_sub(s.kick_t) < 900;
         let br = n("brk") / 255.0;
         let clu = n("clu");
+        let lat = n("ax").abs();   // Querbeschleunigung m/s² (Kurve)
         let slip = d["slip"].as_array().map(|a| a.iter().filter_map(|v| v.as_f64()).fold(0.0, f64::max)).unwrap_or(0.0);
         let span = (mx - idle).max(500.0);
         let r = ((rpm - idle) / span).clamp(0.0, 1.2);
@@ -206,7 +319,7 @@ pub fn tick(d: &Value) -> Option<String> {
                 if dir > 0 && s.ok_shifts > 0 && from >= 3 { s.top.insert(car, from); }   // oberster Gang erreicht
                 else {
                     s.miss += 1;
-                    if s.miss >= 3 && s.ok_shifts == 0 { note(s, if s.pad { "Schaltet nicht – im Spiel Getriebe auf „Manuell“ stellen; am Controller muss Hochschalten auf RB und Runterschalten auf LB liegen" } else { "Schaltet nicht – im Spiel Getriebe auf „Manuell“ stellen und Hoch/Runter auf E/Q lassen" }, now); }
+                    if s.miss >= 3 && s.ok_shifts == 0 { note(s, match s.via { 'v' => "Schaltet nicht – in Forza Getriebe auf „Manuell“ und im Lenkrad-Profil Hoch/Runter auf die vJoy-Knöpfe legen (Knopf „Belegen“ in den Einstellungen)", 'p' => "Schaltet nicht – in Forza Getriebe auf „Manuell“; am Controller Hoch/Runter auf die gewählten Knöpfe legen", _ => "Schaltet nicht – in Forza Getriebe auf „Manuell“ und Hoch/Runter auf E/Q lassen" }, now); }
                 }
             }
         }
@@ -256,7 +369,8 @@ pub fn tick(d: &Value) -> Option<String> {
                     let hold = (br > 0.1 && !limiter)                                   // beim Bremsen nicht hoch
                         || (m == 'S' && thr < 0.05 && !limiter)                         // S+: Gas weg = Gang halten (Kurve)
                         || (slip > 1.6 && r < 0.93)                                     // durchdrehende Räder: halten
-                        || (since_dn < 1400 && !limiter && r < hi);                     // nach Rückschalten nicht gleich wieder hoch
+                        || (since_dn < 1400 && !limiter && r < hi)                      // nach Rückschalten nicht gleich wieder hoch
+                        || (lat > if m == 'S' { 5.0 } else { 7.0 } && !limiter && r < 0.93);   // in der Kurve Gang halten (wie eine echte Automatik)
                     if !hold && r >= up_at && (limiter || after(gear + 1) > dn + 0.09) { shift(s, 1, now); return label; }
                 }
                 // --- runter ---
@@ -282,16 +396,23 @@ pub fn state() -> Value {
     with(|s| {
         let gears = s.ratio.keys().filter(|(c, _)| *c == s.car).count();
         let hint = if clock().saturating_sub(s.hint_t) < 15000 { s.hint.clone() } else { String::new() };
-        let pad_err = PAD_ERR.lock().unwrap().clone();
-        json!({"ok": true, "an": s.an, "mode": s.mode.to_string(), "via": if s.pad { "pad" } else { "key" }, "pad_err": pad_err, "up": s.up, "dn": s.dn, "gelernt": gears, "geschaltet": s.ok_shifts, "hint": hint})
+        let err = if s.an { DEV_ERR.lock().unwrap().clone() } else { String::new() };
+        let vj = vj_lib().is_some();
+        json!({"ok": true, "an": s.an, "mode": s.mode.to_string(), "via": match s.via { 'v' => "vjoy", 'p' => "pad", _ => "key" }, "err": err, "vjoy": vj, "pup": s.pup, "pdn": s.pdn, "gelernt": gears, "geschaltet": s.ok_shifts, "hint": hint})
     })
 }
 
-// {an, mode, via ("pad" = Controller, "key" = Tastatur), up, dn} – alles optional. R und P nur fast im Stand (wie beim echten Wählhebel).
+// {an, mode, via ("vjoy" | "pad" = Controller | "key" = Tastatur), pup, pdn (Controller-Knöpfe), up, dn (Tasten)} – alles optional. R und P nur fast im Stand (wie beim echten Wählhebel).
 pub fn set(b: &Value) -> Value {
     let r = with(|s| {
         if let Some(a) = b["an"].as_bool() { if a && !s.an { s.mode = 'D'; s.gear = 255; s.miss = 0; } s.an = a; }
-        if let Some(v) = b["via"].as_str() { s.pad = v != "key"; }
+        if let Some(v) = b["via"].as_str() { DEV_ERR.lock().unwrap().clear(); s.via = match v { "vjoy" => 'v', "key" => 'k', _ => 'p' }; }
+        if let Some(u) = b["pup"].as_u64() { if u > 0 && u <= 0xF000 { s.pup = u as u16; } }
+        if let Some(u) = b["pdn"].as_u64() { if u > 0 && u <= 0xF000 { s.pdn = u as u16; } }
+        for (i, k) in ["wup", "wdn"].iter().enumerate() {
+            if b[*k].is_null() { continue; }
+            WIP.lock().unwrap()[i] = b[*k]["dev"].as_str().zip(b[*k]["btn"].as_u64()).map(|(d, n)| (d.chars().take(40).collect(), n as u16));
+        }
         if let Some(u) = b["up"].as_u64() { if u > 0 && u < 0x80 { s.up = u as u16; } }
         if let Some(u) = b["dn"].as_u64() { if u > 0 && u < 0x80 { s.dn = u as u16; } }
         if let Some(m) = b["mode"].as_str().and_then(|m| m.chars().next()) {
@@ -305,11 +426,14 @@ pub fn set(b: &Value) -> Value {
         None
     });
     // Controller nur angesteckt, solange die Automatik über den Controller schaltet (Anstecken dauert etwas – im Hintergrund)
-    let (an, pad) = with(|s| (s.an, s.pad));
+    let (an, via) = with(|s| (s.an, s.via));
     #[cfg(not(test))]
-    { if an && pad { std::thread::spawn(|| { pad_on(); }); } else { pad_off(); } }
+    {
+        if an && via == 'p' { std::thread::spawn(|| { pad_on(); }); } else { pad_off(); }
+        if an && via == 'v' { std::thread::spawn(|| { vj_on(); }); } else { vj_off(); }
+    }
     #[cfg(test)]
-    let _ = (an, pad);
+    let _ = (an, via);
     let mut v = state();
     if let Some(e) = r { v["ok"] = json!(false); v["err"] = json!(e); }
     v
