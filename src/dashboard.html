@@ -2757,8 +2757,16 @@ const CLS_COL = ["#3ec7f3","#f8d23a","#ff8c1a","#ff4b4b","#b84dff","#3d74ff","#3
 const DRIVE = ["Frontantrieb","Heckantrieb","Allrad"];
 function tempColor(c){ if (c < 60) return "#2c6e8f"; if (c < 90) return "#248a3d"; if (c < 105) return "#a88900"; if (c < 120) return "#c46a00"; return "#c4302b"; }
 function angLerp(a, b, t){ let d = b - a; while (d > Math.PI) d -= 2*Math.PI; while (d < -Math.PI) d += 2*Math.PI; return a + d * t; }
+// Größe der Zeichenfläche: getBoundingClientRect zwingt den Browser mitten im Bild zu einem Layout (die Kacheln haben
+// davor gerade Texte geändert). Deshalb höchstens alle 250 ms neu messen – oder sofort, wenn sich die Größe ändert.
+const FIT_RO = window.ResizeObserver ? new ResizeObserver(es => { for (const e of es) { e.target._fitT = 0; if (!e.target.isConnected) { FIT_RO.unobserve(e.target); e.target._fitO = 0; } } }) : null;
+function fitRect(c){
+  const now = performance.now();
+  if (!c._fitR || now - (c._fitT || 0) > 250) { c._fitR = c.getBoundingClientRect(); c._fitT = now; if (FIT_RO && !c._fitO) { c._fitO = 1; FIT_RO.observe(c); } }
+  return c._fitR;
+}
 function fitCanvas(c){
-  const r = c.getBoundingClientRect(); const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const r = fitRect(c); const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
   if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
   const g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); return [g, r.width, r.height];
@@ -11065,6 +11073,8 @@ function edQuickWire(b){
   try { edWire(); } catch (e) {}
 }
 // ---- Mehr → Gelände: Fortschritt der Phase 1 (eigene + alle Spieler) ----
+// nur die Anzahl (Einstellungen): ohne die ganze Karte aller Spieler zu kopieren
+function hgtMergedSize(){ const r = HGT.r; if (!r || !r.size) return HGT.m.size; let n = r.size; for (const k of HGT.m.keys()) if (!r.has(k)) n++; return n; }
 function hgtMerged(){
   const M = new Map(HGT.r || []);
   for (const [k, v] of HGT.m) { const o = M.get(k); M.set(k, o ? [(o[0] * o[1] + v[0] * v[1]) / (o[1] + v[1]), o[1] + v[1]] : v.slice()); }
@@ -11486,7 +11496,7 @@ function buildSettings(){
     rg.appendChild(row("Kartenversion", "Version " + k.version + (k.signiert ? " · geprüft ✓" : "") + " · " + nf0.format(k.objekte) + " Objekte" + (k.erstellt ? " · vom " + new Date(k.erstellt).toLocaleDateString("de-DE") : "") +
       (SESS.aktiv ? " · du bearbeitest gerade (Sitzung " + sessFmt(SESS.aktiv.code) + ")" : " · nur lesen – bearbeitet wird gemeinsam in einer Sitzung"), kb));
   }
-  mg.appendChild(row("Gelände", "Hügel und Täler auf der Karte – gemessen aus den Fahrten aller Spieler (" + nf0.format(hgtMerged().size) + " Felder, " + nf0.format(HGT.m.size) + " von dir). Fortschritt: Bearbeiten → Mehr → Gelände", seg("terrain", [[true,"An"],[false,"Aus"]])));
+  mg.appendChild(row("Gelände", "Hügel und Täler auf der Karte – gemessen aus den Fahrten aller Spieler (" + nf0.format(hgtMergedSize()) + " Felder, " + nf0.format(HGT.m.size) + " von dir). Fortschritt: Bearbeiten → Mehr → Gelände", seg("terrain", [[true,"An"],[false,"Aus"]])));
   mg.appendChild(row("Ausrichtung", "Auch über den Kompass umschaltbar", seg("orient", [["heading","Fahrtrichtung"],["north","Norden"]])));
   mg.appendChild(row("Karten-Bildrate", "Sparsam = weniger Last für die Grafikkarte, falls Forza ruckelt", seg("mapFps", [[60,"Flüssig"],[30,"Sparsam"]])));
   mg.appendChild(row("Pfeil auf der Straße halten", "Gleicht kleine Abweichungen der Kartenausrichtung aus, damit der Pfeil nicht neben der Straße fährt", seg("carSnap", [[true,"An"],[false,"Aus"]])));
@@ -11522,7 +11532,8 @@ function buildSettings(){
   const imb = document.createElement("button"); imb.textContent = "Datei wählen …";
   imb.onclick = () => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".json,application/json"; inp.onchange = () => { if (inp.files[0]) { $("sheet").classList.remove("open"); mapImport(inp.files[0]); } }; inp.click(); };
   rg.appendChild(row("Karte importieren", "Karten-Datei (gelernte-strassen.json, karte-gemeinsam.json) – geht in einer Bearbeiten-Sitzung, nur Neueres wird übernommen. Oder einfach aufs Dashboard ziehen", imb));
-  rg.appendChild(row("Gelernte Straßen", nf0.format(LR.roads.filter(r => !r.s && !r.f).length) + " Straßen · " + nf1.format(LR.roads.filter(r => !r.s && !r.f).reduce((a, r) => a + lrLen(r), 0) / 1000) + " km", lrb));
+  { let n = 0, len = 0; for (const r of LR.roads) if (!r.s && !r.f) { n++; len += lrLen(r); }   // einmal durchgehen statt zweimal filtern
+    rg.appendChild(row("Gelernte Straßen", nf0.format(n) + " Straßen · " + nf1.format(len / 1000) + " km", lrb)); }
   const lg2 = document.createElement("div"); lg2.style.cssText = "display:flex;gap:12px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--muted)";
   lg2.innerHTML = [["#7d8590","Autobahn",6,""],["#6f7782","Straße",3,""],["#59606a","Tunnel",5,"dashed"],["#9aa3ae","Brücke (Ebene 1/2)",6,""],["#b9a27e","Schotter",3,"dashed"],["#e2681f","Offroad",3,""]].map(([c,t,w,d]) =>
     '<span style="display:inline-flex;align-items:center;gap:6px"><i style="display:inline-block;width:18px;border-top:' + w + 'px ' + (d || "solid") + ' ' + c + '"></i>' + t + '</span>').join("");
@@ -11581,7 +11592,7 @@ function bdUpdate(d, gear, frac, shift, v){
   const on = !!(st && BD_DRAW[st]), card = $("bdash").parentElement;
   if (card.classList.contains("branded") !== on) { card.classList.toggle("branded", on); $("bdash").hidden = !on; }
   if (!on) return;
-  const c = $("bdcv"), r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const c = $("bdcv"), r = fitRect(c), dpr = window.devicePixelRatio || 1;
   if (r.width < 40 || r.height < 40) return;
   const pw = Math.round(r.width * dpr), ph = Math.round(r.height * dpr);
   if (c.width !== pw || c.height !== ph) { c.width = pw; c.height = ph; }
@@ -11927,6 +11938,7 @@ const SEGS = 36, segEls = [], segOn = [];
 for (let i = 0; i < SEGS; i++) { const e = document.createElement("i"); $("rpmbar").appendChild(e); segEls.push(e); }
 const segCol = i => { const f = i / SEGS; return f < 0.62 ? "#30d158" : f < 0.8 ? "#ffd60a" : f < 0.9 ? "#ff9f0a" : "#ff453a"; };
 function setView(v){
+  GR.viewT = performance.now();
   if ((v === "apps" || v === "set" || v === "friends" || v === "spotify" || v === "youtube" || v === "discord" || v === "twitch" || v === "perf" || v === "mods" || v === "tune") && S.design !== "glass") v = "dash";
   if (GR.view && GR.view !== v && window.NAV && !NAV.skip) { NAV.stack.push(GR.view); if (NAV.stack.length > 30) NAV.stack.shift(); }   // Verlauf für „Zurück“ (Maustaste 4)
   if ((v === "map" || v === "dash") && cam.mode !== "follow" && !ed.on && !cal.open) setMode("follow");
@@ -12234,11 +12246,17 @@ function diagTick(now){
 }
 // Forza im Pausemenü und niemand bedient das Dashboard: nur noch ~8 Bilder/s zeichnen und Animationen anhalten –
 // so bleibt die Grafikkarte frei fürs Spiel (Raustabben ohne Pause bleibt unverändert)
+const FRAME_BEHIND = new Set(["set", "apps", "friends", "mods", "tune"]);
 let G_ACT = 0; ["pointermove", "pointerdown", "wheel", "keydown"].forEach(t => addEventListener(t, () => { G_ACT = performance.now(); }, {passive:true, capture:true}));
 function frame(){
   { const now = performance.now(), idle = live && D && !D.on && now - lastMsg < 3000 && now - G_ACT > 4000 && now - lastInteract > 4000;
     if (document.documentElement.classList.contains("fdidle") !== idle) document.documentElement.classList.toggle("fdidle", idle);
-    if (idle && now - (frame.lt || 0) < 125) { requestAnimationFrame(frame); return; }
+    // Eingebettete Seite (YouTube, Twitch, Discord, Spotify) füllt den ganzen Platz: vom Dashboard sind nur Leiste und
+    // Kopfzeile zu sehen -> 15 Bilder/s reichen, damit das Video die Grafikkarte für sich hat
+    const webFull = GR.view !== "dash" && $("main").classList.contains("webmode") && !$("main").classList.contains("websplit");
+    // Einstellungen, Apps, Freunde, Mods, Tuning: Karte und Kacheln sind ausgeblendet -> 30 Bilder/s für die Kopfzeile
+    const behind = !webFull && S.design === "glass" && FRAME_BEHIND.has(GR.view) && !WEB.pip;
+    if ((idle && now - (frame.lt || 0) < 125) || (webFull && now - (frame.lt || 0) < 62) || (behind && now - (frame.lt || 0) < 30)) { requestAnimationFrame(frame); return; }
     frame.lt = now; }
   diagTick(performance.now());
   if (MC.g && MC.g.isContextLost && MC.g.isContextLost()) MC.c = null;   // Zwischenspeicher verloren -> neu zeichnen, sobald möglich
@@ -12250,7 +12268,8 @@ function frame(){
   if (!mapHold && cv.offsetWidth && (Math.abs(cv.offsetWidth - W) > 1 || Math.abs(cv.offsetHeight - H) > 1)) resize();
   frameN++;
   if (frameN % 3 === 0) try { webFollow(); } catch (e) {}
-  if (S.mapFps !== 30 || frameN % 2 === 0) try { drawMap(); } catch (e) { diagErr(e); }
+  // Video neben der Karte (YouTube „Mit Karte“ oder Mini-Fenster): Karte mit 30 Bildern/s, wie bei „Sparsam“
+  if ((S.mapFps !== 30 && !videoShown()) || frameN % 2 === 0) try { drawMap(); } catch (e) { diagErr(e); }
   try { drawCal(); } catch (e) { console.error(e); }
   requestAnimationFrame(frame);
 }
@@ -12457,15 +12476,49 @@ function gLoopStart(){ if (!GB.raf && isGlass() && S.gWall === "kirsch") GB.raf 
 function gLoop(ts){
   GB.raf = 0; if (!isGlass() || S.gWall !== "kirsch") return;
   GB.raf = requestAnimationFrame(gLoop);
-  if (document.hidden || ts - GB.last < 40) return;   // ~25 Bilder/s reichen für fallende Blüten
+  // ~25 Bilder/s reichen für fallende Blüten; ganz angehalten, solange eine eingebettete Seite (YouTube …) den Platz
+  // füllt, und halb so oft neben dem Mini-Video – damit das Video flüssig bleibt
+  const web = GR.view === "youtube" || GR.view === "twitch" || GR.view === "discord" || (GR.view === "spotify" && SP.login);
+  if (document.hidden || web || ts - GB.last < (WEB.pip ? 80 : 40)) { if (web) GB.last = ts; return; }
   const dt = Math.min(.1, (ts - GB.last) / 1000); GB.last = ts; GB.t += dt;
   GB.petals.forEach((p, i) => { p.y += p.vy * dt; p.x += p.vx * dt + Math.sin(GB.t * 1.3 + p.ph) * 24 * dt; p.rot += p.vr * dt; if (p.y > GH + 20 || p.x < -30) GB.petals[i] = gPetal(false); });
   gDraw();
 }
 window.addEventListener("resize", () => { if (isGlass()) { gDraw(); gGlassSoon(); } });
+// Vorschaubilder der Hintergründe (Einstellungen → Design). Alle sechs in voller Größe zu zeichnen (Unschärfe, Schatten)
+// hat das erste Öffnen der Einstellungen um über eine halbe Sekunde blockiert. Jetzt: sofort ein ruhiger Platzhalter,
+// die Bilder entstehen nacheinander in Leerlauf-Momenten und werden als kleines JPEG gemerkt (gilt auch nach dem Neustart).
+// G_THUMB_V hochzählen, wenn sich ein Hintergrund in G_WALLS ändert.
+const G_THUMB_V = "1";
+GB.thumbWait = {}; GB.thumbQ = [];
+function gThumbMake(m){
+  const t = document.createElement("canvas"); t.width = 192; t.height = 108;
+  if (m === GB.wall && GB.base) { t.getContext("2d").drawImage(GB.base, 0, 0, 192, 108); return t; }   // aktueller Hintergrund liegt schon fertig vor
+  const keep = GB.pts, seed = GB.seed, big = gRenderWall(m); t.getContext("2d").drawImage(big, 0, 0, 192, 108); GB.pts = keep; GB.seed = seed; return t;
+}
+function gThumbDone(m, t){ GB.thumbs[m] = t; for (const f of (GB.thumbWait[m] || []).splice(0)) try { f(t); } catch (e) {} }
+function gThumbPump(){
+  if (GB.thumbT) return;
+  const next = () => {
+    GB.thumbT = 0; const m = GB.thumbQ.shift(); if (!m) return;
+    if (!GB.thumbs[m]) { const t = gThumbMake(m); if (m !== "eigen") try { localStorage.setItem("fd.gthumb." + m, G_THUMB_V + "|" + t.toDataURL("image/jpeg", 0.85)); } catch (e) {} gThumbDone(m, t); }
+    gThumbPump();
+  };
+  if (!GB.thumbQ.length) return;
+  GB.thumbT = window.requestIdleCallback ? requestIdleCallback(next, {timeout:400}) : setTimeout(next, 40);
+}
 function gThumb(m){
-  if (!GB.thumbs[m]) { const keep = GB.pts, big = gRenderWall(m), t = document.createElement("canvas"); t.width = 192; t.height = 108; t.getContext("2d").drawImage(big, 0, 0, 192, 108); GB.pts = keep; GB.thumbs[m] = t; }
-  const c = document.createElement("canvas"); c.width = 192; c.height = 108; c.getContext("2d").drawImage(GB.thumbs[m], 0, 0); return c;
+  const c = document.createElement("canvas"); c.width = 192; c.height = 108; const g = c.getContext("2d");
+  const put = t => g.drawImage(t, 0, 0, 192, 108);
+  if (GB.thumbs[m]) { put(GB.thumbs[m]); return c; }
+  g.fillStyle = "rgba(128,128,128,.16)"; g.fillRect(0, 0, 192, 108);
+  const w = GB.thumbWait[m] || (GB.thumbWait[m] = []); w.push(put);
+  if (w.length > 1) return c;   // wird schon geladen oder erzeugt
+  let s = null; if (m !== "eigen") try { s = localStorage.getItem("fd.gthumb." + m); } catch (e) {}
+  const make = () => { if (!GB.thumbQ.includes(m)) GB.thumbQ.push(m); gThumbPump(); };
+  if (s && s.startsWith(G_THUMB_V + "|")) { const im = new Image(); im.onload = () => gThumbDone(m, im); im.onerror = make; im.src = s.slice(G_THUMB_V.length + 1); }
+  else make();
+  return c;
 }
 // eigenes Bild: verkleinert (max. 1920 px) im Browser gespeichert, damit es nach dem Neustart wieder da ist
 function gImgLoad(){
@@ -12860,7 +12913,13 @@ setInterval(() => {
     mapRecover();
   } catch (e) { diagErr(e); }
 }, 3000);
-function webFollow(){ if (WEB.ready && window.FD_EXE && (GR.view === "youtube" || GR.view === "discord" || GR.view === "twitch" || WEB.pip || (GR.view === "spotify" && SP.login))) webSync(); }
+// Lage nur dann jedes 3. Bild nachmessen, wenn sich gerade etwas bewegen kann (Eingabe, Ansichtswechsel, Fenstergröße) –
+// sonst reicht der 600-ms-Takt. Jedes Messen erzwingt ein Layout der ganzen Seite.
+WEB.busyT = 0;
+["pointerdown", "pointermove", "wheel", "keydown", "resize"].forEach(t => addEventListener(t, () => { WEB.busyT = performance.now(); }, {passive:true, capture:true}));
+function webFollow(){ if (WEB.ready && window.FD_EXE && performance.now() - Math.max(WEB.busyT, GR.viewT || 0) < 1500 && (GR.view === "youtube" || GR.view === "discord" || GR.view === "twitch" || WEB.pip || (GR.view === "spotify" && SP.login))) webSync(); }
+// läuft gerade ein Video neben der Karte? Dann zeichnet die Karte sparsamer (30 Bilder/s)
+const videoShown = () => S.design === "glass" && (WEB.pip || (GR.view === "youtube" && WEB.yt === "split"));
 $("gweb").addEventListener("click", e => {
   const w = e.target.closest("[data-w]"), m = e.target.closest("[data-mode]"), id = GR.view;
   if (w && (id === "spotify" || id === "youtube" || id === "discord" || id === "twitch") && window.FD_EXE) fetch("/app?id=" + id + "&" + w.dataset.w + "=1", {cache:"no-store"}).catch(() => {});
@@ -13087,6 +13146,7 @@ function gAcSave(){ try { localStorage.setItem("fd.klima", JSON.stringify(gAc));
 function gAcMark(){ document.querySelectorAll('.gico[data-k="klima"]').forEach(b => { b.dataset.ac = gAc.mode; b.title = "Klima · " + {pin:"immer ausgefahren", off:"aus", hover:"bei Maus unten"}[gAc.mode]; }); }
 setTimeout(gAcMark, 500);
 function gAcSet(){
+  try { WEB.busyT = performance.now(); } catch (e) {}   // Klimaleiste fährt ein/aus: eingebettete Seite folgt
   const app = document.querySelector(".app"), want = isGlass() && (gAc.mode === "pin" || (gAc.mode === "hover" && GAC.open)) && GR.view !== "youtube" && GR.view !== "spotify" && GR.view !== "discord" && GR.view !== "twitch";
   if (app.classList.contains("acopen") === want) return;
   // Karte während der Animation nicht in jedem Bild neu anlegen – danach einmal
