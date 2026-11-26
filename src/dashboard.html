@@ -4915,7 +4915,8 @@ const PAD_ACT = {
   blinkR:["Blinker rechts", () => blPress("r")],
   hazard:["Warnblinker", () => blSet(BL.m === "h" ? "" : "h")],
   pbrake:["Handbremse (halten = anziehen, antippen = lösen)", () => pbPress()],
-  gsCyc:["Fahrmodus durchschalten (E → D → S+)", () => gselSet({E:"D", D:"S", S:"E"}[GS.mode] || "D")],
+  // im Stand mit getretener Bremse: R ein/aus (wie beim echten Wählhebel), sonst C → D → S+
+  gsCyc:["Fahrmodus durchschalten (C → D → S+, im Stand + Bremse: R)", () => { const still = D && Math.abs(D.spd || 0) * 3.6 < 2 && (D.brk || 0) > 60; gselSet(still && GS.mode !== "R" ? "R" : GS.mode === "R" ? "D" : ({E:"D", D:"S", S:"E"}[GS.mode] || "D")); }],
   wipUp:["Schaltwippe hoch", () => {}],   // wertet das Programm direkt beim Lenkrad-Lesen aus (ohne Verzögerung)
   wipDn:["Schaltwippe runter", () => {}],
 };
@@ -5101,12 +5102,12 @@ function buildWheelSettings(){
 // P = Handbremse an, R, D, E (Eco), S+ (Sport), M = selbst schalten. Die Fahrstufe kommt mit jedem Telemetrie-Paket
 // zurück (d.gsel) – die Anzeige blendet sich nur kurz ein, wenn sie sich ändert (und einmal am Anfang).
 const GS = {mode:"", t:0, hide:0, st:null, hint:"", poll:0};
-const GS_NAME = {P:"Parken", R:"Rückwärts", D:"Drive", E:"Eco", S:"Sport+", M:"Manuell"};
+const GS_NAME = {P:"Parken", R:"Rückwärts", D:"Drive", E:"Comfort", S:"Sport+", M:"Manuell"};
 const GS_SUB = {P:"Handbremse angezogen", R:"Rückwärtsgang", D:"Automatik", E:"früh schalten, sparsam", S:"spät schalten, hält den Gang", M:"du schaltest selbst"};
 const GS_COL = {P:"#ff453a", R:"#ff9f0a", D:"#0a84ff", E:"#30d158", S:"#ff375f", M:"#bf5af2"};
 // Schalttasten: Controller B/X oder RB/LB (unsichtbarer Xbox-Controller) oder vJoy (im Lenkrad-Profil, ganz ohne Ruck)
 const GS_BTN = {bx:[0x2000, 0x4000, "B / X"], rl:[0x0200, 0x0100, "RB / LB"], vj:[0, 0, "vJoy"]};
-const gsL = m => m === "S" ? "S+" : m;
+const gsL = m => m === "S" ? "S+" : m === "E" ? "C" : m;   // E heißt für den Nutzer „Comfort“ (C)
 function gsIco(t){ return '<text x="12" y="16.3" text-anchor="middle" font-size="' + (t.length > 1 ? 10.5 : 13) + '" font-weight="800" fill="#fff" stroke="none" font-family="-apple-system,Segoe UI,system-ui,sans-serif">' + t + '</text>'; }
 function gsPost(b){
   return fetch("/schaltung", {method:"POST", body:JSON.stringify(b)}).then(r => r.ok ? r.json() : null).then(v => { if (v) { GS.st = v; const was = !!GS.vj; GS.vj = !!v.vjoy; if (GS.vj !== was) gsSync(); } return v; }).catch(() => null);
@@ -5175,7 +5176,7 @@ function gsSettings(grp){
     if (GS.wiz === 9) box.innerHTML = '<div class="gsst on"><i>✓</i><div><b>Nichts zu tun</b><small>Geschaltet wird über einen unsichtbaren Controller (B / X, Forza-Standard). Dabei springt Forza kurz vom Lenkrad um. Ganz ohne Ruck geht es mit vJoy (github.com/BrunnerInnovation/vJoy) – danach hier nochmal „Einrichten“.</small></div></div>';
     else box.innerHTML = step(1, "Hochschalt-Wippe drücken", "Am Lenkrad jetzt die Wippe drücken, mit der du hochschaltest.")
       + step(2, "Runterschalt-Wippe drücken", "Jetzt die Wippe zum Runterschalten.")
-      + step(3, "In Forza einmal verbinden", "Forza › Einstellungen › Steuerung › Lenkrad › eigenes Profil. Hier „Hoch“ tippen, zu Forza wechseln und „Hochschalten“ auswählen – das Programm drückt 12 s lang immer wieder. Dann dasselbe mit „Runter“.");
+      + step(3, "In Forza einmal verbinden", "Forza › Einstellungen › Steuerung › Lenkrad › eigenes Profil. Hier „Hoch“ tippen, zu Forza wechseln und bei „Hochschalten“ belegen – am besten im zweiten Feld, dann bleibt deine Wippe dort. Gibt es keins, einfach ersetzen: das Programm reicht deine Wippe dann selbst weiter. Danach dasselbe mit „Runter“.");
     if (GS.wiz === 3) {
       const pr = document.createElement("div"); pr.className = "gsprobe";
       for (const [k, t] of [["up", "Hoch"], ["dn", "Runter"]]) pr.appendChild(mk(t, () => { fetch("/schaltung/probe", {method:"POST", body:JSON.stringify({k})}).catch(() => {}); toast("„" + t + "“ wird gleich 12 s lang gedrückt – jetzt in Forza das Feld auswählen"); }));

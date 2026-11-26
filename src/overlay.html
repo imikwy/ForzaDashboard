@@ -378,7 +378,7 @@ function gsoTick(d){
   const el = $("gsel");
   el.style.setProperty("--gc", GSO_C[m] || "#0a84ff");
   el.style.transform = "translateX(-50%) translateY(-" + Math.round(VH() * .12) + "px) scale(" + kf() + ")";
-  el.querySelector("b").textContent = m === "S" ? "S+" : m;
+  el.querySelector("b").textContent = m === "S" ? "S+" : m === "E" ? "C" : m;
   el.classList.add("on"); clearTimeout(GSO.h); GSO.h = setTimeout(() => el.classList.remove("on"), 1600);
 }
 function lampTick(d){

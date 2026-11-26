@@ -38,11 +38,11 @@ struct St {
     thr0: f64,
     kick_t: u64,
     prev: char,
-    hold_t: u64,
-    hold_done: bool,
     via: char,      // 'v' = vJoy, 'p' = Controller, 'k' = Tastatur
     pup: u16,       // Controller-Knopf hoch
     pdn: u16,       // Controller-Knopf runter
+    wip_direct: Option<bool>,           // Wippe schaltet in Forza selbst (true) oder nur über vJoy (false); None = noch unbekannt
+    wip_probe: Option<(u64, i8, u8)>,   // Wippe gerade gedrückt: (Zeit, Richtung, Gang vorher) – wartet, ob Forza selbst schaltet
 }
 
 static ST: Mutex<Option<St>> = Mutex::new(None);
@@ -51,8 +51,8 @@ fn with<R>(f: impl FnOnce(&mut St) -> R) -> R {
     let mut g = ST.lock().unwrap();
     let s = g.get_or_insert_with(|| St {
         an: false, mode: 'D', up: 0x12, dn: 0x10, car: 0, ratio: HashMap::new(), top: HashMap::new(), peak: HashMap::new(),
-        gear: 255, seen: 0, pend: None, last_up: 0, last_dn: 0, ok_shifts: 0, miss: 0, hint: String::new(), hint_t: 0, spd: 0.0, thr0: 0.0, kick_t: 0, prev: 'D', hold_t: 0, hold_done: false,
-        via: 'p', pup: 0x2000, pdn: 0x4000,
+        gear: 255, seen: 0, pend: None, last_up: 0, last_dn: 0, ok_shifts: 0, miss: 0, hint: String::new(), hint_t: 0, spd: 0.0, thr0: 0.0, kick_t: 0, prev: 'D',
+        via: 'p', pup: 0x2000, pdn: 0x4000, wip_direct: None, wip_probe: None,
     });
     f(s)
 }
@@ -216,41 +216,59 @@ pub fn probe(which: &str) -> Value {
 }
 
 
+// ---- Fahrtenbuch der Schaltung (zur Fehlersuche): die letzten 600 Ereignisse, abrufbar unter /schaltung/log ----
+static GLOG: Mutex<std::collections::VecDeque<String>> = Mutex::new(std::collections::VecDeque::new());
+fn glog(line: String) {
+    let mut g = GLOG.lock().unwrap();
+    if g.len() >= 600 { g.pop_front(); }
+    g.push_back(format!("{:>9.3} {line}", clock() as f64 / 1000.0 % 100000.0));
+}
+pub fn log_text() -> String { GLOG.lock().unwrap().iter().cloned().collect::<Vec<_>>().join("\n") }
+
 // Belegung der Wippen (vom Dashboard geschickt): direkt beim Lesen des Lenkrads ausgewertet – kein Umweg übers Fenster
 static WIP: Mutex<[Option<(String, u16)>; 2]> = Mutex::new([None, None]);
 pub fn wippe_btn(dev: &str, btn: u16) -> bool {
     let hit = { let w = WIP.lock().unwrap(); w.iter().position(|x| x.as_ref().is_some_and(|(d, b)| d == dev && *b == btn)) };
     let Some(i) = hit else { return false };
-    if !with(|s| s.an && s.via == 'v') { return false; }
+    if !with(|s| s.an) { return false; }
     wippe(if i == 0 { 1 } else { -1 });
     true
 }
-// Schaltwippe am Lenkrad (über das Dashboard belegt): Forza hört beim Schalten auf vJoy, also reicht das Programm
-// die Wippe dorthin durch. Wer selbst schaltet, ist im Modus M (wie bei einer echten Automatik mit Wippen).
+// Schaltwippe am Lenkrad: wer selbst schaltet, ist im Modus M (wie bei einer echten Automatik mit Wippen).
+// Ob Forza die Wippe selbst kennt (zweite Belegung) oder nur noch vJoy, wird beim ersten Mal erkannt:
+// ändert sich der Gang innerhalb von 250 ms von allein, bleibt die Wippe direkt – sonst reicht das Programm sie an vJoy weiter.
 pub fn wippe(dir: i64) -> Value {
     let now = clock();
-    let via = with(|s| {
-        if s.an && matches!(s.mode, 'D' | 'E' | 'S') { s.prev = s.mode; s.mode = 'M'; }
-        s.pend = Some(Pend { dir: if dir > 0 { 1 } else { -1 }, t: now, from: s.gear });
-        s.via
+    let dir: i8 = if dir > 0 { 1 } else { -1 };
+    let send = with(|s| {
+        if s.an && matches!(s.mode, 'D' | 'E' | 'S') { s.prev = s.mode; s.mode = 'M'; glog(format!("Wippe {} → Modus M", if dir > 0 { "hoch" } else { "runter" })); }
+        if s.via != 'v' { s.wip_probe = None; return None; }   // ohne vJoy schaltet die Wippe ohnehin direkt
+        match s.wip_direct {
+            Some(true) => { s.pend = Some(Pend { dir, t: now, from: s.gear }); None }
+            Some(false) => { s.pend = Some(Pend { dir, t: now, from: s.gear }); Some(s.via) }
+            None => { s.wip_probe = Some((now, dir, s.gear)); None }
+        }
     });
     #[cfg(not(test))]
-    tap(via, if dir > 0 { Btn::Up } else { Btn::Dn }, 40);
+    if let Some(via) = send { tap(via, if dir > 0 { Btn::Up } else { Btn::Dn }, 70); }
     #[cfg(test)]
-    let _ = via;
+    let _ = send;
     json!({"ok": true})
 }
 #[cfg(test)]
 static SIM: Mutex<Vec<i8>> = Mutex::new(Vec::new());
 
-fn shift(s: &mut St, dir: i8, now: u64) -> bool {
+fn shift(s: &mut St, dir: i8, now: u64, why: &str) -> bool {
     #[cfg(not(test))]
     {
         if !spiel_vorne() { return false; }
         let via = s.via;
+        // vJoy etwas länger halten: Forza liest DirectInput-Geräte nicht ganz so oft wie den Controller
+        let ms = if via == 'v' { 70 } else { 40 };
         // erst nach dem Lock-Ende drücken (press liest selbst die Einstellungen)
-        std::thread::spawn(move || tap(via, if dir > 0 { Btn::Up } else { Btn::Dn }, 40));
+        std::thread::spawn(move || tap(via, if dir > 0 { Btn::Up } else { Btn::Dn }, ms));
     }
+    glog(format!("[{}] {} {}→{}  {}", s.mode, if dir > 0 { "▲" } else { "▼" }, s.gear, s.gear as i16 + dir as i16, why));
     #[cfg(test)]
     SIM.lock().unwrap().push(dir);
     s.pend = Some(Pend { dir, t: now, from: s.gear });
@@ -304,40 +322,48 @@ pub fn tick(d: &Value) -> Option<String> {
             if pow > p.1 { *p = (rpm, pow); }
         }
 
-        // Ergebnis des letzten Tastendrucks
+        // Wippe gedrückt: hat Forza selbst geschaltet (Wippe dort belegt) oder muss das Programm sie an vJoy weiterreichen?
+        if let Some((t0, dir, from)) = s.wip_probe {
+            if gear != from && (gear as i16 - from as i16).signum() as i8 == dir {
+                s.wip_direct = Some(true); s.wip_probe = None;
+                glog(format!("Wippe schaltet in Forza direkt ({} ms) – vJoy nur für die Automatik", now.saturating_sub(t0)));
+            } else if now.saturating_sub(t0) > 250 {
+                s.wip_direct = Some(false); s.wip_probe = None;
+                s.pend = Some(Pend { dir, t: now, from: gear });
+                glog("Wippe schaltet in Forza nicht direkt – wird ab jetzt an vJoy weitergereicht".into());
+                #[cfg(not(test))]
+                { let via = s.via; std::thread::spawn(move || tap(via, if dir > 0 { Btn::Up } else { Btn::Dn }, 70)); }
+            }
+        }
+
+        // Ergebnis des letzten Knopfdrucks – Forza darf sich bis 1,2 s Zeit lassen (vJoy wird etwas seltener gelesen)
         if gear != s.gear {
-            let ours = s.pend.as_ref().map(|p| now.saturating_sub(p.t) < 700 && (gear as i16 - p.from as i16).signum() as i8 == p.dir).unwrap_or(false);
+            let ours = s.pend.as_ref().map(|p| now.saturating_sub(p.t) < 1200 && (gear as i16 - p.from as i16).signum() as i8 == p.dir).unwrap_or(false)
+                || s.wip_probe.is_some();
+            if let Some(p) = s.pend.as_ref().filter(|_| ours) { glog(format!("   ✓ Gang {} nach {} ms", gear, now.saturating_sub(p.t))); }
             if ours { s.ok_shifts += 1; s.miss = 0; }
             else if (gear as i16 - s.gear as i16).abs() == 1 && spd > 1.0 && matches!(s.mode, 'D' | 'E' | 'S') {
-                // selbst geschaltet (Wippe/Taste) – oder Forza schaltet noch selbst
-                s.mode = 'M';
+                // selbst geschaltet (Wippe ohne Belegung im Dashboard, Taste) – oder Forza schaltet noch selbst
+                glog(format!("Gang {}→{} ohne Programm – Modus M", s.gear, gear));
+                s.prev = s.mode; s.mode = 'M';
                 if s.ok_shifts == 0 { note(s, "Forza schaltet selbst – im Spiel Getriebe auf „Manuell“ stellen", now); }
                 else { note(s, "Selbst geschaltet – Wählhebel steht jetzt auf M", now); }
             }
             s.pend = None;
             s.gear = gear;
         } else if let Some(p) = &s.pend {
-            if now.saturating_sub(p.t) > 450 {
+            if now.saturating_sub(p.t) > 1200 {
                 let (dir, from) = (p.dir, p.from);
                 s.pend = None;
+                glog(format!("   ✗ kein Gangwechsel nach 1200 ms (Gang {from})"));
                 if dir > 0 && s.ok_shifts > 0 && from >= 3 { s.top.insert(car, from); }   // oberster Gang erreicht
                 else {
                     s.miss += 1;
-                    if s.miss >= 3 && s.ok_shifts == 0 { note(s, match s.via { 'v' => "Schaltet nicht – in Forza Getriebe auf „Manuell“ und im Lenkrad-Profil Hoch/Runter auf die vJoy-Knöpfe legen (Knopf „Belegen“ in den Einstellungen)", 'p' => "Schaltet nicht – in Forza Getriebe auf „Manuell“; am Controller Hoch/Runter auf die gewählten Knöpfe legen", _ => "Schaltet nicht – in Forza Getriebe auf „Manuell“ und Hoch/Runter auf E/Q lassen" }, now); }
+                    if s.miss >= 3 && s.ok_shifts == 0 { note(s, match s.via { 'v' => "Schaltet nicht – in Forza Getriebe auf „Manuell“ und im Lenkrad-Profil Hoch/Runter auf die vJoy-Knöpfe legen (Einrichten)", 'p' => "Schaltet nicht – in Forza Getriebe auf „Manuell“; am Controller Hoch/Runter auf B / X", _ => "Schaltet nicht – in Forza Getriebe auf „Manuell“ und Hoch/Runter auf E/Q lassen" }, now); }
                 }
             }
         }
-        if s.pend.is_some() { return label; }
-
-        // Rückwärts wie beim Automatik-Wagen: im Stand die Bremse 1 s halten = R, nochmal 1 s halten = wieder vorwärts
-        if matches!(s.mode, 'D' | 'E' | 'S' | 'R') && spd < 0.4 && br > 0.5 && thr < 0.05 {
-            if s.hold_t == 0 { s.hold_t = now; }
-            if !s.hold_done && now.saturating_sub(s.hold_t) > 1000 {
-                s.hold_done = true;
-                if s.mode == 'R' { s.mode = s.prev; } else { s.prev = s.mode; s.mode = 'R'; }
-                return Some(s.mode.to_string());
-            }
-        } else { s.hold_t = 0; s.hold_done = false; }
+        if s.pend.is_some() || s.wip_probe.is_some() { return label; }
 
         // Drehzahl nach dem Schalten vorhersagen (gelernt, sonst typischer Gangsprung)
         let rt: [Option<f64>; 3] = [s.ratio.get(&(car, gear.saturating_sub(1))).copied(), s.ratio.get(&(car, gear)).copied(), s.ratio.get(&(car, gear + 1)).copied()];
@@ -350,13 +376,13 @@ pub fn tick(d: &Value) -> Option<String> {
 
         match s.mode {
             'R' => {
-                if gear >= 1 && spd < 1.2 && now.saturating_sub(s.last_dn) > 250 { shift(s, -1, now); }
+                if gear >= 1 && spd < 1.2 && now.saturating_sub(s.last_dn) > 250 { shift(s, -1, now, "R einlegen"); }
             }
             'D' | 'E' | 'S' => {
                 let m = s.mode;
-                if gear == 0 { if spd < 2.0 && now.saturating_sub(s.last_up) > 250 { shift(s, 1, now); } return label; }
+                if gear == 0 { if spd < 2.0 && now.saturating_sub(s.last_up) > 250 { shift(s, 1, now, "aus R in den 1."); } return label; }
                 // Stillstand / ganz langsam: zurück in den ersten
-                if spd < 1.5 && gear > 1 { if now.saturating_sub(s.last_dn) > 220 { shift(s, -1, now); } return label; }
+                if spd < 1.5 && gear > 1 { if now.saturating_sub(s.last_dn) > 220 { shift(s, -1, now, &format!("Stillstand → 1. ({:.0} km/h)", spd * 3.6)); } return label; }
                 let (lo, hi, dn, mut wait) = match m { 'E' => (0.15, 0.60, 0.09, 650), 'S' => (0.55, 0.97, 0.40, 220), _ => (0.22, 0.88, 0.12, 420) };
                 if thr < 0.3 && m != 'S' { wait = wait.max(900); }   // bei wenig Gas gemächlich einen Gang nach dem anderen
                 let mut up_at = lo + (hi - lo) * ((thr - 0.05) / 0.85).clamp(0.0, 1.0).powf(1.6);   // wenig Gas = früh hoch wie im echten Auto
@@ -375,7 +401,7 @@ pub fn tick(d: &Value) -> Option<String> {
                         || (slip > 1.6 && r < 0.93)                                     // durchdrehende Räder: halten
                         || (since_dn < 1400 && !limiter && r < hi)                      // nach Rückschalten nicht gleich wieder hoch
                         || (lat > if m == 'S' { 5.0 } else { 7.0 } && !limiter && r < 0.93);   // in der Kurve Gang halten (wie eine echte Automatik)
-                    if !hold && r >= up_at && (limiter || after(gear + 1) > dn + 0.09) { shift(s, 1, now); return label; }
+                    if !hold && r >= up_at && (limiter || after(gear + 1) > dn + 0.09) { let w = format!("hoch bei {:.0}/min (ab {:.0}), Gas {:.0}% {:.0} km/h{}", rpm, idle + up_at * span, thr * 100.0, spd * 3.6, if limiter { " Begrenzer" } else { "" }); shift(s, 1, now, &w); return label; }
                 }
                 // --- runter ---
                 if gear > 1 && since >= wait.min(400) {
@@ -386,7 +412,7 @@ pub fn tick(d: &Value) -> Option<String> {
                         let eco_kick = m == 'E' && thr > 0.97 && fresh_kick && a < 0.72 && r < 0.4;
                         let brake = br > 0.25 && a < if m == 'S' { 0.86 } else { 0.48 } && r < if m == 'S' { 0.7 } else { 0.32 };
                         let sport = m == 'S' && thr > 0.3 && r < dn && a < 0.9 && since_up > 1500;
-                        if (lug || kick || eco_kick || brake || sport) && slip < 1.6 && (since_up > 700 || kick || brake) { shift(s, -1, now); }
+                        if (lug || kick || eco_kick || brake || sport) && slip < 1.6 && (since_up > 700 || kick || brake) { let w = format!("runter ({}) bei {:.0}/min, danach ~{:.0}/min, Gas {:.0}% Bremse {:.0}% {:.0} km/h", if kick { "Kickdown" } else if brake { "Bremsen" } else if sport { "Sport" } else if eco_kick { "Kickdown" } else { "Drehzahl tief" }, rpm, idle + a * span, thr * 100.0, br * 100.0, spd * 3.6); shift(s, -1, now, &w); }
                     }
                 }
             }
@@ -423,6 +449,7 @@ pub fn set(b: &Value) -> Value {
             let m = m.to_ascii_uppercase();
             if !"PRDESM".contains(m) { return Some("Unbekannte Fahrstufe"); }
             if matches!(m, 'P' | 'R') && s.spd * 3.6 > 6.0 && s.mode != m { return Some("Erst anhalten"); }
+            if s.mode != m { glog(format!("Fahrstufe {} → {}", s.mode, m)); }
             s.mode = m;
             if matches!(m, 'D' | 'E' | 'S') { s.prev = m; }
             if m != 'M' { s.hint.clear(); }

@@ -175,6 +175,7 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/lobby/chat", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().send_chat(&b, &s.name())) }))
         .route("/lobby/leader", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().promote(&b, &s.name())) }))
         .route("/lobby/ev", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().ev_set(&b, &s.name())) }))
+        .route("/schaltung/log", get(|| async { crate::schaltung::log_text() }))
         .route("/schaltung/wippe", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::schaltung::wippe(body(&b)["d"].as_i64().unwrap_or(1))) }))
         .route("/schaltung/probe", post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::schaltung::probe(body(&b)["k"].as_str().unwrap_or(""))) }))
         .route("/lobby/pc", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().pc_set(&b, &s.name())) }))
