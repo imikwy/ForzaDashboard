@@ -1996,9 +1996,10 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .krank{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:rgba(118,118,128,.24);flex:none;margin-right:2px}.krank.r1{background:#ffd60a;color:#1c1c1e}.krank.r2{background:#d1d1d6;color:#1c1c1e}.krank.r3{background:#ff9f0a;color:#1c1c1e}
 .kavg{text-align:right;flex:none}.kavg b{display:block;font-size:15px}.kavg small{font-size:11.5px;color:var(--muted)}
 .pcst{flex:none;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,.2)}.pcst i{font-style:normal;color:#ffd60a}
-.pcseg{margin:0;flex:none}.kbtn:disabled{opacity:.4}
+.pcseg{margin:0;flex:none}.pcseg button{white-space:nowrap;flex:none}.kbtn:disabled{opacity:.4}
 .pcp{position:absolute;top:62px;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:9px;height:34px;padding:0 15px;border-radius:17px;background:rgba(22,26,34,.78);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 6px 18px rgba(0,0,0,.3);color:#fff;font-size:13.5px;font-weight:650;white-space:nowrap;overflow:hidden;pointer-events:none;max-width:calc(100% - 140px)}
 .pcp[hidden]{display:none}
+.pcp.w{pointer-events:auto;cursor:pointer;padding-right:8px}.pcp .x{width:22px;height:22px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.14);font-size:11px;flex:none;margin-left:2px}
 .pcp b{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:700}
 .pcp small{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.72)}.pcp small.r{color:#ff6961}
 .pcp .sep{width:1px;height:14px;background:rgba(255,255,255,.18);flex:none}
@@ -6010,14 +6011,15 @@ function updateCam(){
   carUpdate();
   const [carX, carY] = carMap(), spd = D ? D.spd * 3.6 : 0;
   cam.spdS = cam.spdS === undefined ? spd : cam.spdS + (spd - cam.spdS) * kv;   // geglättetes Tempo -> kein Zoom-Gezappel
+  const wc = cam.mode === "follow" ? watchCam() : null;
   if (cam.mode === "follow") {
-    cam.cx = carX; cam.cy = carY;
+    cam.cx = wc ? wc[0] : carX; cam.cy = wc ? wc[1] : carY;
     // weit herausgezoomt: flach und Auto in der Mitte, damit man beim Herauszoomen weiß, wo man ist (nicht beim Bearbeiten)
     if (ed.on || cal.open) cam.far = false; else if (!cam.far && S.zoom < 0.42) cam.far = true; else if (cam.far && S.zoom > 0.5) cam.far = false;
     const at = S.orient === "heading" ? (isNavi() ? 0.87 : cam.far ? 0.5 : 0.68) : 0.5;
     cam.af = cam.af === undefined ? at : cam.af + (at - cam.af) * kz;
     cam.ts = followBase() * S.zoom;
-    const tr = S.orient === "heading" ? trail.heading : 0;
+    const tr = S.orient === "heading" ? (wc ? wc[2] : trail.heading) : 0;
     cam.rot = cam.init ? angLerp(cam.rot, tr, kr) : tr;
   } else if (cam.mode === "overview") {
     const now = performance.now();
@@ -6289,6 +6291,7 @@ function drawMap(){
   $("needle").style.transform = "rotate(" + (-cam.rot) + "rad)";
 }
 function setMode(m){
+  if (WATCH.id) watchStop();   // Folgen, Übersicht, Verschieben: zurück zu mir
   // beim Zurückkehren zum Folgen die aktuelle Zoomstufe übernehmen
   if (m === "follow" && cam.mode !== "follow" && cam.init && cam.mode === "free") { S.zoom = Math.max(0.12, Math.min(8, cam.s / followBase())); saveSettings(); }
   if (m !== "follow") { cam.far = false; cam.af = undefined; } else if (cam.mode !== "follow") cam.af = 0.5;   // aus der Mitte weich an die Folge-Position
@@ -6963,7 +6966,8 @@ function navPathWorld(sx, sz, tx, tz){
   return P;
 }
 // Demofahrer: fährt zu gesetzten Wegpunkten (hält dort kurz an), sonst zu markierten Orten oder weit entfernten Straßen
-function demoDriver(x0, z0){
+function demoDriver(x0, z0, o){
+  o = o || {};
   const d = {x:x0, z:z0, yaw:0, P:null, cum:null, s:0, goal:null, wait:0, lastPlan:-1e9, skip:null, rid:0};
   const plan = (tx, tz, isWp) => {
     let P = null; try { P = navPathWorld(d.x, d.z, tx, tz); } catch (e) {}
@@ -6991,7 +6995,7 @@ function demoDriver(x0, z0){
     // Ziel und Wunschtempo; null = kein Straßennetz (dann fährt die Demo den alten Rundkurs)
     plan(now){
       if (!mapImg.T) return null;
-      const w = wp.active >= 0 ? wp.list[wp.active] : null;
+      const w = !o.noWp && wp.active >= 0 ? wp.list[wp.active] : null;
       if (w && w !== d.skip && (!d.goal || !d.goal.wp || Math.hypot(d.goal.x - w.x, d.goal.z - w.z) > 5) && now - d.lastPlan > 1500) { d.lastPlan = now; d.wait = 0; plan(w.x, w.z, true); }
       if (!w && d.goal && d.goal.wp) { d.P = null; d.goal = null; d.wait = 0; }   // Wegpunkt eingesammelt oder gelöscht
       if (!d.P && now - d.lastPlan > 1500) { d.lastPlan = now; pickRandom(); }
@@ -7000,7 +7004,9 @@ function demoDriver(x0, z0){
       // Kurven voraus: größte Richtungsänderung auf den nächsten 60 m -> Tempo
       let maxTurn = 0; const h0 = head(d.s); for (const ahead of [12, 25, 40, 60]) { let dh = Math.abs(head(Math.min(total, d.s + ahead)) - h0); if (dh > Math.PI) dh = 2 * Math.PI - dh; maxTurn = Math.max(maxTurn, dh / ahead * 30); }
       // gemütlich: höchstens ~95 km/h, in Kurven langsamer (wie eine entspannte Ausfahrt in der Kolonne)
-      let target = Math.max(9, Math.min(26, 30 - maxTurn * 40));
+      // schnell (Police Chase): auf Geraden bis vmax, vor Kurven und Kreuzungen rechtzeitig runter
+      const vm = typeof o.vmax === "function" ? o.vmax() : o.vmax;
+      let target = vm ? Math.max(10, Math.min(vm, (46 - maxTurn * 50) * (o.boost ? o.boost() : 1))) : Math.max(9, Math.min(26, 30 - maxTurn * 40));
       if (d.goal.wp) { target = Math.min(target, Math.max(0, rem - 2) * 0.45); if (rem < 3) { d.wait += 1 / 60; if (d.wait > 7) { d.skip = w; d.P = null; d.goal = null; } } }
       else if (rem < 8) { d.P = null; d.goal = null; }
       return target;
@@ -7011,6 +7017,9 @@ function demoDriver(x0, z0){
       const total = d.cum[d.cum.length - 1]; d.s = Math.min(total, d.s + dist);
       const [x, z] = at(d.s); d.x = x; d.z = z; d.yaw = head(d.s); return [x, z, d.yaw];
     },
+    // neues Ziel von außen (Police-Chase-Demo); false = kein Weg dorthin
+    goTo(tx, tz){ d.lastPlan = performance.now(); return plan(tx, tz, false); },
+    idle(){ return !d.P; },
     behind(dist){ if (!d.P) return null; const L = Math.max(0, d.s - dist), [x, z] = at(L); return [x, z, head(L)]; },
     // Punkt mit Abstand (+ vor dir, − hinter dir) auf deiner Strecke, dazu: kommt eine Kurve? (für die Blinker der Mitfahrer)
     along(off){
@@ -7323,25 +7332,51 @@ function pcNextPing(c, st){
   const iv = pcEvery(st || 0), t0 = c.p.start + PCR.head, k = Math.floor((c.now - t0) / iv) + 1;
   return Math.max(1, Math.ceil((t0 + k * iv - c.now) / 1000));
 }
-// als Polizist: Flüchtige außerhalb aller Suchkreise gar nicht erst in die Freundes-Liste lassen (Karte, Listen, Overlay, Abstände)
+// Zuschauen: die Karte folgt einem anderen Spieler und zeigt die Runde aus seiner Sicht
+const WATCH = {id:null, n:""};
+// aus wessen Sicht gezeigt wird: ich selbst oder der Spieler, dem ich zuschaue (Rolle cop/run/spec)
+function pcView(c){
+  const id = WATCH.id || (c ? c.me : null);
+  if (!c || !c.p) return {id, role:""};
+  return {id, role:c.p.cops.includes(id) ? "cop" : c.p.runs.includes(id) ? "run" : "spec"};
+}
+// darf ich diesem Spieler zuschauen? Aktive Polizisten nicht den Flüchtigen (sonst sähen sie alles)
+function pcCanWatch(id){
+  const c = pcCtx(); if (!c || !c.p || c.ph === "end" || c.ph === "over") return true;
+  return !(c.role === "cop" && c.p.runs.includes(id));
+}
+// Flüchtige außerhalb aller Suchkreise: aus Sicht der Polizei gar nicht erst in die Freundes-Liste lassen (Karte, Listen, Overlay, Abstände)
 function pcFilter(list, kc){
   PC.raw.clear(); PC.vis.clear();
-  const c = pcCtx(kc); if (!c || !c.p || c.role !== "cop" || (c.ph !== "run" && c.ph !== "head")) return list;
+  const c = pcCtx(kc); if (!c || !c.p || (c.ph !== "run" && c.ph !== "head")) return list;
   const runs = new Set(c.p.runs), cops = [];
   for (const f of list) { if (runs.has(f.id)) PC.raw.set(f.id, f); else if (c.p.cops.includes(f.id) && isFinite(f.x)) cops.push(f); }
-  if (D && isFinite(D.px) && (D.px || D.pz)) cops.push({x:D.px, z:D.pz});
-  return list.filter(f => {
-    if (!runs.has(f.id) || pcRun(c, f.id).out) return true;   // Gefasste fahren offen mit
-    const v = c.ph === "run" && cops.some(q => Math.hypot(f.x - q.x, f.z - q.z) < PCR.see);
-    if (v) PC.vis.add(f.id);
-    return v;
-  });
+  if (c.role === "cop" && D && isFinite(D.px) && (D.px || D.pz)) cops.push({x:D.px, z:D.pz});
+  if (c.ph === "run") for (const f of list) if (runs.has(f.id) && !pcRun(c, f.id).out && cops.some(q => Math.hypot(f.x - q.x, f.z - q.z) < PCR.see)) PC.vis.add(f.id);
+  if (pcView(c).role !== "cop") return list;
+  return list.filter(f => !runs.has(f.id) || f.id === c.me || pcRun(c, f.id).out || PC.vis.has(f.id));   // Gefasste fahren offen mit
 }
-// ist dieser Fahrer für mich (Polizist) gerade verborgen?
-function pcHid(id){ const c = pcCtx(); return !!(c && c.p && c.role === "cop" && (c.ph === "run" || c.ph === "head") && c.p.runs.includes(id) && !pcRun(c, id).out && !PC.vis.has(id)); }
+// ist dieser Fahrer aus Sicht der Polizei gerade verborgen?
+function pcHid(id){ const c = pcCtx(); return !!(c && c.p && pcView(c).role === "cop" && (c.ph === "run" || c.ph === "head") && c.p.runs.includes(id) && id !== c.me && !pcRun(c, id).out && !PC.vis.has(id)); }
+// an die exe – oder in der Police-Chase-Demo an die Demo-Kolonne
+function pcApi(path, body){ return PCD.on ? Promise.resolve(pcDemoApi(path, body)) : sessPost(path, body); }
+function pcPost(path, body){ return PCD.on ? pcApi(path, body).then(j => { gFriends(true); return j; }) : lobbyPost(path, body); }
+// Regeln für einen Flüchtigen (mein Stand oder ein Demo-Mitspieler): Stern beim Eintritt in einen Suchkreis, Fangzeit im Fangkreis
+function pcRule(S, x, z, cops, now, dt){
+  let dmin = Infinity, near = null;
+  for (const q of cops) { const d = Math.hypot(q.x - x, q.z - z); if (d < dmin) dmin = d; if (q.g && d < PCR.cat && (!near || d < near.d)) near = {d, id:q.id, n:q.n}; }
+  const r = {};
+  S.seen = dmin < PCR.see;
+  if (dmin > PCR.far) S.far = true;
+  if (S.seen && S.far && now - S.starT >= PCR.gap) { S.far = false; S.starT = now; if (S.st < 6) { S.st++; r.star = true; } }
+  S.near = near;
+  if (near) S.ct += dt; else S.ct = Math.max(0, S.ct - dt * 2);
+  if (near && S.ct >= pcNeed(S.st)) { S.out = true; S.by = near.id; S.ct = 0; S.near = null; r.caught = near; }
+  return r;
+}
 function pcSend(c){
   const sig = c.p.rid + "|" + PC.st + "|" + PC.out; if (sig === PC.sent) return; PC.sent = sig;
-  sessPost("/lobby/ev", {code:c.l.code, pc:{rid:c.p.rid, st:PC.st, out:PC.out, by:PC.by}, c:D && D.car}).then(j => { if (!j || !j.ok) PC.sent = ""; }).catch(() => { PC.sent = ""; });
+  pcApi("/lobby/ev", {code:c.l.code, pc:{rid:c.p.rid, st:PC.st, out:PC.out, by:PC.by}, c:D && D.car}).then(j => { if (!j || !j.ok) PC.sent = ""; }).catch(() => { PC.sent = ""; });
 }
 function pcReset(c){
   const mine = (c.ev[c.me] || {}).pc, same = !!(mine && mine.rid === c.p.rid);
@@ -7353,31 +7388,21 @@ function pcReset(c){
 }
 // als Flüchtiger: Suchkreise (Sterne) und Fangkreis (Festnahme) messen
 function pcRunner(c, dt){
-  let dmin = Infinity, near = null;
-  for (const id of c.p.cops) {
-    const e = FR.m.get(id); if (!e || !isFinite(e.tx)) continue;
-    const d = Math.hypot(e.tx - D.px, e.tz - D.pz);
-    if (d < dmin) dmin = d;
-    if (e.g && d < PCR.cat && (!near || d < near.d)) near = {d, id, n:e.n};
-  }
-  PC.seen = dmin < PCR.see;
-  if (dmin > PCR.far) PC.far = true;
-  if (PC.seen && PC.far && c.now - PC.starT >= PCR.gap) {
-    PC.far = false; PC.starT = c.now;
-    if (PC.st < 6) { PC.st++; pcSend(c); toast("🚨 Im Suchkreis – " + PC.st + (PC.st === 1 ? " Stern" : " Sterne") + (PC.st === 3 || PC.st === 6 ? " · Fangzeit kürzer" : PC.st === 4 ? " · Ping alle 20 s" : "")); }
-  }
-  PC.near = near;
-  if (near) PC.ct += dt; else PC.ct = Math.max(0, PC.ct - dt * 2);
-  if (near && PC.ct >= pcNeed(PC.st)) { PC.out = true; PC.by = near.id; PC.ct = 0; PC.near = null; pcSend(c); toast("🚔 Gefasst von " + near.n + " – du bist raus"); }
+  const cops = [];
+  for (const id of c.p.cops) { const e = FR.m.get(id); if (e && isFinite(e.tx)) cops.push({id, x:e.tx, z:e.tz, g:e.g, n:e.n}); }
+  const r = pcRule(PC, D.px, D.pz, cops, c.now, dt);
+  if (r.star) { pcSend(c); toast("🚨 Im Suchkreis – " + PC.st + (PC.st === 1 ? " Stern" : " Sterne") + (PC.st === 3 || PC.st === 6 ? " · Fangzeit kürzer" : PC.st === 4 ? " · Ping alle 20 s" : "")); }
+  if (r.caught) { pcSend(c); toast("🚔 Gefasst von " + r.caught.n + " – du bist raus"); }
 }
-// als Polizist: zu den gemeinsamen Ping-Zeitpunkten die Position jedes Flüchtigen festhalten
+// zu den gemeinsamen Ping-Zeitpunkten die Position jedes Flüchtigen festhalten (gezeigt nur aus Sicht der Polizei)
 function pcPings(c){
   const t0 = c.p.start + PCR.head;
   for (const id of c.p.runs) {
     const r = pcRun(c, id); if (r.out) { PC.pings.delete(id); continue; }
     const iv = pcEvery(r.st || 0), k = Math.floor((c.now - t0) / iv), old = PC.pings.get(id);
     if (old && old.k === k && old.iv === iv) continue;
-    const f = PC.raw.get(id); if (!f) continue;   // gerade keine Position (offline oder im Menü): alter Ping bleibt
+    const f = id === c.me ? (D && D.dash && (D.px || D.pz) ? {x:D.px, z:D.pz, n:FR.name || "Du"} : null) : PC.raw.get(id);
+    if (!f) continue;   // gerade keine Position (offline oder im Menü): alter Ping bleibt
     PC.pings.set(id, {k, iv, x:f.x, z:f.z, n:f.n, at:Date.now()});
   }
 }
@@ -7390,7 +7415,7 @@ function pcLeader(c){
   else PC.allT = 0;
   if (!res || c.now - PC.endT < 5000) return;
   PC.endT = c.now;
-  sessPost("/lobby/pc", {code:c.l.code, end:true, rid:c.p.rid, res}).catch(() => {});
+  pcApi("/lobby/pc", {code:c.l.code, end:true, rid:c.p.rid, res}).catch(() => {});
 }
 // Festnahmen und Ergebnis allen kurz melden
 function pcNews(c){
@@ -7407,12 +7432,30 @@ function pcStep(){
   const t = performance.now(); if (PC.lastT && t - PC.lastT < 90) return;
   const dt = PC.lastT ? Math.min(0.5, (t - PC.lastT) / 1000) : 0; PC.lastT = t;
   const c = pcCtx();
+  // Zuschauen endet, wenn der Spieler weg ist (oder ich als Polizist einem Flüchtigen zuschauen würde)
+  if (WATCH.id && (!FR.m.get(WATCH.id) || !pcCanWatch(WATCH.id))) watchStop(true);
   if (!c || !c.p) { pcPill(null); return; }
   if (PC.rid !== c.p.rid) pcReset(c);
   if (c.role === "run" && c.ph === "run" && !PC.out && D && D.on && D.dash) pcRunner(c, dt);
   else { PC.near = null; PC.seen = false; }
-  if (c.role === "cop" && c.ph === "run") pcPings(c);
+  if (c.ph === "run") pcPings(c);
   pcLeader(c); pcNews(c); pcPill(c);
+}
+function watchStart(id){
+  const e = FR.m.get(id); if (!e) return;
+  if (!pcCanWatch(id)) { toast("Als Polizist kannst du nur deinem Team zuschauen"); return; }
+  setMode("follow"); WATCH.id = id; WATCH.n = e.n; PC.lastT = 0; pcStep();
+  toast("👁 Du schaust " + e.n + " zu – oben auf ✕ tippen zum Beenden");
+}
+function watchStop(quiet){
+  if (!WATCH.id) return;
+  const n = WATCH.n; WATCH.id = null; PC.lastT = 0;
+  if (!quiet) toast("Zuschauen beendet"); else if (n) toast(n + " ist nicht mehr zu sehen – Zuschauen beendet");
+}
+// Kamera beim Zuschauen: Position und Fahrtrichtung des Spielers (null = mir selbst folgen)
+function watchCam(){
+  const e = WATCH.id && FR.m.get(WATCH.id); if (!e || !isFinite(e.x ?? e.tx)) return null;
+  return [mirror() * (e.x ?? e.tx), -(e.z ?? e.tz), (e.h ?? e.th ?? 0) + (trail.yawOff === null ? 0 : trail.yawOff)];
 }
 function pchTick(d){ pcStep(); }
 setInterval(() => { try { pcStep(); } catch (e) {} }, 500);
@@ -7421,7 +7464,18 @@ function pcPill(c){
   const el = $("pcPill"); if (!el) return;
   let h = "", cls = "";
   const sep = '<span class="sep"></span>';
-  if (c && c.p) {
+  if (WATCH.id) {
+    // Zuschauen: wem, und was der gerade hat – antippen beendet
+    const e = FR.m.get(WATCH.id), v = pcView(c), live = c && c.p && (c.ph === "run" || c.ph === "head");
+    h = '👁 <b>' + esc(WATCH.n || (e && e.n) || "Spieler") + '</b>';
+    if (live) {
+      const {p, now} = c, clock = pcMmss(c.ph === "head" ? p.start + PCR.head - now : p.start + p.dur - now);
+      if (v.role === "cop") { const left = p.runs.filter(id => !pcRun(c, id).out); h += sep + "🚓 <b>" + clock + "</b>" + sep + "<small>" + (p.runs.length - left.length) + "/" + p.runs.length + " gefasst</small>"; cls = "cop"; }
+      else if (v.role === "run") { const r = pcRun(c, v.id); h += sep + "<b>" + clock + "</b>" + sep + (r.out ? "<small>gefasst</small>" : pcStars(r.st || 0)); }
+      else h += sep + "<b>" + clock + "</b>";
+    }
+    h += '<span class="x" aria-label="Zuschauen beenden">✕</span>'; cls += " w";
+  } else if (c && c.p) {
     const {p, now, role, ph} = c, clock = pcMmss(p.start + p.dur - now), free = p.runs.filter(id => !pcRun(c, id).out && !pcGone(c, id)).length;
     if (ph === "end" || ph === "over") {
       const res = pcResOf(c), ago = now - (p.end || p.start + p.dur);
@@ -7438,13 +7492,14 @@ function pcPill(c){
     } else h = (role === "run" ? "🚔 <small>Gefasst</small>" : "👀 <small>Zuschauen</small>") + sep + "<b>" + clock + "</b>" + sep + "<small>" + free + " frei</small>";
   }
   if (!h) { if (!el.hidden) el.hidden = true; return; }
-  el.hidden = false; el.className = "pcp" + (cls ? " " + cls : "");
+  el.hidden = false; el.className = "pcp" + (cls ? " " + cls.trim() : "");
+  if (!el.onclick) el.onclick = () => { if (WATCH.id) { watchStop(); pcPill(pcCtx()); } };
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
 }
 // Kartenebene: rote Suchkreise (für Flüchtige), eigener blauer Fangkreis und Pings (für die Polizei)
 function drawPc(axS, ayS, s){
   const c = pcCtx(); if (!c || !c.p || (c.ph !== "run" && c.ph !== "head")) return;
-  const me = CAR.ok ? [mirror() * CAR.x, -CAR.y] : D && (D.px || D.pz) ? [D.px, D.pz] : null;
+  const me = CAR.ok ? [mirror() * CAR.x, -CAR.y] : D && (D.px || D.pz) ? [D.px, D.pz] : null, v = pcView(c);
   const pos = id => { if (id === c.me) return me; const e = FR.m.get(id); if (!e) return null; const x = e.x ?? e.tx, z = e.z ?? e.tz; return isFinite(x) && isFinite(z) ? [x, z] : null; };
   const ring = (w, r, fill, stroke, dash) => {
     const [x, y] = screenOf(w[0], w[1], axS, ayS, s), R = Math.max(3, r * s);
@@ -7453,12 +7508,12 @@ function drawPc(axS, ayS, s){
     if (fill) { ctx.fillStyle = fill; ctx.fill(); }
     ctx.setLineDash(dash || []); ctx.lineWidth = 1.6; ctx.strokeStyle = stroke; ctx.stroke(); ctx.setLineDash([]);
   };
-  if (c.role !== "cop") {
+  if (v.role !== "cop") {
     for (const id of c.p.cops) { const w = pos(id); if (w) { ring(w, PCR.see, "rgba(255,59,48,.09)", "rgba(255,69,58,.55)"); ring(w, PCR.cat, "rgba(255,59,48,.2)", "rgba(255,69,58,.9)"); } }
     return;
   }
   for (const id of c.p.cops) { const w = pos(id); if (w) ring(w, PCR.see, null, "rgba(64,156,255,.32)", [7, 7]); }
-  { const w = pos(c.me); if (w) ring(w, PCR.cat, "rgba(10,132,255,.18)", "rgba(64,156,255,.95)"); }
+  { const w = pos(v.id); if (w) ring(w, PCR.cat, "rgba(10,132,255,.18)", "rgba(64,156,255,.95)"); }
   const pulse = (performance.now() % 1600) / 1600;
   // sichtbare Flüchtige: roter Ring um den Punkt
   for (const id of PC.vis) { const w = pos(id); if (!w) continue; const [x, y] = screenOf(w[0], w[1], axS, ayS, s); ctx.globalAlpha = 1 - pulse; ctx.strokeStyle = "#ff453a"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x, y, 15 + pulse * 14, 0, 7); ctx.stroke(); }
@@ -7506,6 +7561,168 @@ function kolPolice(l, mem, ev, mine){
   const by = {}; for (const x of runs) if (x.r.out && x.r.by) by[x.r.by] = (by[x.r.by] || 0) + 1;
   s += '<div class="ihd">🚓 Polizei · ' + p.cops.length + '</div><div class="ilist">' + p.cops.slice().sort((a, b) => (by[b] || 0) - (by[a] || 0)).map(id => '<div class="irow"><div class="tx"><b>' + nm(id) + '</b><small>' + (by[id] ? by[id] + (by[id] === 1 ? ' Festnahme' : ' Festnahmen') : 'noch keine Festnahme') + (pcGone(c, id) ? ' · nicht da' : '') + '</small></div></div>').join("") + '</div>';
   return s;
+}
+// ---- Police-Chase-Demo: du und 5 Mitspieler fahren auf den echten Straßen – zum Ausprobieren und Vorführen ----
+// Polizisten wissen nur, was die Regeln hergeben (live im Suchkreis, sonst der Ping); Flüchtige sehen die Polizei und weichen aus.
+const PCD = {on:false, code:"PCD-EMO-001", lobby:null, bots:[], ev:{}, pc:null, me:"demo-me", t:0, iv:0, feedT:0, intel:new Map(), tgt:{}, meNext:0};
+const PCD_BOTS = [
+  {id:"pcd1", n:"kenji_touge", pid:"demo-kenji", c:4114},
+  {id:"pcd2", n:"anna_rs", pid:"demo-anna", c:3781},
+  {id:"pcd3", n:"lena.gt", pid:"demo-lena", c:4144},
+  {id:"pcd4", n:"taro.r34", pid:"demo-taro", c:3402},
+  {id:"pcd5", n:"mika_s15", pid:"demo-mika", c:3983},
+];
+const PCD_PROFILES = {
+  "demo-taro":{id:"demo-taro", u:"taro.r34", lv:11, cur:300, need:520, ep:3300, km:1210, cars:22, ev:7, tags:["Highway", "Grip"], garage:[[3402, 520.2], [4114, 98.1]], car:3402, since:Date.now() - 90 * 864e5, av:false},
+  "demo-mika":{id:"demo-mika", u:"mika_s15", lv:7, cur:90, need:380, ep:1500, km:610, cars:12, ev:3, tags:["Drift", "Touge"], garage:[[3983, 330.4], [3781, 80.0]], car:3983, since:Date.now() - 25 * 864e5, av:false},
+};
+function pcDemoBox(){
+  if (PCD.on) return '<div class="ilist" style="margin-top:14px"><div class="irow"><div class="tx"><b>Police-Chase-Demo läuft</b><small>Auf der Karte einen Mitspieler antippen → „Zuschauen“ zeigt die Runde aus seiner Sicht</small></div><button class="itx red" data-a="pcdemo-x">Beenden</button></div></div>';
+  return '<div class="ihd">Ausprobieren</div><div class="ilist"><div class="irow"><div class="tx"><b>🚓 Police Chase – Demo</b><small>Du und 5 Mitspieler auf der echten Karte. Rolle wählen, Runde starten, zuschauen.</small></div><button class="kbtn pri" data-a="pcdemo">Starten</button></div></div>';
+}
+function pcDemoStart(){
+  if (PCD.on) return;
+  const me = demoDrvRef && demoDrvRef.along(0);
+  if (!demo || !me) { toast("Die Demo braucht die Karte – einen Moment, bis die Demo-Fahrt läuft"); return; }
+  const prof = Object.assign({}, DEMO_PROFILES, PCD_PROFILES);
+  for (const id in prof) if (!PFC.has(id)) PFC.set(id, {at:Infinity, p:Object.assign({ok:true}, prof[id])});
+  // Start wie eine echte Kolonne: alle stehen auf deiner Strecke, vor und hinter dir
+  PCD.bots = PCD_BOTS.map((c, i) => {
+    const q = demoDrvRef.along([60, -50, 110, -100, 160][i]) || me;
+    return Object.assign({}, c, {drv:demoDriver(q.x, q.z, {noWp:true, vmax:() => pcDemoRole(c.id) === "cop" ? 47 : performance.now() < (PCD.bots[i] || {}).alarm ? (i % 2 ? 41 : 43) : 32,
+      boost:() => performance.now() < ((PCD.bots[i] || {}).close || 0) ? 1.15 : 1}), v:0, x:q.x, z:q.z, h:q.h, next:0, alarm:0, S:null});
+  });
+  PCD.ev = {[PCD.me]:{r:{}, role:"", caught:[], n:"Du"}};
+  for (const b of PCD.bots) PCD.ev[b.id] = {r:{}, role:"", caught:[], n:b.n, c:b.c};
+  PCD.lobby = {code:PCD.code, name:"Police Chase", an:true, owner:true, online:[]};
+  PCD.pc = null; PCD.intel.clear(); PCD.on = true; PCD.t = performance.now();
+  clearInterval(PCD.iv); PCD.iv = setInterval(() => { try { pcDemoStep(); } catch (e) { console.error(e); } }, 50);
+  pcDemoFeed(); GR.frTab = "kolonne"; gFriends(true);
+  toast("Demo-Kolonne mit 5 Mitspielern – wähl deine Rolle und starte die Runde");
+}
+function pcDemoStop(){
+  if (!PCD.on) return;
+  clearInterval(PCD.iv); PCD.on = false; PCD.bots = []; PCD.pc = null;
+  WATCH.id = null;
+  frUpdate({on:true, ok:true, name:"Du", group:"Demo", list:[], lobbys:[], kc:{kol:[], chat:[]}});
+  PC.rid = ""; pcPill(null); gFriends(true); toast("Police-Chase-Demo beendet");
+}
+// Anfragen der Spiel-Logik (eigene Rolle, Sterne, Start, Ende) gehen in der Demo hierhin statt an die exe
+function pcDemoApi(path, body){
+  const me = PCD.ev[PCD.me];
+  if (path === "/lobby/ev") {
+    if (typeof body.role === "string") me.role = body.role === "cop" || body.role === "run" ? body.role : "";
+    if (body.pc) me.pc = Object.assign({}, body.pc, {t:body.pc.out ? Date.now() : 0});
+  } else if (path === "/lobby/pc" && body.start) {
+    if (PCD.pc && !PCD.pc.end && Date.now() < PCD.pc.start + PCD.pc.dur) return {ok:false, why:"Es läuft schon eine Runde"};
+    const ids = [PCD.me].concat(PCD.bots.map(b => b.id)), rank = id => ({cop:0, run:2})[(PCD.ev[id] || {}).role] ?? 1;
+    const ord = ids.map(id => ({id, r:rank(id), k:Math.random()})).sort((a, b) => a.r - b.r || a.k - b.k).map(x => x.id), n = pcCops(ids.length);
+    const nm = {[PCD.me]:"Du"}; for (const b of PCD.bots) nm[b.id] = b.n;
+    PCD.pc = {rid:"DEMO" + Math.random().toString(36).slice(2, 8).toUpperCase(), start:Date.now(), dur:(+body.dur || 15) * 60000, cops:ord.slice(0, n), runs:ord.slice(n), nm, end:0, res:"", t:Date.now()};
+    PCD.intel.clear(); PCD.tgt = {}; delete me.pc; PCD.meNext = 0;
+    for (const b of PCD.bots) { b.S = {st:0, far:true, starT:-1e9, ct:0, out:false, by:""}; b.next = 0; PCD.ev[b.id].pc = {rid:PCD.pc.rid, st:0, out:false, by:"", t:0}; }
+  } else if (path === "/lobby/pc" && body.end) {
+    if (!PCD.pc || PCD.pc.end) return {ok:false, why:"Keine Runde offen"};
+    PCD.pc = Object.assign({}, PCD.pc, {end:Date.now(), res:body.res || "abort", t:Date.now()});
+  } else return {ok:false};
+  pcDemoFeed();
+  return {ok:true};
+}
+// so geht es an die Karte, die Listen und die Spiel-Logik – genauso, wie es sonst die exe 4×/s schickt
+function pcDemoFeed(){
+  PCD.feedT = performance.now();
+  const list = PCD.bots.map(b => ({id:b.id, n:b.n, pid:b.pid, x:b.x, z:b.z, h:b.h, v:b.v, c:b.c, g:1, b:"", age:0}));
+  const mem = PCD.bots.map(b => ({d:b.id, n:b.n, pid:b.pid, c:b.c, v:b.v, g:1, x:b.x, z:b.z}));
+  const kk = {code:PCD.code, leader:PCD.me, me:PCD.me, mem, votes:{}, promo:{}, ev:PCD.ev, pc:PCD.pc};
+  frUpdate({on:true, ok:true, name:"Du", group:"Demo", list, lobbys:[PCD.lobby], kc:{kol:[kk], chat:[]}});
+}
+const pcDemoRole = id => { const p = PCD.pc; return !p || p.end ? "" : p.cops.includes(id) ? "cop" : p.runs.includes(id) ? "run" : ""; };
+// Position, Strecke und Status eines Mitspielers (ich selbst: die Demo-Fahrt)
+function pcDemoUnit(id){
+  if (id === PCD.me) return D ? {id, x:D.px, z:D.pz, n:"Du", g:1, drv:demoDrvRef, out:PC.rid === (PCD.pc || {}).rid && PC.out} : null;
+  const b = PCD.bots.find(x => x.id === id); return b ? {id, x:b.x, z:b.z, n:b.n, g:1, drv:b.drv, out:!!(b.S && b.S.out)} : null;
+}
+const pcDemoCops = () => (PCD.pc ? PCD.pc.cops : []).map(pcDemoUnit).filter(Boolean);
+// muss meine Demo-Fahrt stehen bleiben? Polizei wartet den Vorsprung ab, Gefasste halten an
+function pcDemoHold(){
+  if (!PCD.on || !PCD.pc || PCD.pc.end) return false;
+  const role = pcDemoRole(PCD.me), now = Date.now();
+  return (role === "cop" && now < PCD.pc.start + PCR.head) || (role === "run" && PC.rid === PCD.pc.rid && PC.out);
+}
+// Polizei: zum nächsten bekannten Flüchtigen (live im Suchkreis, sonst die letzte Ortung); nah dran auf seine Strecke voraus
+function pcDemoChase(u){
+  const cops = pcDemoCops(); let best = null;
+  for (const id of PCD.pc.runs) {
+    const R = pcDemoUnit(id); if (!R || R.out) continue;
+    const seen = cops.some(q => Math.hypot(q.x - R.x, q.z - R.z) < PCR.see), g = PCD.intel.get(id);
+    // nicht gesehen: von der letzten Ortung aus in Fahrtrichtung vorausschätzen (höchstens 1,2 km)
+    let k = seen ? {x:R.x, z:R.z} : null;
+    if (!k && g) { const age = Math.min(25, (Date.now() - g.at) / 1000), vx = g.vx * age, vz = g.vz * age, f = Math.min(1, 1200 / Math.max(1, Math.hypot(vx, vz))); k = {x:g.x + vx * f, z:g.z + vz * f, gx:g.x, gz:g.z}; }
+    if (!k) continue;
+    // ein anderer Polizist ist schon an ihm dran: lieber einen anderen nehmen (die Polizei verteilt sich)
+    const d = Math.hypot(k.x - u.x, k.z - u.z), taken = Object.entries(PCD.tgt).some(([c, r]) => c !== u.id && r === id), sc = d * (taken && d > 400 ? 1.7 : 1);
+    if (!best || sc < best.sc) best = {d, sc, id, k, R, seen};
+  }
+  if (!best) return 4000;
+  PCD.tgt[u.id] = best.id;
+  if (u.b) u.b.close = best.seen && best.d < 320 ? performance.now() + 3000 : 0;   // dicht dran: in Kurven etwas mutiger
+  let tx = best.k.x, tz = best.k.z;
+  if (best.seen && best.d < 320 && best.R.drv) { const a = best.R.drv.along(Math.min(140, best.d + 60)); if (a) { tx = a.x; tz = a.z; } }
+  if (!u.drv.goTo(tx, tz) && best.k.gx !== undefined) u.drv.goTo(best.k.gx, best.k.gz);   // geschätzter Punkt neben der Straße: zur Ortung selbst
+  return best.seen ? (best.d < 320 ? 1400 : 2500) : 4000;
+}
+// Flüchtige: ohne Polizei in Sicht unauffällig in der Gegend cruisen; kommt ein Polizist in Sicht (Rand des Suchkreises),
+// mit Vollgas weg – weit weg und nicht auf ihn zu (Bots fahren dann ~20 s schneller)
+function pcDemoFlee(u, force){
+  const cops = pcDemoCops(); let nc = null, dmin = Infinity;
+  for (const q of cops) { const d = Math.hypot(q.x - u.x, q.z - u.z); if (d < dmin) { dmin = d; nc = q; } }
+  const threat = dmin < PCR.see;
+  if (!force && !threat && !u.drv.idle()) return 3000;
+  if (threat && u.b) u.b.alarm = performance.now() + 20000;
+  const G = navBuildGraph(); let best = null;
+  const [lo, hi] = threat || force ? [900, 3500] : [500, 1800];
+  for (let i = 0; i < 40; i++) {
+    const n = (Math.random() * G.X.length) | 0, [x, z] = imgToWorld(G.X[n], G.Y[n]), q = Math.hypot(x - u.x, z - u.z);
+    if (q < lo || q > hi) continue;
+    let s = Math.random() * 400;
+    if (threat || force) { s = Infinity; for (const c of cops) s = Math.min(s, Math.hypot(c.x - x, c.z - z)); }
+    if (nc && threat) s -= 900 * ((x - u.x) * (nc.x - u.x) + (z - u.z) * (nc.z - u.z)) / (q * Math.max(1, dmin));   // nicht auf den Polizisten zu
+    if (!best || s > best.s) best = {x, z, s};
+  }
+  if (best) u.drv.goTo(best.x, best.z);
+  return threat ? 7000 : 3000;
+}
+function pcDemoStep(){
+  const t = performance.now(), dt = Math.min(0.2, (t - PCD.t) / 1000 || 0.05), now = Date.now(); PCD.t = t;
+  const p = PCD.pc, run = !!p && !p.end && now >= p.start + PCR.head && now < p.start + p.dur, head = !!p && !p.end && now < p.start + PCR.head;
+  // Ortung für die Polizei-Bots: dieselben Ping-Zeitpunkte wie im Spiel
+  if (run) for (const id of p.runs) {
+    const R = pcDemoUnit(id); if (!R) continue;
+    const st = id === PCD.me ? PC.st : ((PCD.bots.find(b => b.id === id) || {}).S || {}).st || 0, iv = pcEvery(st), k = Math.floor((now - p.start - PCR.head) / iv), old = PCD.intel.get(id);
+    // dazu die Bewegung seit der letzten Ortung (so schätzt die Polizei, wohin er fährt)
+    if (!old || old.k !== k || old.iv !== iv) PCD.intel.set(id, {k, iv, x:R.x, z:R.z, at:now, vx:old ? (R.x - old.x) / Math.max(1, (now - old.at) / 1000) : 0, vz:old ? (R.z - old.z) / Math.max(1, (now - old.at) / 1000) : 0});
+  }
+  // meine Demo-Fahrt lenkt mit, solange kein eigener Wegpunkt gesetzt ist
+  if ((run || head) && demoDrvRef && wp.active < 0 && t > PCD.meNext) {
+    const role = pcDemoRole(PCD.me), u = pcDemoUnit(PCD.me);
+    PCD.meNext = t + (role === "cop" && run ? pcDemoChase(u) : role === "run" && !u.out ? pcDemoFlee(u, !PCD.meNext) : 4000);
+  }
+  for (const b of PCD.bots) {
+    const role = pcDemoRole(b.id), out = !!(b.S && b.S.out), u = {id:b.id, x:b.x, z:b.z, drv:b.drv, b};
+    if (t > b.next) b.next = t + (role === "cop" && run ? pcDemoChase(u) : role === "run" && !out && (run || head) ? pcDemoFlee(u, !b.next) : 6000);
+    let target = b.drv.plan(t);
+    if (target === null || (role === "cop" && head) || (role === "run" && out)) target = 0;
+    const brake = b.v > target + 3;
+    b.v += ((brake ? -16 : b.v < target ? 8.5 : 0) - 0.5) * dt;
+    b.v = Math.max(0, Math.min(46, b.v));
+    const r = b.v > 0.05 ? b.drv.advance(b.v * dt) : null; if (r) { b.x = r[0]; b.z = r[1]; b.h = r[2]; }
+    // Flüchtiger Bot: dieselben Regeln wie für dich (Sterne, Fangkreis)
+    if (role === "run" && run && b.S && !b.S.out) {
+      const rr = pcRule(b.S, b.x, b.z, pcDemoCops(), now, dt);
+      if (rr.star || rr.caught) PCD.ev[b.id].pc = {rid:p.rid, st:b.S.st, out:b.S.out, by:b.S.by, t:b.S.out ? now : 0};
+    }
+  }
+  if (t - PCD.feedT >= 250) pcDemoFeed();
 }
 // ---- Handbremse: hält im Spiel die Leertaste (Handbremse auf der Tastatur), bis man sie löst ----
 const PB = {on:false, seen:false, ping:0, badT:0, gasT:0};
@@ -8209,6 +8426,7 @@ async function pfPopShow(e){
     el.addEventListener("click", ev => { const b = ev.target.closest("[data-p]"); if (!b) return; const fr = FR.m.get(PFP.id);
       if (b.dataset.p === "x") pfPopHide();
       else if (b.dataset.p === "go" && fr) { frGoto(fr); pfPopHide(); }
+      else if (b.dataset.p === "watch" && fr) { pfPopHide(); watchStart(fr.id); setView("map"); }
       else if (b.dataset.p === "prof" && fr && fr.pid) { PROF.view = fr.pid; GR.frTab = "profil"; setView("friends"); pfPopHide(); }
     }); }
   PFP.id = e.id; PFP.p = null;
@@ -8227,7 +8445,7 @@ function pfPopDraw(){
     + (car ? '<div class="car"><span class="dot"></span><div class="t"><small>FÄHRT GERADE</small><b>' + esc(car.full || car.name) + '</b>' + (p && carModOf(p, e.c || p.car) ? '<em class="cmod">🔧 ' + esc(modShort(mdNameOf(carModOf(p, e.c || p.car)))) + '</em>' : '') + '</div><div class="sp"><span data-ps>–</span><small>' + (S.unit === "mph" ? "MPH" : "KM/H") + '</small></div></div>' : '')
     + (p && p.tags && p.tags.length ? '<div class="tg">' + p.tags.map(t => '<span>' + esc(t) + '</span>').join("") + '</div>' : '')
     + (p ? showcaseHtml(p, "pfsh pps") : '')
-    + '<div class="bt"><button class="pri" data-p="go">Hinfahren</button>' + (p ? '<button data-p="prof">Profil ansehen</button>' : '') + '</div></div><span class="stem"></span>';
+    + '<div class="bt"><button class="pri" data-p="go">Hinfahren</button>' + (pcCanWatch(e.id) ? '<button data-p="watch">👁 Zuschauen</button>' : '') + (p ? '<button data-p="prof">Profil</button>' : '') + '</div></div><span class="stem"></span>';
   pfPopLive();
 }
 // Entfernung und Tempo laufend aktualisieren
@@ -8268,6 +8486,7 @@ function gwpCheck(){
 const FR_COLS = ["#ff375f", "#64d2ff", "#ffd60a", "#bf5af2", "#30d158", "#ff9f0a"];
 function frCol(id){ let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0; return FR_COLS[Math.abs(h) % FR_COLS.length]; }
 function frUpdate(o){
+  if (PCD.on && o && o.group !== "Demo") return;
   if (demo && o && o.group !== "Demo") o = Object.assign({}, o, {list:FR.demoList || []});
   if (o && o.group === "Demo") FR.demoList = o.list;
   FR.on = !!o.on; FR.ok = !!o.ok; FR.name = o.name || ""; FR.group = o.group || ""; FR.upd = o.upd || ""; try { updAsk(); } catch (x) {} if (o.lobbys) FR.lobbys = o.lobbys;
@@ -8481,6 +8700,7 @@ const DEMO_PROFILES = {
 };
 const frDemo = {n:0, rid:-1, lead:0, bl:{}};
 function frDemoConvoy(drv, v){
+  if (PCD.on) return;
   if (++frDemo.n % 15) return;
   const me = drv.along(0); if (!me) return;
   if (me.rid !== frDemo.rid) { frDemo.rid = me.rid; frDemo.lead = (frDemo.lead + 1) % DEMO_CREW.length; }
@@ -8500,6 +8720,7 @@ function frDemoConvoy(drv, v){
   frUpdate({on:true, ok:true, name:"Du", group:"Demo", list});
 }
 function frDemoTick(x, z, h, v){
+  if (PCD.on) return;
   if (++frDemo.n % 30) return;
   frUpdate({on:true, ok:true, name:"Du", group:"Demo", list:[{id:"demo1", n:"Kollege", x, z, h, v, c:0, g:1, age:0}]});
 }
@@ -12004,6 +12225,7 @@ function tick(){ const t = new Date(); dayHour = t.getHours(); setText("clock", 
 setInterval(tick, 5000); tick();
 
 /* ======================= Demo ======================= */
+let demoDrvRef = null;
 function startDemo(prewarm){
   if (demoTimer) return;
   // mit laufender exe bleibt die Verbindung offen (Änderungen der Freunde, Speichern) – nur die Fahrdaten werden ignoriert
@@ -12026,9 +12248,9 @@ function startDemo(prewarm){
   if (route && !realT) { mapImg.demo = true; setT(route.T); fit.anchor = null; fit.params = null; }
   const temps = [175, 175, 182, 182], wear = [0.12, 0.12, 0.18, 0.18];
   // Demofahrer über die ganze Karte (Straßennetz); ohne Netz fährt er den alten Rundkurs
-  const [sx0, sz0] = pos(0.3), drv = demoDriver(sx0, sz0); let px = sx0, pz = sz0, a0 = 0;
+  const [sx0, sz0] = pos(0.3), drv = demoDriver(sx0, sz0, {vmax:() => PCD.on ? 42 : 0}); demoDrvRef = drv; let px = sx0, pz = sz0, a0 = 0;
   const step = () => {
-    const dt = 1 / 60, wish = drv.plan(performance.now());
+    const dt = 1 / 60, wish0 = drv.plan(performance.now()), wish = wish0 !== null && pcDemoHold() ? 0 : wish0;
     let target;
     if (wish !== null) target = wish;
     else { const [x0, z0] = pos(t), [x1, z1] = pos(t + 0.001), dl = Math.hypot(x1 - x0, z1 - z0) / 0.001; a0 = Math.atan2(x1 - x0, z1 - z0); px = x0; pz = z0; let dq = a0 - prevA; while (dq > Math.PI) dq -= 2 * Math.PI; while (dq < -Math.PI) dq += 2 * Math.PI; const cq = Math.abs(dq) / Math.max(0.01, v * dt); target = cq > 0.004 ? 30 + 0.12 / Math.max(cq, 0.001) : 62; t += v * dt / dl; }
@@ -12439,7 +12661,11 @@ function gFriends(force){
   let h = '<div class="frw' + (tab === "profil" ? " wide" : "") + '"><div class="frh"><h2>Freunde</h2>';
   if (live) h += '<label class="frsw">Online-Modus <button class="sw' + (z.welt ? " on" : "") + '" data-a="welt" aria-label="Online-Modus"></button></label>';
   h += '</div>';
-  if (!live) { el.innerHTML = h + '<div class="ilist"><div class="iempty">Freunde, Kolonnen und der Online-Modus gibt es im ForzaDashboard-Programm auf dem PC.</div></div></div>'; el.dataset.h = ""; return; }
+  if (!live) {
+    h += PCD.on && PCD.lobby ? kolCard(PCD.lobby, {av, spd, dist}) : '<div class="ilist"><div class="iempty">Freunde, Kolonnen und der Online-Modus gibt es im ForzaDashboard-Programm auf dem PC.</div></div>';
+    if (demo) h += pcDemoBox();
+    h += '</div>'; if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } return;
+  }
   const pm = PROF.me;
   if (pm && tab !== "profil") h += pm.has
     ? '<div class="pfb" data-tab="profil">' + pfAvatar(pm, 52) + '<div class="tx"><b>' + esc(pm.u) + '</b><small>Level ' + pm.lv + ' · ' + lvName(pm.lv) + ' · noch ' + nf0.format(pm.need - pm.cur) + ' EP</small><div class="pfbar"><u style="width:' + Math.round(pm.cur / pm.need * 100) + '%"></u></div></div><span class="itx">Profil</span></div>'
@@ -12458,6 +12684,7 @@ function gFriends(force){
   } else if (tab === "kolonne") {
     if (!act.length) h += '<div class="ilist"><div class="iempty"><span class="big">' + FI.people + '</span><b>Zusammen fahren</b>Starte eine Kolonne und lade Freunde ein – ihr seht euch auf der Karte und könnt gemeinsame Ziele setzen.<button class="btn pri" data-a="new">Kolonne starten</button></div></div>';
     for (const l of act) h += kolCard(l, {av, spd, dist});
+    if (demo) h += pcDemoBox();
     const idle = lob.filter(l => !l.an);
     if (idle.length) h += '<div class="ihd">Pausiert</div><div class="ilist">' + idle.map(l => '<div class="irow"><div class="tx"><b>' + esc(l.name) + "</b><small>" + esc(l.code) + '</small></div><button class="itx" data-a="resume" data-c="' + esc(l.code) + '">Fortsetzen</button></div>').join("") + "</div>";
     h += '<div class="ihd">Mit Code beitreten</div><div class="ilist"><div class="irow"><input class="edin" id="frCode" maxlength="13" placeholder="z. B. K7M-2QX-9PA"><button class="itx" data-a="join">Beitreten</button></div></div>';
@@ -12482,13 +12709,15 @@ $("gfr").onclick = e => {
   if (a === "new") lobbyPost("/lobby/neu", {name:"Kolonne von " + (FR.name || "mir")}).then(j => { if (j && j.code) { copyText(j.code); toast("Kolonne gestartet – Code " + j.code + " kopiert"); } done(); });
   else if (a === "join") { const v = ($("frCode") || {}).value || ""; lobbyPost("/lobby/beitreten", {code:v}).then(j => { if (j && j.ok) toast("Kolonne beigetreten"); done(); }); }
   else if (a === "copy") { copyText(c); toast("Code " + c + " kopiert"); }
+  else if (a === "pcdemo") pcDemoStart();
+  else if (a === "pcdemo-x" || ((a === "pause" || a === "leave") && PCD.on && c === PCD.code)) pcDemoStop();
   else if (a === "pause" || a === "resume") lobbyPost("/lobby/an", {code:c, an:a === "resume"}).then(done);
   else if (a === "leave") { if (FR.leaveSure !== c || Date.now() - (FR.leaveT || 0) > 6000) { FR.leaveSure = c; FR.leaveT = Date.now(); gFriends(true); return; } FR.leaveSure = null; lobbyPost("/lobby/verlassen", {code:c}).then(j => { FR.lobbys = (FR.lobbys || []).filter(x => x.code !== c); toast("Kolonne verlassen"); done(); }); }
   else if (a === "krate") lobbyPost("/lobby/ev", {code:c, rate:id, s:+b.dataset.s, c:D && D.car}).then(done);
-  else if (a === "krole") lobbyPost("/lobby/ev", {code:c, role:b.dataset.s, c:D && D.car}).then(j => { if (j && j.ok) toast(b.dataset.s === "cop" ? "Wunschrolle: Polizei 🚓" : b.dataset.s === "run" ? "Wunschrolle: Flucht 🏃" : "Rolle wird zugelost"); done(); });
+  else if (a === "krole") pcPost("/lobby/ev", {code:c, role:b.dataset.s, c:D && D.car}).then(j => { if (j && j.ok) toast(b.dataset.s === "cop" ? "Wunschrolle: Polizei 🚓" : b.dataset.s === "run" ? "Wunschrolle: Flucht 🏃" : "Rolle wird zugelost"); done(); });
   else if (a === "pcdur") { PC.dur = +b.dataset.s || 20; done(); }
-  else if (a === "pcstart") lobbyPost("/lobby/pc", {code:c, start:true, dur:PC.dur}).then(j => { if (j && j.ok) toast("🚨 Police Chase gestartet – " + PC.dur + " min"); done(); });
-  else if (a === "pcend") { if (Date.now() - PC.endSure > 6000) { PC.endSure = Date.now(); done(); return; } PC.endSure = 0; lobbyPost("/lobby/pc", {code:c, end:true, res:"abort"}).then(done); }
+  else if (a === "pcstart") pcPost("/lobby/pc", {code:c, start:true, dur:PC.dur}).then(j => { if (j && j.ok) toast("🚨 Police Chase gestartet – " + PC.dur + " min"); done(); });
+  else if (a === "pcend") { if (Date.now() - PC.endSure > 6000) { PC.endSure = Date.now(); done(); return; } PC.endSure = 0; pcPost("/lobby/pc", {code:c, end:true, res:"abort"}).then(done); }
   else if (a === "kmore") {
     const l = (FR.lobbys || []).find(x => x.code === c), kk = l ? kolInfo(l).kk : null, m = kk && (kk.mem || []).find(x => x.d === id); if (!m) return;
     const lead = kk.leader === kk.me, v = (kk.votes || {})[id], pr = (kk.promo || {})[id], e = FR.m.get(id), r = b.getBoundingClientRect(), keys = [];

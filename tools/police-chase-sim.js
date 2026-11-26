@@ -148,4 +148,19 @@ t("Kolonnen-Menü rendert (ohne Runde, laufend, Ergebnis)", () => {
   h = w.ctx.kolPolice(l, mem, w.kk.ev, {}); assert.ok(h.includes("Läuft · noch") && h.includes("gefasst von dir") && !h.includes("Du <span") && h.includes("1 Festnahme") && h.includes('data-a="pcend"'), h);
   w.kk.pc = round({end:T, res:"cop"}); h = w.ctx.kolPolice(l, mem, w.kk.ev, {}); assert.ok(h.includes("Polizei hat gewonnen") && h.includes("1 von 2 gefasst"), h);
 });
+t("Zuschauen: Sicht des Polizisten, aktive Polizisten nicht bei Flüchtigen", () => {
+  T = START + 100e3; const w = mk("X9", "C1"); w.kk.mem = [{d:"C1"}, {d:"C2"}, {d:"R1"}, {d:"R2"}]; w.kk.pc = round();
+  w.ctx.FR.m.set("C1", {id:"C1", n:"Cop1", tx:0, tz:0, x:0, z:0}); w.ctx.FR.m.set("R1", {id:"R1", n:"Run1"});
+  const list = [{id:"C1", n:"Cop1", x:0, z:0}, {id:"C2", n:"Cop2", x:5000, z:0}, {id:"R1", n:"Run1", x:200, z:0}, {id:"R2", n:"Run2", x:900, z:0}];
+  assert.strictEqual(w.ctx.pcFilter(list, w.ctx.FR.kc).length, 4, "Zuschauer ohne Zuschauen: alle");
+  w.run("WATCH.id = \"C1\"");
+  assert.deepStrictEqual(w.ctx.pcFilter(list, w.ctx.FR.kc).map(f => f.id), ["C1", "C2", "R1"], "Sicht von Cop1: Run2 verborgen");
+  assert.strictEqual(w.run("pcHid(\"R2\")"), true);
+  w.run("WATCH.id = \"R1\"");
+  assert.strictEqual(w.ctx.pcFilter(list, w.ctx.FR.kc).length, 4, "Sicht eines Flüchtigen: alle");
+  const c = mk("C2", "C1"); c.kk.mem = [{d:"C1"}, {d:"R1"}, {d:"R2"}]; c.kk.pc = round();
+  assert.strictEqual(c.run("pcCanWatch(\"R1\")"), false, "Polizist darf keinem Flüchtigen zuschauen");
+  assert.strictEqual(c.run("pcCanWatch(\"C1\")"), true);
+  c.kk.pc = round({end:T, res:"cop"}); assert.strictEqual(c.run("pcCanWatch(\"R1\")"), true, "nach der Runde alles erlaubt");
+});
 console.log("fertig");

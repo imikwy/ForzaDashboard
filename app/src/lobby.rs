@@ -366,7 +366,7 @@ impl Lobbys {
             players.push((self.dev.clone(), take_chars(name, 24)));
             if players.len() < PC_MIN { return json!({"ok": false, "why": format!("Mindestens {PC_MIN} Fahrer nötig (gerade {})", players.len())}); }
             let ev = self.ev.lock().unwrap().get(&code).cloned().unwrap_or_default();
-            let wish: Vec<bool> = players.iter().map(|(d, _)| ev.get(d).is_some_and(|e| e["role"] == "cop")).collect();
+            let wish: Vec<u8> = players.iter().map(|(d, _)| match ev.get(d).and_then(|e| e["role"].as_str()) { Some("cop") => 0, Some("run") => 2, _ => 1 }).collect();
             let mut rnd = vec![0u8; players.len() * 4];
             let _ = getrandom::fill(&mut rnd);
             let ids: Vec<String> = players.iter().map(|(d, _)| d.clone()).collect();
@@ -697,11 +697,11 @@ const PC_MIN: usize = 4;
 // Polizisten je Spielerzahl: bis 6 Spieler 2, bis 12 Spieler 4, bis 18 Spieler 6 … (immer mindestens 1 Flüchtiger)
 fn pc_cops(n: usize) -> usize { (2 * n.div_ceil(6)).min(n.saturating_sub(1)) }
 
-// Teams verteilen: wer Polizei als Wunsch hat, zuerst (unter sich zufällig), der Rest zufällig
-fn pick_teams(ids: &[String], wish: &[bool], rnd: &[u8]) -> (Vec<String>, Vec<String>) {
+// Teams verteilen: Wunsch Polizei (0) zuerst, dann ohne Wunsch (1), Wunsch Flucht (2) zuletzt – innerhalb gleich zufällig
+fn pick_teams(ids: &[String], wish: &[u8], rnd: &[u8]) -> (Vec<String>, Vec<String>) {
     let key = |i: usize| rnd.get(i * 4..i * 4 + 4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]])).unwrap_or(i as u32);
     let mut ord: Vec<usize> = (0..ids.len()).collect();
-    ord.sort_by_key(|&i| (!wish.get(i).copied().unwrap_or(false), key(i)));
+    ord.sort_by_key(|&i| (wish.get(i).copied().unwrap_or(1), key(i)));
     let n = pc_cops(ids.len());
     let cops = ord[..n].iter().map(|&i| ids[i].clone()).collect();
     let runs = ord[n..].iter().map(|&i| ids[i].clone()).collect();
@@ -741,12 +741,13 @@ mod tests {
     #[test]
     fn teams_wunsch_zuerst() {
         let ids: Vec<String> = (0..7).map(|i| format!("g{i}")).collect();
-        let wish = [false, false, true, false, false, false, true];
+        let wish = [2, 1, 0, 2, 1, 2, 0];
         for seed in 0..50u8 {
             let rnd: Vec<u8> = (0..28u8).map(|i| i.wrapping_mul(37).wrapping_add(seed.wrapping_mul(91))).collect();
             let (cops, runs) = pick_teams(&ids, &wish, &rnd);
             assert_eq!(cops.len(), 4); assert_eq!(runs.len(), 3);
             assert!(cops.contains(&"g2".to_string()) && cops.contains(&"g6".to_string()));
+            assert!(!cops.contains(&"g0".to_string()) && !cops.contains(&"g3".to_string()) && !cops.contains(&"g5".to_string()), "Wunsch Flucht bleibt Flucht");
             assert!(cops.iter().all(|c| !runs.contains(c)));
         }
     }
