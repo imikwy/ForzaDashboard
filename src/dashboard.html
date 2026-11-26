@@ -1995,7 +1995,20 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .kstars{display:flex;gap:1px;flex:none}.kstars button{font-size:22px;width:30px;height:34px;color:rgba(255,255,255,.2);background:none}.kstars button.on{color:#ffd60a}
 .krank{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:rgba(118,118,128,.24);flex:none;margin-right:2px}.krank.r1{background:#ffd60a;color:#1c1c1e}.krank.r2{background:#d1d1d6;color:#1c1c1e}.krank.r3{background:#ff9f0a;color:#1c1c1e}
 .kavg{text-align:right;flex:none}.kavg b{display:block;font-size:15px}.kavg small{font-size:11.5px;color:var(--muted)}
-.kalert{background:rgba(255,69,58,.12)}.kalert .tx{width:100%}.kmeter{height:6px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:7px;overflow:hidden}.kmeter i{display:block;height:100%;background:#ff453a;transition:width .25s}
+.pcst{flex:none;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,.2)}.pcst i{font-style:normal;color:#ffd60a}
+.pcseg{margin:0;flex:none}.kbtn:disabled{opacity:.4}
+.pcp{position:absolute;top:62px;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:9px;height:34px;padding:0 15px;border-radius:17px;background:rgba(22,26,34,.78);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 6px 18px rgba(0,0,0,.3);color:#fff;font-size:13.5px;font-weight:650;white-space:nowrap;overflow:hidden;pointer-events:none;max-width:calc(100% - 140px)}
+.pcp[hidden]{display:none}
+.pcp b{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:700}
+.pcp small{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.72)}.pcp small.r{color:#ff6961}
+.pcp .sep{width:1px;height:14px;background:rgba(255,255,255,.18);flex:none}
+.pcp .pcst{font-size:13px}
+.pcp.cop{box-shadow:inset 0 0 0 1px rgba(64,156,255,.45),0 6px 18px rgba(0,0,0,.3)}
+.pcp.hot{background:rgba(110,22,26,.84);box-shadow:inset 0 0 0 1px rgba(255,69,58,.5),0 6px 18px rgba(0,0,0,.3)}
+.pcp.end{box-shadow:inset 0 0 0 1px rgba(255,214,10,.4),0 6px 18px rgba(0,0,0,.3)}
+.pcp .bar{position:absolute;left:12px;right:12px;bottom:3px;height:3px;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden}.pcp .bar u{display:block;height:100%;background:#ff453a;transition:width .25s}
+.main:has(.navbanner:not([hidden])) .pcp{top:104px}
+.G .main:has(.navbanner:not([hidden])) .pcp{top:136px}
 .pfl{display:flex;flex-direction:column;gap:14px;min-width:0}
 .fsb{padding:14px 14px 12px}
 .fsh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}.fsh b{font-size:16px;font-weight:600;letter-spacing:-.01em}
@@ -2503,6 +2516,7 @@ html.dev-phone,html.dev-phone body{height:100%!important;overflow:hidden!importa
       <div class="diag" id="diag" hidden></div>
       <div class="navbanner" id="navbanner" hidden><div class="ico" id="navIco"></div><div class="tx"><b id="navDist">–</b><span id="navText">–</span><small id="navEta"></small></div><button id="navEnd" aria-label="Navigation beenden">✕</button></div>
       <div class="mtop"><span class="pill" id="mapinfo">Freie Fahrt</span><button class="pill frchip" id="frChip" hidden></button><button class="x glass" id="wpClear" hidden aria-label="Wegpunkt entfernen">✕</button></div>
+      <div class="pcp" id="pcPill" hidden></div>
       <button class="compass glass" id="compass" title="Ausrichtung wechseln" aria-label="Kartenausrichtung wechseln">
         <svg viewBox="0 0 40 40" id="needle"><path d="M20 4 26 20H14z" fill="#ff453a"/><path d="M20 36 14 20h12z" fill="#d1d1d6"/></svg>
       </button>
@@ -4514,7 +4528,7 @@ const FDE = [
 // Spezial: Tuning-Wettbewerb zu jeder geraden Stunde, Police Chase zu jeder ungeraden – je 60 Minuten
 const FDS = [
   ["tuning", "Tuning-Wettbewerb", "Daikoku-Parkplatz", "Zeig dein bestes Build: alle bewerten mit 0–5 Sternen, die Top 3 werden gekürt.", "rx7", 0],
-  ["police", "Police Chase", "Shinjuku", "Jäger gegen Gejagte: Wer 10 Sekunden lang einen Polizisten im Nacken hat, ist gefangen.", "yasu", 1],
+  ["police", "Police Chase", "Shinjuku", "Polizei gegen Flüchtige: Suchkreise, Ortung alle 30 s und bis zu 6 Sterne – ab 4 Fahrern.", "yasu", 1],
 ];
 function fdEvents(){
   const now = Date.now(), out = [];
@@ -6255,7 +6269,7 @@ function drawMap(){
   try { drawEditOverlay(s); drawRoute(); } catch (e) { diagErr(e); }
   ctx.restore();
   // jede Ebene für sich: ein Fehler bei Freunden o. Ä. darf weder den Pfeil noch die übrige Karte verhindern
-  for (const layer of [drawPois, drawFriends, drawWaypoints, drawPresence, drawRoadPrev]) { ctx.save(); try { layer(axS, ayS, s); } catch (e) { diagErr(e); } ctx.restore(); }
+  for (const layer of [drawPois, drawPc, drawFriends, drawWaypoints, drawPresence, drawRoadPrev]) { ctx.save(); try { layer(axS, ayS, s); } catch (e) { diagErr(e); } ctx.restore(); }
   // eigener Pfeil zuletzt: liegt immer über Orten, Wegpunkten und Freunden
   if (D && D.dash && (D.px || D.pz)) {
     const [carX, carY] = carMap(), dx = (carX - cam.cx) * s, dy = (carY - cam.cy) * s;
@@ -7245,7 +7259,7 @@ function kolCard(l, H){
     + '<div class="kcode"><div><small>Code für deine Freunde</small><b>' + esc(l.code) + '</b></div><button class="kbtn" data-a="copy" data-c="' + esc(l.code) + '">Kopieren</button><button class="kbtn pri" data-tab="freunde">Einladen</button></div></div>';
   s += '<div class="ihd">Fahrer · ' + n + '</div><div class="ilist">' + mem.map(m => {
     const car = m.c > 0 ? carName(m.c) : null, v = (kk.votes || {})[m.d], pr = (kk.promo || {})[m.d];
-    const st = m.g ? H.spd({v:m.v || 0}) + (!m.self && m.x != null ? ' · ' + H.dist(m.x, m.z) : '') : 'im Menü';
+    const st = m.g ? H.spd({v:m.v || 0}) + (!m.self && m.x != null && !pcHid(m.d) ? ' · ' + H.dist(m.x, m.z) : '') : 'im Menü';
     const tags = (pr ? '<span class="ktag">👑 ' + pr.n + '/' + pr.need + '</span>' : '') + (v ? '<span class="ktag red">raus ' + v.n + '/' + v.need + '</span>' : '');
     return '<div class="irow kmem">' + H.av(m.self ? "" : m.d, m.n, !!m.g) + '<div class="tx"><b>' + esc(m.n) + (m.self ? ' <span class="kyou">du</span>' : '') + (m.d === lead ? ' <span class="klead">👑</span>' : '') + tags + '</b><small>' + (car ? esc(car.name) + ' · ' : '') + st + '</small></div>'
       + (m.self ? '' : '<button class="ib kmore" data-a="kmore" data-id="' + esc(m.d) + '" data-c="' + esc(l.code) + '" title="Mehr" aria-label="Mehr">•••</button>') + '</div>';
@@ -7268,35 +7282,230 @@ function kolTuning(l, mem, ev, mine){
   s += '<div class="ihd">Rangliste</div><div class="ilist">' + rank.map((r, i) => '<div class="irow"><span class="krank' + (r.n && i < 3 ? ' r' + (i + 1) : '') + '">' + (i + 1) + '</span><div class="tx"><b>' + esc(r.m.n) + (r.m.self ? ' <span class="kyou">du</span>' : '') + '</b><small>' + esc(carOf(r.m)) + '</small></div><div class="kavg"><b>' + (r.n ? nf1.format(r.avg) + ' ★' : '–') + '</b><small>' + r.n + (r.n === 1 ? ' Stimme' : ' Stimmen') + '</small></div></div>').join("") + '</div>';
   return s;
 }
-// Police Chase: Rolle wählen; bleibt ein Polizist 10 s unter 15 m an einem Flüchtigen dran, ist der gefangen
-const PCH = {t:0, cop:null, lastT:0, cool:0};
-function kolPolice(l, mem, ev, mine){
-  const role = d => (ev[d] || {}).role || "", my = mine.role || "", by = {};
-  for (const st of Object.values(ev)) for (const c of st.caught || []) by[c.by] = (by[c.by] || 0) + 1;
-  let s = '<div class="ihd">Police Chase</div><div class="ilist"><div class="irow"><div class="tx"><b>Deine Rolle</b><small>' + (my === "cop" ? "Bleib 10 s dicht (unter 15 m) an einem Flüchtigen – dann ist er gefangen" : my === "run" ? "Hau ab: 10 s ein Polizist unter 15 m an dir = gefangen" : "Wähle deine Seite") + '</small></div>'
-    + '<div class="seg2 sm"><button data-a="krole" data-s="cop" data-c="' + esc(l.code) + '" class="' + (my === "cop" ? "on" : "") + '">🚓 Polizei</button><button data-a="krole" data-s="run" data-c="' + esc(l.code) + '" class="' + (my === "run" ? "on" : "") + '">🏃 Flüchtig</button></div></div>';
-  if (my === "run" && PCH.cop) s += '<div class="irow kalert"><div class="tx"><b>🚨 ' + esc(PCH.cop.n) + ' ist ' + Math.round(PCH.cop.d) + ' m hinter dir</b><div class="kmeter"><i style="width:' + Math.min(100, PCH.t * 10) + '%"></i></div></div></div>';
-  s += '</div>';
-  const cops = mem.filter(m => role(m.d) === "cop"), runs = mem.filter(m => role(m.d) === "run"), none = mem.filter(m => !role(m.d));
-  const nm = m => esc(m.n) + (m.self ? ' <span class="kyou">du</span>' : '');
-  const grp = (t, list, fn) => list.length ? '<div class="ihd">' + t + ' · ' + list.length + '</div><div class="ilist">' + list.map(fn).join("") + '</div>' : '';
-  s += grp("🚓 Polizei", cops.sort((a, b) => (by[b.d] || 0) - (by[a.d] || 0)), m => '<div class="irow"><div class="tx"><b>' + nm(m) + '</b><small>' + (by[m.d] || 0) + ' gefangen</small></div></div>');
-  s += grp("🏃 Flüchtig", runs, m => { const c = ((ev[m.d] || {}).caught || []).length; return '<div class="irow"><div class="tx"><b>' + nm(m) + '</b><small>' + (c ? c + '× gefangen' : 'noch nie gefangen') + '</small></div></div>'; });
-  s += grp("Noch ohne Rolle", none, m => '<div class="irow"><div class="tx"><b>' + nm(m) + '</b></div></div>');
-  return s;
+// ---- Police Chase: Polizei gegen Flüchtige (Kolonnen-Spiel) ----
+// Der Kolonnenführer startet die Runde (ab 4 Fahrern, 15/20/30 min). Teams: bis 6 Fahrer 2 Polizisten, bis 12 Fahrer 4 … – wer Polizei wünscht, zuerst.
+// Nach 60 s Vorsprung: Flüchtige sehen um jeden Polizisten den roten Suchkreis (350 m) und den Fangkreis (40 m).
+// Polizisten sehen Flüchtige nur live, solange die im Suchkreis irgendeines Polizisten sind – sonst nur den Ping
+// (alle 30 s, ab 4 Sternen alle 20 s, bei 6 Sternen alle 15 s; vom Rundenstart gerechnet, damit alle gleichzeitig pingen).
+// Jeder neue Eintritt in einen Suchkreis gibt einen Stern (max. 6; neu erst nach > 400 m Abstand und 15 s).
+// Gefasst: insgesamt 10 s (ab 3 Sternen 8 s, bei 6 Sternen 6 s) im Fangkreis; draußen läuft der Zähler doppelt so schnell zurück.
+// Das Gerät des Flüchtigen misst selbst und meldet Sterne/Festnahme über die Event-Daten. Ende: alle gefasst = Polizei, Zeit um = Flüchtige.
+const PCR = {see:350, far:400, cat:40, head:60e3, min:4, gap:15e3};
+const pcCops = n => Math.min(n - 1, 2 * Math.ceil(n / 6));
+const pcNeed = st => st >= 6 ? 6 : st >= 3 ? 8 : 10;
+const pcEvery = st => (st >= 6 ? 15 : st >= 4 ? 20 : 30) * 1000;
+const PC = {rid:"", st:0, far:true, starT:-1e9, ct:0, out:false, by:"", seen:false, near:null, sent:"", lastT:0, raw:new Map(), vis:new Set(), pings:new Map(), outs:new Set(), init:false, dur:20, endT:0, allT:0, endSure:0, res:""};
+const pcMmss = ms => { const t = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+const pcStars = n => '<span class="pcst">' + '<i>★</i>'.repeat(n) + '★'.repeat(6 - n) + '</span>';
+function pcLobby(){ return (FR.lobbys || []).find(x => x.an && ((kolType(x.name) || kolType(x.code) || [])[0] === "police")); }
+// Runde der Police-Kolonne mit meiner Rolle (cop/run/spec) und Phase (head = Vorsprung, run, over = Zeit um, end = beendet)
+function pcCtx(kc){
+  const l = pcLobby(); if (!l) return null;
+  const kk = (((kc || FR.kc) || {}).kol || []).find(x => x.code === l.code); if (!kk) return null;
+  const p = kk.pc && kk.pc.rid ? kk.pc : null, me = kk.me, now = Date.now();
+  const role = !p ? "" : p.cops.includes(me) ? "cop" : p.runs.includes(me) ? "run" : "spec";
+  const ph = !p ? "" : p.end ? "end" : now < p.start + PCR.head ? "head" : now < p.start + p.dur ? "run" : "over";
+  return {l, kk, p, me, role, ph, now, ev:kk.ev || {}};
 }
-// als Flüchtiger: Abstand zu den Polizisten messen und eine Festnahme melden
-function pchTick(d){
-  const now = performance.now(), dt = PCH.lastT ? Math.min(.5, (now - PCH.lastT) / 1000) : 0; PCH.lastT = now;
-  const l = (FR.lobbys || []).find(x => x.an && (kolType(x.name) || kolType(x.code) || [])[0] === "police");
-  if (!l || !d.on || !d.dash) { PCH.t = 0; PCH.cop = null; return; }
-  const {kk, mem} = kolInfo(l), ev = kk.ev || {};
-  if (((ev[kk.me] || {}).role) !== "run") { PCH.t = 0; PCH.cop = null; return; }
-  let best = null;
-  for (const m of mem) { if (m.self || (ev[m.d] || {}).role !== "cop") continue; const e = FR.m.get(m.d); if (!e || !e.g) continue; const dd = Math.hypot(e.x - d.px, e.z - d.pz); if (!best || dd < best.d) best = {d:dd, n:m.n, id:m.d}; }
-  PCH.cop = best && best.d < 60 ? best : null;
-  if (best && best.d < 15 && now > PCH.cool) PCH.t += dt; else PCH.t = Math.max(0, PCH.t - dt * 2);
-  if (PCH.t >= 10 && best) { PCH.t = 0; PCH.cool = now + 30000; lobbyPost("/lobby/ev", {code:l.code, caught:best.id, c:D.car}); toast("🚨 Gefangen von " + best.n + "!"); }
+// Sterne und Status eines Flüchtigen in dieser Runde (für mich selbst zählt mein eigener Stand)
+function pcRun(c, id){
+  if (id === c.me && c.role === "run" && PC.rid === c.p.rid) return {st:PC.st, out:PC.out, by:PC.by};
+  const e = (c.ev[id] || {}).pc; return e && e.rid === c.p.rid ? e : {st:0, out:false, by:""};
+}
+const pcGone = (c, id) => id !== c.me && !(c.kk.mem || []).some(m => m.d === id);
+const pcName = (c, id) => id === c.me ? "Du" : (c.p.nm || {})[id] || "Fahrer";
+function pcResOf(c){
+  if (c.ph === "end") return c.p.res;
+  if (c.ph !== "over") return "";
+  return c.p.runs.some(id => !pcRun(c, id).out && !pcGone(c, id)) ? "run" : c.p.runs.some(id => pcRun(c, id).out) ? "cop" : "abort";
+}
+function pcNextPing(c, st){
+  const iv = pcEvery(st || 0), t0 = c.p.start + PCR.head, k = Math.floor((c.now - t0) / iv) + 1;
+  return Math.max(1, Math.ceil((t0 + k * iv - c.now) / 1000));
+}
+// als Polizist: Flüchtige außerhalb aller Suchkreise gar nicht erst in die Freundes-Liste lassen (Karte, Listen, Overlay, Abstände)
+function pcFilter(list, kc){
+  PC.raw.clear(); PC.vis.clear();
+  const c = pcCtx(kc); if (!c || !c.p || c.role !== "cop" || (c.ph !== "run" && c.ph !== "head")) return list;
+  const runs = new Set(c.p.runs), cops = [];
+  for (const f of list) { if (runs.has(f.id)) PC.raw.set(f.id, f); else if (c.p.cops.includes(f.id) && isFinite(f.x)) cops.push(f); }
+  if (D && isFinite(D.px) && (D.px || D.pz)) cops.push({x:D.px, z:D.pz});
+  return list.filter(f => {
+    if (!runs.has(f.id) || pcRun(c, f.id).out) return true;   // Gefasste fahren offen mit
+    const v = c.ph === "run" && cops.some(q => Math.hypot(f.x - q.x, f.z - q.z) < PCR.see);
+    if (v) PC.vis.add(f.id);
+    return v;
+  });
+}
+// ist dieser Fahrer für mich (Polizist) gerade verborgen?
+function pcHid(id){ const c = pcCtx(); return !!(c && c.p && c.role === "cop" && (c.ph === "run" || c.ph === "head") && c.p.runs.includes(id) && !pcRun(c, id).out && !PC.vis.has(id)); }
+function pcSend(c){
+  const sig = c.p.rid + "|" + PC.st + "|" + PC.out; if (sig === PC.sent) return; PC.sent = sig;
+  sessPost("/lobby/ev", {code:c.l.code, pc:{rid:c.p.rid, st:PC.st, out:PC.out, by:PC.by}, c:D && D.car}).then(j => { if (!j || !j.ok) PC.sent = ""; }).catch(() => { PC.sent = ""; });
+}
+function pcReset(c){
+  const mine = (c.ev[c.me] || {}).pc, same = !!(mine && mine.rid === c.p.rid);
+  Object.assign(PC, {rid:c.p.rid, st:same ? mine.st : 0, out:same && !!mine.out, by:same ? mine.by : "", far:true, starT:-1e9, ct:0, seen:false, near:null, sent:"", endT:0, allT:0, res:"", init:false});
+  PC.pings.clear(); PC.outs.clear();
+  if (c.role === "run" && c.ph !== "end") pcSend(c);
+  if (c.ph === "head" && c.now - c.p.start < 15000)
+    toast(c.role === "cop" ? "🚓 Police Chase: Du bist Polizei – die Jagd beginnt in 60 s" : c.role === "run" ? "🏃 Police Chase: Du bist auf der Flucht – 60 s Vorsprung!" : "🚨 Police Chase gestartet – du schaust zu");
+}
+// als Flüchtiger: Suchkreise (Sterne) und Fangkreis (Festnahme) messen
+function pcRunner(c, dt){
+  let dmin = Infinity, near = null;
+  for (const id of c.p.cops) {
+    const e = FR.m.get(id); if (!e || !isFinite(e.tx)) continue;
+    const d = Math.hypot(e.tx - D.px, e.tz - D.pz);
+    if (d < dmin) dmin = d;
+    if (e.g && d < PCR.cat && (!near || d < near.d)) near = {d, id, n:e.n};
+  }
+  PC.seen = dmin < PCR.see;
+  if (dmin > PCR.far) PC.far = true;
+  if (PC.seen && PC.far && c.now - PC.starT >= PCR.gap) {
+    PC.far = false; PC.starT = c.now;
+    if (PC.st < 6) { PC.st++; pcSend(c); toast("🚨 Im Suchkreis – " + PC.st + (PC.st === 1 ? " Stern" : " Sterne") + (PC.st === 3 || PC.st === 6 ? " · Fangzeit kürzer" : PC.st === 4 ? " · Ping alle 20 s" : "")); }
+  }
+  PC.near = near;
+  if (near) PC.ct += dt; else PC.ct = Math.max(0, PC.ct - dt * 2);
+  if (near && PC.ct >= pcNeed(PC.st)) { PC.out = true; PC.by = near.id; PC.ct = 0; PC.near = null; pcSend(c); toast("🚔 Gefasst von " + near.n + " – du bist raus"); }
+}
+// als Polizist: zu den gemeinsamen Ping-Zeitpunkten die Position jedes Flüchtigen festhalten
+function pcPings(c){
+  const t0 = c.p.start + PCR.head;
+  for (const id of c.p.runs) {
+    const r = pcRun(c, id); if (r.out) { PC.pings.delete(id); continue; }
+    const iv = pcEvery(r.st || 0), k = Math.floor((c.now - t0) / iv), old = PC.pings.get(id);
+    if (old && old.k === k && old.iv === iv) continue;
+    const f = PC.raw.get(id); if (!f) continue;   // gerade keine Position (offline oder im Menü): alter Ping bleibt
+    PC.pings.set(id, {k, iv, x:f.x, z:f.z, n:f.n, at:Date.now()});
+  }
+}
+// Kolonnenführer beendet die Runde: alle gefasst (8 s lang bestätigt) oder Zeit um
+function pcLeader(c){
+  if (c.kk.leader !== c.me || c.p.end || c.ph === "head") return;
+  let res = "";
+  if (c.ph === "over") res = pcResOf(c);
+  else if (c.p.runs.every(id => pcRun(c, id).out || pcGone(c, id))) { PC.allT = PC.allT || c.now; if (c.now - PC.allT > 8000) res = c.p.runs.some(id => pcRun(c, id).out) ? "cop" : "abort"; }
+  else PC.allT = 0;
+  if (!res || c.now - PC.endT < 5000) return;
+  PC.endT = c.now;
+  sessPost("/lobby/pc", {code:c.l.code, end:true, rid:c.p.rid, res}).catch(() => {});
+}
+// Festnahmen und Ergebnis allen kurz melden
+function pcNews(c){
+  for (const id of c.p.runs) {
+    const r = pcRun(c, id); if (!r.out || PC.outs.has(id)) continue;
+    PC.outs.add(id);
+    if (PC.init && id !== c.me) toast("🚔 " + pcName(c, id) + " wurde gefasst" + (r.by ? " – von " + (r.by === c.me ? "dir" : pcName(c, r.by)) : ""));
+  }
+  PC.init = true;
+  const res = pcResOf(c);
+  if (res && !PC.res) { PC.res = res; if (c.now - (c.p.end || c.p.start + c.p.dur) < 60000) toast(res === "cop" ? "🚓 Police Chase vorbei – die Polizei gewinnt" : res === "run" ? "🏃 Police Chase vorbei – die Flüchtigen gewinnen" : "Police Chase beendet"); }
+}
+function pcStep(){
+  const t = performance.now(); if (PC.lastT && t - PC.lastT < 90) return;
+  const dt = PC.lastT ? Math.min(0.5, (t - PC.lastT) / 1000) : 0; PC.lastT = t;
+  const c = pcCtx();
+  if (!c || !c.p) { pcPill(null); return; }
+  if (PC.rid !== c.p.rid) pcReset(c);
+  if (c.role === "run" && c.ph === "run" && !PC.out && D && D.on && D.dash) pcRunner(c, dt);
+  else { PC.near = null; PC.seen = false; }
+  if (c.role === "cop" && c.ph === "run") pcPings(c);
+  pcLeader(c); pcNews(c); pcPill(c);
+}
+function pchTick(d){ pcStep(); }
+setInterval(() => { try { pcStep(); } catch (e) {} }, 500);
+// kleine Glas-Pille oben auf der Karte: Restzeit, Sterne bzw. nächster Ping, Fang-Balken nur wenn nötig
+function pcPill(c){
+  const el = $("pcPill"); if (!el) return;
+  let h = "", cls = "";
+  const sep = '<span class="sep"></span>';
+  if (c && c.p) {
+    const {p, now, role, ph} = c, clock = pcMmss(p.start + p.dur - now), free = p.runs.filter(id => !pcRun(c, id).out && !pcGone(c, id)).length;
+    if (ph === "end" || ph === "over") {
+      const res = pcResOf(c), ago = now - (p.end || p.start + p.dur);
+      if (ago < 45000) { h = res === "cop" ? "🚓 <b>Polizei gewinnt</b>" : res === "run" ? "🏃 <b>Flüchtige gewinnen</b>" + sep + "<small>" + free + " entkommen</small>" : "<small>Police Chase beendet</small>"; cls = "end"; }
+    } else if (ph === "head") {
+      const sec = Math.ceil((p.start + PCR.head - now) / 1000) + " s";
+      h = role === "cop" ? "🚓 <small>Jagd beginnt in</small> <b>" + sec + "</b>" : role === "run" ? "🏃 <small>Vorsprung</small> <b>" + sec + "</b>" : "🚨 <small>Police Chase startet in</small> <b>" + sec + "</b>";
+    } else if (role === "run" && !PC.out) {
+      h = "<b>" + clock + "</b>" + sep + pcStars(PC.st) + sep + (PC.seen ? '<small class="r">Gesehen</small>' : "<small>Ping " + pcNextPing(c, PC.st) + " s</small>");
+      if (PC.ct > 0.05) { h += '<i class="bar"><u style="width:' + Math.min(100, PC.ct / pcNeed(PC.st) * 100).toFixed(0) + '%"></u></i>'; cls = "hot"; }
+    } else if (role === "cop") {
+      const left = p.runs.filter(id => !pcRun(c, id).out), nxt = left.length ? Math.min(...left.map(id => pcNextPing(c, pcRun(c, id).st))) : 0;
+      h = "🚓 <b>" + clock + "</b>" + sep + "<small>Ping " + nxt + " s</small>" + sep + "<small>" + (p.runs.length - left.length) + "/" + p.runs.length + " gefasst</small>"; cls = "cop";
+    } else h = (role === "run" ? "🚔 <small>Gefasst</small>" : "👀 <small>Zuschauen</small>") + sep + "<b>" + clock + "</b>" + sep + "<small>" + free + " frei</small>";
+  }
+  if (!h) { if (!el.hidden) el.hidden = true; return; }
+  el.hidden = false; el.className = "pcp" + (cls ? " " + cls : "");
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+// Kartenebene: rote Suchkreise (für Flüchtige), eigener blauer Fangkreis und Pings (für die Polizei)
+function drawPc(axS, ayS, s){
+  const c = pcCtx(); if (!c || !c.p || (c.ph !== "run" && c.ph !== "head")) return;
+  const me = CAR.ok ? [mirror() * CAR.x, -CAR.y] : D && (D.px || D.pz) ? [D.px, D.pz] : null;
+  const pos = id => { if (id === c.me) return me; const e = FR.m.get(id); if (!e) return null; const x = e.x ?? e.tx, z = e.z ?? e.tz; return isFinite(x) && isFinite(z) ? [x, z] : null; };
+  const ring = (w, r, fill, stroke, dash) => {
+    const [x, y] = screenOf(w[0], w[1], axS, ayS, s), R = Math.max(3, r * s);
+    if (x + R < 0 || y + R < 0 || x - R > W || y - R > H) return;
+    ctx.beginPath(); ctx.arc(x, y, R, 0, 7);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    ctx.setLineDash(dash || []); ctx.lineWidth = 1.6; ctx.strokeStyle = stroke; ctx.stroke(); ctx.setLineDash([]);
+  };
+  if (c.role !== "cop") {
+    for (const id of c.p.cops) { const w = pos(id); if (w) { ring(w, PCR.see, "rgba(255,59,48,.09)", "rgba(255,69,58,.55)"); ring(w, PCR.cat, "rgba(255,59,48,.2)", "rgba(255,69,58,.9)"); } }
+    return;
+  }
+  for (const id of c.p.cops) { const w = pos(id); if (w) ring(w, PCR.see, null, "rgba(64,156,255,.32)", [7, 7]); }
+  { const w = pos(c.me); if (w) ring(w, PCR.cat, "rgba(10,132,255,.18)", "rgba(64,156,255,.95)"); }
+  const pulse = (performance.now() % 1600) / 1600;
+  // sichtbare Flüchtige: roter Ring um den Punkt
+  for (const id of PC.vis) { const w = pos(id); if (!w) continue; const [x, y] = screenOf(w[0], w[1], axS, ayS, s); ctx.globalAlpha = 1 - pulse; ctx.strokeStyle = "#ff453a"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x, y, 15 + pulse * 14, 0, 7); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+  if (c.ph !== "run") return;
+  ctx.font = "800 12px Manrope, Segoe UI, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  for (const [id, g] of PC.pings) {
+    if (PC.vis.has(id)) continue;
+    const [x, y] = screenOf(g.x, g.z, axS, ayS, s);
+    if (x < -60 || y < -60 || x > W + 60 || y > H + 60) continue;
+    ctx.globalAlpha = 1 - pulse; ctx.strokeStyle = "#ff453a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 8 + pulse * 22, 0, 7); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill();
+    ctx.fillStyle = "#ff453a"; ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fill();
+    const label = g.n + " · vor " + Math.max(0, Math.round((Date.now() - g.at) / 1000)) + " s", tw = ctx.measureText(label).width + 14;
+    ctx.fillStyle = "rgba(14,16,20,.86)"; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - tw / 2, y - 33, tw, 20, 10) : ctx.rect(x - tw / 2, y - 33, tw, 20); ctx.fill();
+    ctx.fillStyle = "#ff6961"; ctx.fillText(label, x, y - 16.5);
+  }
+}
+// Kolonnen-Menü: Wunschrolle, Start (Kolonnenführer), laufende Runde, Teams mit Sternen und Festnahmen, Ergebnis
+function kolPolice(l, mem, ev, mine){
+  const kk = kolInfo(l).kk, lead = kk.leader === kk.me, n = mem.length, my = mine.role || "", code = esc(l.code);
+  const c0 = pcCtx(), c = c0 && c0.l.code === l.code && c0.p ? c0 : null, p = c && c.p, live = !!p && (c.ph === "head" || c.ph === "run");
+  let s = '<div class="ihd">Police Chase</div><div class="ilist">';
+  if (live) {
+    const sure = Date.now() - PC.endSure < 6000;
+    const what = c.role === "cop" ? "Du bist Polizei – halte Flüchtige in deinem blauen Fangkreis" : c.role === "run" ? (PC.out ? "Du wurdest gefasst – schau den anderen zu" : "Du bist auf der Flucht – meide die roten Kreise") : "Du schaust zu";
+    s += '<div class="irow"><div class="tx"><b>' + (c.ph === "head" ? "Startet in " + Math.ceil((p.start + PCR.head - c.now) / 1000) + " s" : "Läuft · noch " + pcMmss(p.start + p.dur - c.now)) + '</b><small>' + what + '</small></div>'
+      + (lead ? '<button class="itx red" data-a="pcend" data-c="' + code + '">' + (sure ? "Wirklich beenden?" : "Beenden") + '</button>' : '') + '</div>';
+  } else {
+    const ok = n >= PCR.min, nc = pcCops(Math.max(n, 2));
+    s += '<div class="irow"><div class="tx"><b>Wunschrolle</b><small>' + (my === "cop" ? "Du kommst zuerst ins Polizei-Team" : my === "run" ? "Du willst flüchten" : "Egal – wird zugelost") + '</small></div><div class="seg2 sm pcseg">'
+      + '<button data-a="krole" data-s="' + (my === "cop" ? "" : "cop") + '" data-c="' + code + '" class="' + (my === "cop" ? "on" : "") + '">🚓 Polizei</button><button data-a="krole" data-s="' + (my === "run" ? "" : "run") + '" data-c="' + code + '" class="' + (my === "run" ? "on" : "") + '">🏃 Flucht</button></div></div>';
+    s += '<div class="irow"><div class="tx"><b>' + (ok ? nc + " Polizei · " + (n - nc) + " Flüchtige" : "Noch " + (PCR.min - n) + " Fahrer fehlen") + '</b><small>' + (!ok ? "Ab " + PCR.min + " Fahrern geht es los" : lead ? "Dauer wählen und starten" : "Der Kolonnenführer startet die Runde") + '</small></div>'
+      + (lead ? '<div class="seg2 sm pcseg">' + [15, 20, 30].map(m => '<button data-a="pcdur" data-s="' + m + '" class="' + (PC.dur === m ? "on" : "") + '">' + m + '′</button>').join("") + '</div><button class="kbtn pri" data-a="pcstart" data-c="' + code + '"' + (ok ? '' : ' disabled') + '>Start</button>' : '') + '</div>';
+    if (p) { const res = pcResOf(c), got = p.runs.filter(id => pcRun(c, id).out).length;
+      s += '<div class="irow"><div class="tx"><b>' + (res === "cop" ? "🚓 Polizei hat gewonnen" : res === "run" ? "🏃 Flüchtige haben gewonnen" : "Letzte Runde abgebrochen") + '</b><small>' + got + ' von ' + p.runs.length + ' gefasst · ' + Math.round(p.dur / 60000) + ' min</small></div></div>'; }
+    else s += '<div class="irow"><div class="tx"><small>60 s Vorsprung · Suchkreis 350 m · Ping alle 30 s · 6 Sterne · 10 s im Fangkreis (40 m) = gefasst</small></div></div>';
+  }
+  s += '</div>';
+  if (!p) return s;
+  const nm = id => esc((p.nm || {})[id] || "Fahrer") + (id === c.me ? ' <span class="kyou">du</span>' : '');
+  const runs = p.runs.map(id => ({id, r:pcRun(c, id), gone:pcGone(c, id)})).sort((a, b) => a.r.out - b.r.out || b.r.st - a.r.st);
+  s += '<div class="ihd">🏃 Flüchtige · ' + runs.filter(x => !x.r.out).length + ' frei</div><div class="ilist">' + runs.map(x => '<div class="irow' + (x.r.out ? ' off' : '') + '"><div class="tx"><b>' + nm(x.id) + '</b><small>'
+    + (x.r.out ? 'gefasst' + (x.r.by ? (x.r.by === c.me ? ' von dir' : ' von ' + esc(pcName(c, x.r.by))) : '') : x.gone ? 'nicht da' : live ? 'auf der Flucht' : 'entkommen') + '</small></div>' + pcStars(x.r.st || 0) + '</div>').join("") + '</div>';
+  const by = {}; for (const x of runs) if (x.r.out && x.r.by) by[x.r.by] = (by[x.r.by] || 0) + 1;
+  s += '<div class="ihd">🚓 Polizei · ' + p.cops.length + '</div><div class="ilist">' + p.cops.slice().sort((a, b) => (by[b] || 0) - (by[a] || 0)).map(id => '<div class="irow"><div class="tx"><b>' + nm(id) + '</b><small>' + (by[id] ? by[id] + (by[id] === 1 ? ' Festnahme' : ' Festnahmen') : 'noch keine Festnahme') + (pcGone(c, id) ? ' · nicht da' : '') + '</small></div></div>').join("") + '</div>';
+  return s;
 }
 // ---- Handbremse: hält im Spiel die Leertaste (Handbremse auf der Tastatur), bis man sie löst ----
 const PB = {on:false, seen:false, ping:0, badT:0, gasT:0};
@@ -8063,7 +8272,8 @@ function frUpdate(o){
   if (o && o.group === "Demo") FR.demoList = o.list;
   FR.on = !!o.on; FR.ok = !!o.ok; FR.name = o.name || ""; FR.group = o.group || ""; FR.upd = o.upd || ""; try { updAsk(); } catch (x) {} if (o.lobbys) FR.lobbys = o.lobbys;
   const now = performance.now(), seen = new Set();
-  for (const f of o.list || []) {
+  let fl = o.list || []; try { fl = pcFilter(fl, o.kc); } catch (x) {}
+  for (const f of fl) {
     seen.add(f.id);
     let e = FR.m.get(f.id);
     if (!e) { e = {id:f.id, h:f.h, col:frCol(f.id)}; FR.m.set(f.id, e); }
@@ -12275,7 +12485,10 @@ $("gfr").onclick = e => {
   else if (a === "pause" || a === "resume") lobbyPost("/lobby/an", {code:c, an:a === "resume"}).then(done);
   else if (a === "leave") { if (FR.leaveSure !== c || Date.now() - (FR.leaveT || 0) > 6000) { FR.leaveSure = c; FR.leaveT = Date.now(); gFriends(true); return; } FR.leaveSure = null; lobbyPost("/lobby/verlassen", {code:c}).then(j => { FR.lobbys = (FR.lobbys || []).filter(x => x.code !== c); toast("Kolonne verlassen"); done(); }); }
   else if (a === "krate") lobbyPost("/lobby/ev", {code:c, rate:id, s:+b.dataset.s, c:D && D.car}).then(done);
-  else if (a === "krole") lobbyPost("/lobby/ev", {code:c, role:b.dataset.s, c:D && D.car}).then(j => { if (j && j.ok) toast(b.dataset.s === "cop" ? "Du bist Polizei 🚓" : "Du bist auf der Flucht 🏃"); done(); });
+  else if (a === "krole") lobbyPost("/lobby/ev", {code:c, role:b.dataset.s, c:D && D.car}).then(j => { if (j && j.ok) toast(b.dataset.s === "cop" ? "Wunschrolle: Polizei 🚓" : b.dataset.s === "run" ? "Wunschrolle: Flucht 🏃" : "Rolle wird zugelost"); done(); });
+  else if (a === "pcdur") { PC.dur = +b.dataset.s || 20; done(); }
+  else if (a === "pcstart") lobbyPost("/lobby/pc", {code:c, start:true, dur:PC.dur}).then(j => { if (j && j.ok) toast("🚨 Police Chase gestartet – " + PC.dur + " min"); done(); });
+  else if (a === "pcend") { if (Date.now() - PC.endSure > 6000) { PC.endSure = Date.now(); done(); return; } PC.endSure = 0; lobbyPost("/lobby/pc", {code:c, end:true, res:"abort"}).then(done); }
   else if (a === "kmore") {
     const l = (FR.lobbys || []).find(x => x.code === c), kk = l ? kolInfo(l).kk : null, m = kk && (kk.mem || []).find(x => x.d === id); if (!m) return;
     const lead = kk.leader === kk.me, v = (kk.votes || {})[id], pr = (kk.promo || {})[id], e = FR.m.get(id), r = b.getBoundingClientRect(), keys = [];

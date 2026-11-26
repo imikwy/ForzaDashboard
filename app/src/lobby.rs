@@ -63,6 +63,8 @@ pub struct Lobbys {
     lead_ov: Mutex<HashMap<String, String>>,
     // Event-Daten je Kolonne und Gerät (Sterne beim Tuning-Wettbewerb, Rolle und Festnahmen bei der Police Chase)
     ev: Mutex<HashMap<String, HashMap<String, Value>>>,
+    // Police-Chase-Runde je Kolonne (vom Kolonnenführer gestartet/beendet, liegt beim Vermittler)
+    pc: Mutex<HashMap<String, Value>>,
 }
 
 impl Lobbys {
@@ -74,7 +76,7 @@ impl Lobbys {
             net: net.clone(), dev: dev.to_string(), file, liste: Mutex::new(liste), kanaele: Mutex::new(HashMap::new()),
             friends: Mutex::new(HashMap::new()), last_pub: Mutex::new(0), lr_sent: Mutex::new(HashMap::new()), on_roads, gwp: Mutex::new(HashMap::new()),
             chat: Mutex::new(Vec::new()), votes: Mutex::new(HashMap::new()), owner_dev: Mutex::new(HashMap::new()), kicked_me: Mutex::new(Vec::new()), last_chat: Mutex::new(0),
-            promo: Mutex::new(HashMap::new()), lead_ov: Mutex::new(HashMap::new()), ev: Mutex::new(HashMap::new()),
+            promo: Mutex::new(HashMap::new()), lead_ov: Mutex::new(HashMap::new()), ev: Mutex::new(HashMap::new()), pc: Mutex::new(HashMap::new()),
         })
     }
 
@@ -115,6 +117,13 @@ impl Lobbys {
         if o["y"] == "ev" && sub.strip_prefix("ev/") == Some(d) {
             if self.is_kicked(code, d) { return; }
             self.ev.lock().unwrap().entry(code.to_string()).or_default().insert(d.to_string(), clean_ev(&o));
+            return;
+        }
+        // Police-Chase-Runde: gilt nur vom Kolonnenführer (wer gerade erst beitritt und noch niemanden kennt, nimmt die liegende Runde an)
+        if o["y"] == "pc" && sub == "pc" {
+            if self.is_kicked(code, d) { return; }
+            if d != self.dev && !self.members(code).is_empty() && self.leader(code).as_deref() != Some(d) { return; }
+            if let Some(p) = clean_pc(&o) { self.on_pc(code, p); }
             return;
         }
         if d == self.dev { return; }
@@ -322,6 +331,13 @@ impl Lobbys {
         if let Some(by) = b["caught"].as_str().filter(|x| !x.is_empty() && x.len() <= 40) {
             if let Some(a) = st["caught"].as_array_mut() { a.push(json!({"by": by, "t": now_ms()})); }
         }
+        if b["pc"].is_object() {
+            // Rundendaten des Gejagten: Sterne, raus (von wem); die Zeit der Festnahme setzt das Gerät selbst
+            let (old, mut p) = (st["pc"].clone(), b["pc"].clone());
+            let same = old["rid"] == p["rid"] && old["out"] == true;
+            p["t"] = if same { old["t"].clone() } else if p["out"] == true { json!(now_ms()) } else { json!(0) };
+            st["pc"] = p;
+        }
         st["n"] = json!(take_chars(name, 24));
         if let Some(c) = b["c"].as_u64() { st["c"] = json!(c % 100_000); }
         let st = clean_ev(&st);
@@ -329,6 +345,46 @@ impl Lobbys {
         let mut msg = st.clone(); msg["y"] = json!("ev"); msg["d"] = json!(self.dev);
         if let Some(k) = self.kanaele.lock().unwrap().get(&code) { k.send_to(&msg, &format!("ev/{}", self.dev), true); }
         json!({"ok": true})
+    }
+
+    fn on_pc(&self, code: &str, p: Value) {
+        let mut m = self.pc.lock().unwrap();
+        if m.get(code).and_then(|x| x["t"].as_u64()).is_some_and(|alt| alt > p["t"].as_u64().unwrap_or(0)) { return; }
+        m.insert(code.to_string(), p);
+    }
+
+    // Police Chase: Runde starten (Teams verteilen) oder beenden – nur der Kolonnenführer
+    pub fn pc_set(&self, b: &Value, name: &str) -> Value {
+        let Some(code) = self.first_open(b["code"].as_str().unwrap_or("")) else { return json!({"ok": false, "why": "Keine Kolonne offen"}) };
+        if self.leader(&code).as_deref() != Some(self.dev.as_str()) { return json!({"ok": false, "why": "Das kann nur der Kolonnenführer"}); }
+        let now = now_ms();
+        let cur = self.pc.lock().unwrap().get(&code).cloned();
+        let running = cur.as_ref().is_some_and(|p| pc_running(p, now));
+        let msg = if b["start"].as_bool() == Some(true) {
+            if running { return json!({"ok": false, "why": "Es läuft schon eine Runde"}); }
+            let mut players: Vec<(String, String)> = self.members(&code).into_iter().map(|(d, n, _)| (d, n)).collect();
+            players.push((self.dev.clone(), take_chars(name, 24)));
+            if players.len() < PC_MIN { return json!({"ok": false, "why": format!("Mindestens {PC_MIN} Fahrer nötig (gerade {})", players.len())}); }
+            let ev = self.ev.lock().unwrap().get(&code).cloned().unwrap_or_default();
+            let wish: Vec<bool> = players.iter().map(|(d, _)| ev.get(d).is_some_and(|e| e["role"] == "cop")).collect();
+            let mut rnd = vec![0u8; players.len() * 4];
+            let _ = getrandom::fill(&mut rnd);
+            let ids: Vec<String> = players.iter().map(|(d, _)| d.clone()).collect();
+            let (cops, runs) = pick_teams(&ids, &wish, &rnd);
+            let dur = match b["dur"].as_u64() { Some(m @ (15 | 20 | 30)) => m, _ => 20 };
+            let nm: serde_json::Map<String, Value> = players.iter().map(|(d, n)| (d.clone(), json!(n))).collect();
+            json!({"y": "pc", "d": self.dev, "rid": crate::util::new_code()[..6].to_string(), "start": now, "dur": dur * 60_000, "cops": cops, "runs": runs, "nm": nm, "end": 0, "res": "", "t": now})
+        } else if b["end"].as_bool() == Some(true) {
+            let Some(mut p) = cur.filter(|p| p["end"].as_u64() == Some(0)) else { return json!({"ok": false, "why": "Keine Runde offen"}) };
+            if b["rid"].as_str().is_some_and(|r| p["rid"].as_str() != Some(r)) { return json!({"ok": false}); }
+            let res = b["res"].as_str().filter(|r| ["cop", "run", "abort"].contains(r)).unwrap_or("abort");
+            p["y"] = json!("pc"); p["d"] = json!(self.dev); p["end"] = json!(now); p["res"] = json!(res); p["t"] = json!(now);
+            p
+        } else { return json!({"ok": false}) };
+        let Some(p) = clean_pc(&msg) else { return json!({"ok": false}) };
+        self.on_pc(&code, p.clone());
+        if let Some(k) = self.kanaele.lock().unwrap().get(&code) { k.send_to(&msg, "pc", true); }
+        json!({"ok": true, "pc": p})
     }
 
     fn apply_kick(&self, code: &str, t: &str, by: &str) {
@@ -437,7 +493,8 @@ impl Lobbys {
             };
             let ev = self.ev.lock().unwrap().get(c).cloned().unwrap_or_default();
             let ev: serde_json::Map<String, Value> = ev.into_iter().filter(|(d, _)| online.contains(d)).collect();
-            json!({"code": fmt_code(c), "leader": self.leader(c), "me": self.dev, "mem": memj, "votes": votes, "promo": promo, "ev": ev})
+            let pc = self.pc.lock().unwrap().get(c).filter(|p| now_ms() < p["start"].as_u64().unwrap_or(0) + p["dur"].as_u64().unwrap_or(0) + 2 * 3_600_000).cloned().unwrap_or(Value::Null);
+            json!({"code": fmt_code(c), "leader": self.leader(c), "me": self.dev, "mem": memj, "votes": votes, "promo": promo, "ev": ev, "pc": pc})
         }).collect();
         let chat: Vec<Value> = self.chat.lock().unwrap().iter()
             .filter(|m| (m["me"] == 1 && m["sys"] == 1) || open.iter().any(|c| m["l"] == c.as_str())).cloned().collect();
@@ -554,6 +611,7 @@ impl Lobbys {
         self.net.publish(&format!("{}/lr/{}", ch.topic, self.dev), &[], true);
         self.net.publish(&format!("{}/ev/{}", ch.topic, self.dev), &[], true);
         self.ev.lock().unwrap().remove(&code);
+        self.pc.lock().unwrap().remove(&code);
         self.promo.lock().unwrap().remove(&code);
         self.lead_ov.lock().unwrap().remove(&code);
         self.liste.lock().unwrap().retain(|l| l.code != code);
@@ -624,8 +682,93 @@ fn clean_ev(o: &Value) -> Value {
     let mut r = serde_json::Map::new();
     if let Some(m) = o["r"].as_object() { for (k, v) in m.iter().take(60) { if k.len() <= 40 { if let Some(s) = v.as_u64().filter(|s| (1..=5).contains(s)) { r.insert(k.clone(), json!(s)); } } } }
     let role = o["role"].as_str().filter(|r| *r == "cop" || *r == "run").unwrap_or("");
+    let p = &o["pc"];
+    let pc = match p["rid"].as_str().filter(|r| !r.is_empty() && r.len() <= 16) {
+        Some(rid) => json!({"rid": rid, "st": p["st"].as_u64().unwrap_or(0).min(6), "out": p["out"] == true, "by": take_chars(p["by"].as_str().unwrap_or(""), 40), "t": p["t"].as_u64().unwrap_or(0)}),
+        None => Value::Null,
+    };
     let caught: Vec<Value> = o["caught"].as_array().map(|a| { let skip = a.len().saturating_sub(50); a.iter().skip(skip).filter_map(|x| Some(json!({"by": take_chars(x["by"].as_str()?, 40), "t": x["t"].as_u64().unwrap_or(0)}))).collect() }).unwrap_or_default();
-    json!({"r": r, "role": role, "caught": caught, "n": take_chars(o["n"].as_str().unwrap_or(""), 24), "c": o["c"].as_u64().unwrap_or(0) % 100_000})
+    json!({"r": r, "role": role, "caught": caught, "n": take_chars(o["n"].as_str().unwrap_or(""), 24), "c": o["c"].as_u64().unwrap_or(0) % 100_000, "pc": pc})
+}
+
+// ---------------- Police Chase ----------------
+const PC_MIN: usize = 4;
+
+// Polizisten je Spielerzahl: bis 6 Spieler 2, bis 12 Spieler 4, bis 18 Spieler 6 … (immer mindestens 1 Flüchtiger)
+fn pc_cops(n: usize) -> usize { (2 * n.div_ceil(6)).min(n.saturating_sub(1)) }
+
+// Teams verteilen: wer Polizei als Wunsch hat, zuerst (unter sich zufällig), der Rest zufällig
+fn pick_teams(ids: &[String], wish: &[bool], rnd: &[u8]) -> (Vec<String>, Vec<String>) {
+    let key = |i: usize| rnd.get(i * 4..i * 4 + 4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]])).unwrap_or(i as u32);
+    let mut ord: Vec<usize> = (0..ids.len()).collect();
+    ord.sort_by_key(|&i| (!wish.get(i).copied().unwrap_or(false), key(i)));
+    let n = pc_cops(ids.len());
+    let cops = ord[..n].iter().map(|&i| ids[i].clone()).collect();
+    let runs = ord[n..].iter().map(|&i| ids[i].clone()).collect();
+    (cops, runs)
+}
+
+fn pc_running(p: &Value, now: u64) -> bool {
+    p["end"].as_u64().unwrap_or(0) == 0 && now < p["start"].as_u64().unwrap_or(0) + p["dur"].as_u64().unwrap_or(0)
+}
+
+// Rundendaten prüfen: Kennung, Start, Dauer (5–60 min), Teams, Namen, Ende und Ergebnis
+fn clean_pc(o: &Value) -> Option<Value> {
+    let rid = o["rid"].as_str().filter(|r| !r.is_empty() && r.len() <= 16 && r.chars().all(|c| c.is_ascii_alphanumeric()))?;
+    let start = o["start"].as_u64().filter(|s| *s > 0)?;
+    let dur = o["dur"].as_u64().filter(|d| (300_000..=3_600_000).contains(d))?;
+    let ids = |k: &str| -> Vec<String> { o[k].as_array().map(|a| a.iter().filter_map(|x| x.as_str()).filter(|x| !x.is_empty() && x.len() <= 40).take(60).map(String::from).collect()).unwrap_or_default() };
+    let (cops, mut runs) = (ids("cops"), ids("runs"));
+    runs.retain(|r| !cops.contains(r));
+    if cops.is_empty() || runs.is_empty() { return None; }
+    let mut nm = serde_json::Map::new();
+    for d in cops.iter().chain(runs.iter()) { nm.insert(d.clone(), json!(take_chars(o["nm"][d.as_str()].as_str().unwrap_or("Fahrer"), 24))); }
+    let res = o["res"].as_str().filter(|r| ["cop", "run", "abort"].contains(r)).unwrap_or("");
+    Some(json!({"rid": rid, "d": take_chars(o["d"].as_str().unwrap_or(""), 40), "start": start, "dur": dur, "cops": cops, "runs": runs, "nm": nm,
+        "end": o["end"].as_u64().unwrap_or(0), "res": res, "t": o["t"].as_u64().unwrap_or(start)}))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn polizisten_je_spielerzahl() {
+        let want = [(4, 2), (5, 2), (6, 2), (7, 4), (12, 4), (13, 6), (18, 6), (19, 8)];
+        for (n, c) in want { assert_eq!(pc_cops(n), c, "{n} Spieler"); }
+    }
+
+    #[test]
+    fn teams_wunsch_zuerst() {
+        let ids: Vec<String> = (0..7).map(|i| format!("g{i}")).collect();
+        let wish = [false, false, true, false, false, false, true];
+        for seed in 0..50u8 {
+            let rnd: Vec<u8> = (0..28u8).map(|i| i.wrapping_mul(37).wrapping_add(seed.wrapping_mul(91))).collect();
+            let (cops, runs) = pick_teams(&ids, &wish, &rnd);
+            assert_eq!(cops.len(), 4); assert_eq!(runs.len(), 3);
+            assert!(cops.contains(&"g2".to_string()) && cops.contains(&"g6".to_string()));
+            assert!(cops.iter().all(|c| !runs.contains(c)));
+        }
+    }
+
+    #[test]
+    fn runde_pruefen() {
+        let ok = json!({"rid": "AB12CD", "start": 1000, "dur": 1_200_000, "cops": ["a", "b"], "runs": ["c", "a", "d"], "nm": {"a": "Anna"}});
+        let p = clean_pc(&ok).unwrap();
+        assert_eq!(p["runs"], json!(["c", "d"]));
+        assert_eq!(p["nm"]["a"], "Anna"); assert_eq!(p["nm"]["c"], "Fahrer");
+        assert!(pc_running(&p, 5000) && !pc_running(&p, 1000 + 1_200_000));
+        assert!(clean_pc(&json!({"rid": "x y", "start": 1, "dur": 1_200_000, "cops": ["a"], "runs": ["b"]})).is_none());
+        assert!(clean_pc(&json!({"rid": "X", "start": 1, "dur": 60_000, "cops": ["a"], "runs": ["b"]})).is_none());
+        assert!(clean_pc(&json!({"rid": "X", "start": 1, "dur": 1_200_000, "cops": ["a"], "runs": ["a"]})).is_none());
+    }
+
+    #[test]
+    fn ev_rundendaten() {
+        let e = clean_ev(&json!({"pc": {"rid": "AB12CD", "st": 9, "out": true, "by": "a", "t": 5}}));
+        assert_eq!(e["pc"]["st"], 6); assert_eq!(e["pc"]["out"], true);
+        assert!(clean_ev(&json!({"pc": {"st": 2}}))["pc"].is_null());
+    }
 }
 
 // Chat-Text: keine Steuerzeichen, Leerraum zusammengefasst, begrenzt

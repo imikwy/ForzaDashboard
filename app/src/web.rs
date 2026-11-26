@@ -175,6 +175,7 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/lobby/chat", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().send_chat(&b, &s.name())) }))
         .route("/lobby/leader", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().promote(&b, &s.name())) }))
         .route("/lobby/ev", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().ev_set(&b, &s.name())) }))
+        .route("/lobby/pc", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().pc_set(&b, &s.name())) }))
         .route("/schaltung", get(|| async { j(crate::schaltung::state()) }).post(|ConnectInfo(a): Addr, b: Bytes| async move { if !heimnetz(&a) { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::schaltung::set(&body(&b))) }))
         .route("/handbremse", post(|b: Bytes| async move { let b = body(&b); j(crate::media::handbremse(b["an"].as_bool().unwrap_or(false))) }))
         .route("/lobby/kick", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().vote(&b, &s.name())) }))
