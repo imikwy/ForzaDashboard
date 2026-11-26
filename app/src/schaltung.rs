@@ -299,7 +299,9 @@ pub fn tick(d: &Value) -> Option<String> {
 
         let thr = n("acc") / 255.0;
         // Kickdown nur, wenn das Gas gerade erst durchgetreten wurde (nicht dauernd bei Vollgas, sonst pendelt es nach dem Hochschalten)
-        if thr > 0.85 && s.thr0 <= 0.85 { s.kick_t = now; }
+        // Forza nimmt beim Schalten kurz das Gas weg (in der Telemetrie sichtbar) – das wieder Durchtreten danach ist kein neuer Kickdown
+        let since_shift = now.saturating_sub(s.last_up.max(s.last_dn));
+        if thr > 0.85 && s.thr0 <= 0.85 && since_shift > 700 { s.kick_t = now; }
         s.thr0 = thr;
         let fresh_kick = now.saturating_sub(s.kick_t) < 900;
         let br = n("brk") / 255.0;
@@ -407,9 +409,10 @@ pub fn tick(d: &Value) -> Option<String> {
                 if gear > 1 && since >= wait.min(400) {
                     let a = after(gear - 1);
                     if a < 0.93 {
-                        let lug = r < dn && a < up_at.max(lo) * 0.95 + 0.05;                               // Drehzahl zu tief
-                        let kick = m != 'E' && thr > 0.85 && fresh_kick && a < if m == 'S' { 0.93 } else { 0.84 } && r < if m == 'S' { 0.78 } else { 0.62 };
-                        let eco_kick = m == 'E' && thr > 0.97 && fresh_kick && a < 0.72 && r < 0.4;
+                        let dn2 = if m == 'S' && thr < 0.2 { 0.28 } else { dn };   // S+ rollend: etwas tiefer erlaubt
+                        let lug = r < dn2 && a < up_at.max(lo) * 0.95 + 0.05 && since_dn > 700;                               // Drehzahl zu tief
+                        let kick = m != 'E' && thr > 0.85 && fresh_kick && since_up > 1200 && a < if m == 'S' { 0.93 } else { 0.84 } && r < if m == 'S' { 0.78 } else { 0.62 };
+                        let eco_kick = m == 'E' && thr > 0.97 && fresh_kick && since_up > 1200 && a < 0.72 && r < 0.4;
                         let brake = br > 0.25 && a < if m == 'S' { 0.86 } else { 0.48 } && r < if m == 'S' { 0.7 } else { 0.32 };
                         let sport = m == 'S' && thr > 0.3 && r < dn && a < 0.9 && since_up > 1500;
                         if (lug || kick || eco_kick || brake || sport) && slip < 1.6 && (since_up > 700 || kick || brake) { let w = format!("runter ({}) bei {:.0}/min, danach ~{:.0}/min, Gas {:.0}% Bremse {:.0}% {:.0} km/h", if kick { "Kickdown" } else if brake { "Bremsen" } else if sport { "Sport" } else if eco_kick { "Kickdown" } else { "Drehzahl tief" }, rpm, idle + a * span, thr * 100.0, br * 100.0, spd * 3.6); shift(s, -1, now, &w); }
@@ -492,6 +495,7 @@ mod probe {
         let mut queue: Vec<(f64, i8)> = Vec::new();
         let mut log = Vec::new();
         let mut maxr: f64 = 0.0;
+        let mut cut_until = -1.0;   // wie Forza: beim Gangwechsel 0,15 s kein Gas in der Telemetrie
         for &(dur, thr, brk) in teile {
             let end = t + dur;
             while t < end {
@@ -505,10 +509,10 @@ mod probe {
                 v = (v + (f / 1500.0 - 0.4 * v * v / 1500.0 - 0.15 - brk * 9.0) * 0.016).max(0.0);
                 CLK.store((t * 1000.0) as u64 + 1_000_000, Ordering::Relaxed);
                 let d = json!({"on": 1, "dash": 1, "gear": g, "car": 1, "rpm": rpm, "rpmMax": mx, "rpmIdle": idle, "spd": v,
-                               "acc": (thr * 255.0).round(), "brk": (brk * 255.0).round(), "clu": 0, "slip": [0.1, 0.1, 0.1, 0.1], "pow": pow});
+                               "acc": if t < cut_until { 0.0 } else { (thr * 255.0).round() }, "brk": (brk * 255.0).round(), "clu": 0, "slip": [0.1, 0.1, 0.1, 0.1], "pow": pow});
                 tick(&d);
                 for dir in SIM.lock().unwrap().drain(..) { queue.push((t + 0.06, dir)); log.push(format!("{:5.1}s {:>3.0} km/h  {} {}→{}  bei {:4.0}/min  Gas {:3.0}% Bremse {:3.0}%", t, v * 3.6, if dir > 0 { "▲" } else { "▼" }, g, (g as i8 + dir), rpm, thr * 100.0, brk * 100.0)); }
-                queue.retain(|&(at, dir)| { if t >= at { g = ((g as i8 + dir).clamp(1, 7)) as u8; false } else { true } });
+                queue.retain(|&(at, dir)| { if t >= at { g = ((g as i8 + dir).clamp(1, 7)) as u8; cut_until = t + 0.15; false } else { true } });
                 t += 0.016;
             }
         }

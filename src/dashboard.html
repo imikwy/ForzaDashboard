@@ -5165,9 +5165,9 @@ function gsSettings(grp){
   const b = S.binds || {}, vj = !!GS.vj, ok = !vj || (b.wipUp && b.wipDn && S.gsForza);
   // Assistent weiterschalten, sobald eine Wippe gelernt wurde
   if (GS.wiz === 1 && PAD.learn !== "wipUp") { GS.wiz = 2; PAD.learn = "wipDn"; }
-  else if (GS.wiz === 2 && PAD.learn !== "wipDn") GS.wiz = 3;
+  else if (GS.wiz === 2 && PAD.learn !== "wipDn") { if (S.gsForza) { GS.wiz = 0; toast("Wippen gespeichert ✓"); } else GS.wiz = 3; }   // Forza schon verbunden: nur die Wippen neu lernen
   const head = document.createElement("button"); head.className = "whr";
-  head.innerHTML = '<span class="wt">Einrichten</span><span class="wv">' + (GS.wiz ? "läuft …" : ok ? "✓ fertig" : "noch nicht") + '</span><svg class="chev" viewBox="0 0 8 13" style="transform:rotate(' + (GS.wiz ? 90 : 0) + 'deg)"><path d="m1.5 1.5 5 5-5 5"/></svg>';
+  head.innerHTML = '<span class="wt">Einrichten</span><span class="wv">' + (GS.wiz ? "läuft …" : ok ? "✓ fertig" : vj && S.gsForza && !(b.wipUp && b.wipDn) ? '<b style="color:#ffd60a">Wippen fehlen</b>' : "noch nicht") + '</span><svg class="chev" viewBox="0 0 8 13" style="transform:rotate(' + (GS.wiz ? 90 : 0) + 'deg)"><path d="m1.5 1.5 5 5-5 5"/></svg>';
   head.onclick = () => { if (GS.wiz) { GS.wiz = 0; if (PAD.learn && /^wip/.test(PAD.learn)) PAD.learn = null; } else { GS.wiz = vj ? 1 : 9; if (vj) PAD.learn = "wipUp"; } buildWheelSettings(); };
   grp.appendChild(head);
   if (GS.wiz) {
