@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forza CarPlay – Reveal</title>
+<link rel="stylesheet" href="promo.css">
+<style>
+#bg{position:absolute;inset:0}
+.intro{position:absolute;left:0;right:0;top:430px;text-align:center}
+.intro h1{font-size:88px;font-weight:800;letter-spacing:-.035em;line-height:1.02}
+.intro p{margin-top:22px;font-size:30px;font-weight:600;color:var(--muted)}
+.rail{left:56px;top:60px;width:108px;height:960px;padding:22px 0;display:flex;flex-direction:column;align-items:center;gap:20px;border-radius:40px}
+.rail .clk{font-size:30px;font-weight:700}
+.rail i{width:72px;height:72px;border-radius:20px;display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 16px rgba(0,0,0,.35)}
+.rail i svg{width:38px;height:38px}
+.map{left:190px;top:60px;width:900px;height:960px;overflow:hidden;border-radius:40px}
+.map canvas{position:absolute;inset:0}
+.nav{left:24px;right:24px;top:24px;height:112px;border-radius:30px;display:flex;align-items:center;gap:22px;padding:0 28px;background:rgba(18,82,52,.9);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 14px 30px rgba(0,0,0,.35)}
+.nav svg{width:64px;height:64px;flex:none}
+.nav b{font-size:44px;font-weight:800;display:block}
+.nav small{font-size:22px;font-weight:600;color:rgba(255,255,255,.78)}
+.hud{left:24px;right:24px;bottom:24px;height:120px;border-radius:34px;display:flex;align-items:center;gap:26px;padding:0 30px}
+.hud .spd{font-size:74px;font-weight:800}
+.hud .u{font-size:22px;font-weight:700;color:var(--muted);margin-left:6px}
+.hud .gear{width:86px;height:86px;border-radius:43px;display:grid;place-items:center;font-size:48px;font-weight:800;background:rgba(255,255,255,.12)}
+.hud .gear.sh{background:var(--red);box-shadow:0 0 34px rgba(255,69,58,.7)}
+.hud .bar{flex:1;height:14px;border-radius:7px;background:rgba(255,255,255,.12);overflow:hidden}
+.hud .bar u{display:block;height:100%;border-radius:7px;background:#fff}
+.tile{width:390px;height:300px;padding:26px 28px;border-radius:38px}
+.tile .kicker{font-size:14px}
+.chips{left:300px;right:300px;top:330px;display:flex;flex-wrap:wrap;justify-content:center;gap:26px 22px}
+.chip{height:110px;padding:0 44px 0 26px;border-radius:55px;display:flex;align-items:center;gap:22px;font-size:40px;font-weight:800;letter-spacing:-.01em}
+.chip i{width:66px;height:66px;border-radius:20px;display:grid;place-items:center}
+.chip i svg{width:38px;height:38px}
+.end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.end .mark{width:190px;height:190px;border-radius:54px;display:grid;place-items:center;margin-bottom:44px}
+.end .mark svg{width:120px;height:120px}
+.end h2{font-size:120px;font-weight:800;letter-spacing:-.04em}
+.end p{margin-top:18px;font-size:36px;font-weight:600;color:var(--muted)}
+.end .cta{margin-top:46px;height:84px;padding:0 44px;border-radius:42px;display:flex;align-items:center;font-size:32px;font-weight:800;background:#fff;color:#0b0d12}
+.end small{position:absolute;bottom:44px;font-size:18px;font-weight:500;color:rgba(255,255,255,.4)}
+.stars{font-size:46px;letter-spacing:4px;color:rgba(255,255,255,.18)}
+.stars b{color:var(--yellow);font-weight:400;text-shadow:0 0 18px rgba(255,214,10,.6)}
+.sel{display:flex;gap:10px;margin-top:22px}
+.sel span{flex:1;height:76px;border-radius:22px;display:grid;place-items:center;font-size:30px;font-weight:800;background:rgba(255,255,255,.08);color:rgba(255,255,255,.45)}
+.sel span.on{background:var(--blue);color:#fff;box-shadow:0 0 30px rgba(10,132,255,.6)}
+</style>
+</head>
+<body>
+<div id="stage" data-w="1920" data-h="1080" style="width:1920px;height:1080px">
+  <canvas id="bg" width="1920" height="1080"></canvas>
+
+  <div class="glass abs rail" id="rail">
+    <div class="clk num" id="clk">21:47</div>
+    <i style="background:linear-gradient(180deg,#8fa2c6,#56688e)"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3.2 2.6 11.1c-.5.4-.2 1.2.4 1.2H5v7.4c0 .6.5 1.1 1.1 1.1h3.6v-5.6c0-.5.4-.9.9-.9h2.8c.5 0 .9.4.9.9v5.6h3.6c.6 0 1.1-.5 1.1-1.1v-7.4H21c.6 0 .9-.8.4-1.2Z"/></svg></i>
+    <i style="background:#121212"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1ed760"/><path d="M7 9.2c3.4-1 7-.7 10 1M7.6 12.3c2.8-.8 5.6-.5 8.2.9M8.2 15.2c2.2-.6 4.3-.4 6.3.7" stroke="#121212" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg></i>
+    <i style="background:linear-gradient(180deg,#3a3f4a,#20242b)"><svg viewBox="0 0 24 24"><path d="M4 18 10 6l3 7 2-3 5 8" stroke="#ffd60a" stroke-width="2" fill="none" stroke-linejoin="round"/><circle cx="12" cy="9" r="3.2" fill="#ff453a"/></svg></i>
+    <i style="background:linear-gradient(180deg,#5fe08f,#21a35a)"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="9" cy="9" r="3.4"/><circle cx="16.5" cy="10" r="2.7"/><path d="M3 19c.6-3.4 3-5.2 6-5.2s5.4 1.8 6 5.2zM15 14.3c2.8-.3 5 1.2 5.8 4.7H16.6"/></svg></i>
+    <i style="background:linear-gradient(180deg,#ff6b5e,#d81e1e)"><svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4" fill="#fff"/><path d="M10 9v6l5.2-3z" fill="#e3261d"/></svg></i>
+    <i style="background:linear-gradient(180deg,#6cb6ff,#2f6fe0)"><svg viewBox="0 0 24 24" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/></svg></i>
+  </div>
+
+  <div class="glass abs map" id="map">
+    <canvas id="mc" width="900" height="960"></canvas>
+    <div class="abs nav" id="nav"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4M6 4h11l-2.5 4L17 12H6"/></svg><div><b class="num" id="navd">4,2 km</b><small data-de="Ziel: Festival-Gelände · Ankunft 21:52" data-en="Destination: Festival grounds · Arrive 21:52"></small></div></div>
+    <div class="glass abs hud" id="hud"><div><span class="spd num" id="spd">0</span><span class="u">km/h</span></div><div class="gear num" id="gear">1</div><div class="bar"><u id="rpm"></u></div></div>
+  </div>
+
+  <div class="glass abs tile" id="t1" style="left:1120px;top:60px"><div class="kicker" data-de="Police Chase" data-en="Police Chase"></div><div class="stars" id="stars" style="margin-top:34px"></div><div style="margin-top:26px;font-size:24px;font-weight:600;color:var(--muted)" id="pct" data-de="Gesehen – weg hier!" data-en="Spotted – get out!"></div></div>
+  <div class="glass abs tile" id="t2" style="left:1530px;top:60px;width:340px"><div class="kicker" data-de="Automatik" data-en="Gearbox"></div><div class="sel" id="sel"><span>P</span><span>R</span><span>D</span><span>S+</span></div><div style="margin-top:22px;font-size:22px;font-weight:600;color:var(--muted)" data-de="Eigener Wählhebel" data-en="Your own gear selector"></div></div>
+  <div class="glass abs tile" id="t3" style="left:1120px;top:390px;width:750px;height:230px;display:flex;align-items:center;gap:28px">
+    <div style="width:150px;height:150px;border-radius:26px;flex:none;background:linear-gradient(135deg,#ff375f,#5e5ce6 60%,#0a84ff)"></div>
+    <div style="flex:1"><div class="kicker" data-de="Läuft gerade" data-en="Now playing"></div><div style="font-size:40px;font-weight:800;margin-top:10px">Neon Highway</div><div style="font-size:24px;font-weight:600;color:var(--muted)">Midnight Drivers</div>
+    <div style="margin-top:20px;height:8px;border-radius:4px;background:rgba(255,255,255,.14)"><u id="prog" style="display:block;height:100%;border-radius:4px;background:#fff;width:30%"></u></div></div>
+  </div>
+  <div class="glass abs tile" id="t4" style="left:1120px;top:650px;width:360px;height:370px"><div class="kicker" data-de="G-Kraft" data-en="G-Force"></div><canvas id="gc" width="300" height="270" style="margin-top:14px"></canvas></div>
+  <div class="glass abs tile" id="t5" style="left:1510px;top:650px;width:360px;height:370px"><div class="kicker" data-de="Freunde" data-en="Friends"></div>
+    <div id="fr" style="margin-top:26px;display:flex;flex-direction:column;gap:20px;font-size:26px;font-weight:700"></div></div>
+
+  <div class="intro" id="intro"><h1 data-de="Dein zweiter Bildschirm<br>für Forza Horizon 6" data-en="Your second screen<br>for Forza Horizon 6"></h1><p data-de="Live-Karte · Navi · Mitspieler · Musik – direkt neben dem Spiel" data-en="Live map · Navigation · Friends · Music – right next to the game"></p></div>
+
+  <div class="abs chips" id="chips"></div>
+
+  <div class="end" id="end">
+    <div class="glass mark" id="mark"></div>
+    <h2>Forza CarPlay</h2>
+    <p data-de="Das Dashboard für Forza Horizon 6 – kostenlos" data-en="The dashboard for Forza Horizon 6 – free"></p>
+    <div class="cta" data-de="Jetzt auf Nexus Mods" data-en="Get it on Nexus Mods"></div>
+    <small data-de="Fan-Projekt · nicht verbunden mit Microsoft, Xbox Game Studios oder Playground Games" data-en="Fan project · not affiliated with Microsoft, Xbox Game Studios or Playground Games"></small>
+  </div>
+</div>
+<div class="hint">Leertaste = Pause · R = von vorn · ←/→ = springen · ?lang=en</div>
+<script src="promo.js"></script>
+<script>
+"use strict";
+const DUR = 16;
+$("#mark").innerHTML = MARK_SVG;
+const CHIPS = [
+  ["#0a84ff", '<path d="M12 2 4 20l8-4 8 4z" fill="#fff"/>', "Live-Karte & Navi", "Live map & navigation"],
+  ["#ff453a", '<path d="M12 3l2.6 5.6 6.1.6-4.6 4 1.4 6-5.5-3.2-5.5 3.2 1.4-6-4.6-4 6.1-.6z" fill="#fff"/>', "Police Chase", "Police Chase"],
+  ["#1ed760", '<path d="M9 18V6l11-2v12" stroke="#fff" stroke-width="2.2" fill="none"/><circle cx="7" cy="18" r="2.6" fill="#fff"/><circle cx="18" cy="16" r="2.6" fill="#fff"/>', "Spotify & YouTube", "Spotify & YouTube"],
+  ["#bf5af2", '<path d="M6 4v16M12 4v16M18 4v8M6 12h12" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"/>', "Eigene Automatik", "Custom gearbox"],
+  ["#ff9f0a", '<rect x="3" y="5" width="18" height="12" rx="2" stroke="#fff" stroke-width="2.2" fill="none"/><path d="M8 21h8" stroke="#fff" stroke-width="2.2"/>', "Overlay im Spiel", "In-game overlay"],
+  ["#5e5ce6", '<rect x="7" y="2.5" width="10" height="19" rx="2.5" stroke="#fff" stroke-width="2.2" fill="none"/>', "Handy & Tablet", "Phone & tablet"],
+];
+$("#chips").innerHTML = CHIPS.map(([c, ic, de, en]) => '<div class="glass chip"><i style="background:' + c + '"><svg viewBox="0 0 24 24">' + ic + '</svg></i>' + tr(de, en) + '</div>').join("");
+const chipEls = $$("#chips .chip");
+
+// Hintergrund: weiche, wandernde Farbflächen (Aurora)
+const bg = $("#bg").getContext("2d");
+function drawBg(t){
+  bg.fillStyle = "#05060a"; bg.fillRect(0, 0, 1920, 1080);
+  const blobs = [[0.2, 0.3, "#0a84ff", 760], [0.8, 0.25, "#5e5ce6", 680], [0.55, 0.85, "#ff375f", 620], [0.1, 0.9, "#30d158", 420]];
+  bg.globalCompositeOperation = "lighter";
+  blobs.forEach(([x, y, c, r], i) => {
+    const cx = 1920 * (x + .05 * Math.sin(t * .35 + i * 1.7)), cy = 1080 * (y + .06 * Math.cos(t * .3 + i));
+    const g = bg.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, c + "66"); g.addColorStop(1, c + "00");
+    bg.fillStyle = g; bg.fillRect(0, 0, 1920, 1080);
+  });
+  bg.globalCompositeOperation = "source-over";
+}
+
+// Karte: Kamera folgt dem Pfeil (Fahrtrichtung oben)
+const mc = $("#mc").getContext("2d");
+const ROUTE = spline(ROADS[0], 30), FRIENDS = [[spline(ROADS[2], 30), "#bf5af2", "anna_rs", .1], [spline(ROADS[1], 30), "#30d158", "kenji", .55]];
+function carAt(t){ return along(ROUTE, .04 + .62 * ease.inOut(seg(t, 2.2, 15.5))); }
+function drawMapAt(t){
+  const W = 900, H = 960, car = carAt(t), zoom = lerp(1.75, 1.35, seg(t, 3, 12)), rot = car.h;
+  mc.setTransform(1, 0, 0, 1, 0, 0); mc.fillStyle = "#0e1217"; mc.fillRect(0, 0, W, H);
+  mc.save(); mc.translate(W / 2, H * .64); mc.rotate(-rot); mc.scale(zoom, zoom); mc.translate(-car.x, -car.y);
+  // Gelände-Raster für Tiefe
+  mc.strokeStyle = "rgba(255,255,255,.035)"; mc.lineWidth = 1 / zoom;
+  for (let i = -200; i <= 1200; i += 50) { mc.beginPath(); mc.moveTo(i, -200); mc.lineTo(i, 1200); mc.moveTo(-200, i); mc.lineTo(1200, i); mc.stroke(); }
+  // Wasser und Grünflächen
+  mc.fillStyle = "#0f2236"; mc.beginPath(); mc.moveTo(640, 760); mc.bezierCurveTo(760, 700, 980, 720, 1100, 820); mc.lineTo(1100, 1100); mc.lineTo(560, 1100); mc.bezierCurveTo(560, 920, 600, 800, 640, 760); mc.fill();
+  mc.fillStyle = "#12241a"; for (const [x, y, rx, ry, r] of [[240, 380, 120, 80, .3], [760, 420, 90, 140, -.4], [120, 820, 90, 70, 0], [960, 120, 110, 70, .5]]) { mc.beginPath(); mc.ellipse(x, y, rx, ry, r, 0, 7); mc.fill(); }
+  drawRoads(mc, {w: 11, col: "#2f3846"});
+  // Route vor dem Auto (blau), gefahrene Spur dahinter
+  const k = .04 + .62 * ease.inOut(seg(t, 2.2, 15.5)), rk = ease.out(seg(t, 3.2, 5));
+  drawPath(mc, ROUTE, k, lerp(k, Math.min(1, k + .55), rk), "rgba(10,132,255,.35)", 22);
+  drawPath(mc, ROUTE, k, lerp(k, Math.min(1, k + .55), rk), "#3d8bff", 9);
+  for (const [p, c, n, o] of FRIENDS) { const f = along(p, (o + t * .028) % 1); mc.save(); mc.translate(f.x, f.y); mc.rotate(rot); mc.scale(1 / zoom, 1 / zoom); drawDot(mc, 0, 0, c, 10, n); mc.restore(); }
+  mc.restore();
+  drawArrow(mc, W / 2, H * .64, 0, 1.25, "#0a84ff");
+}
+
+// G-Kraft-Kreis
+const gc = $("#gc").getContext("2d");
+function drawG(t){
+  gc.clearRect(0, 0, 300, 270); const cx = 150, cy = 135, R = 118;
+  gc.strokeStyle = "rgba(255,255,255,.12)"; gc.lineWidth = 1.5;
+  for (let i = 1; i <= 4; i++) { gc.beginPath(); gc.arc(cx, cy, R * i / 4, 0, 7); gc.stroke(); }
+  gc.beginPath(); gc.moveTo(cx - R, cy); gc.lineTo(cx + R, cy); gc.moveTo(cx, cy - R); gc.lineTo(cx, cy + R); gc.stroke();
+  for (let i = 18; i >= 0; i--) {
+    const tt = t - i * .05, x = cx + R * .55 * Math.sin(tt * 1.3) * Math.cos(tt * .4), y = cy - R * .45 * Math.sin(tt * 2.1);
+    gc.globalAlpha = (1 - i / 19) * (i ? .35 : 1); gc.fillStyle = i ? "#0a84ff" : "#fff"; gc.beginPath(); gc.arc(x, y, i ? 5 : 13, 0, 7); gc.fill();
+  }
+  gc.globalAlpha = 1;
+}
+
+const set = (el, txt) => { if (el.textContent !== txt) el.textContent = txt; };
+const show = (el, o, dx = 0, dy = 0, sc = 1) => { el.style.opacity = o.toFixed(3); el.style.transform = "translate(" + dx.toFixed(1) + "px," + dy.toFixed(1) + "px) scale(" + sc.toFixed(4) + ")"; el.style.visibility = o > .002 ? "visible" : "hidden"; };
+
+function render(t){
+  drawBg(t);
+  // 0–2,4 s: Titel
+  { const o = fadeWin(t, .2, 2.6, .6, .5); show($("#intro"), o, 0, lerp(30, 0, ease.out(seg(t, .2, 1))) - 40 * seg(t, 2.1, 2.6)); }
+  // Glasflächen fliegen nacheinander herein (2,2 s …) und gehen am Ende (12,4 s …) wieder
+  const parts = [["#rail", -1, 0, 2.2], ["#map", 0, 1, 2.35], ["#t1", 1, 0, 2.55], ["#t2", 1, 0, 2.65], ["#t3", 1, 0, 2.75], ["#t4", 1, 0, 2.85], ["#t5", 1, 0, 2.95]];
+  for (const [id, dx, dy, a] of parts) {
+    const k = ease.back(seg(t, a, a + .8)), out = ease.in(seg(t, 12.3 + (a - 2.2) * .3, 12.9 + (a - 2.2) * .3));
+    const dim = ease.inOut(seg(t, 8.6, 9.2));   // während der Funktions-Chips: Dashboard tritt zurück
+    show($(id), Math.min(seg(t, a, a + .35), 1 - out) * (1 - .72 * dim), dx * (1 - k) * 260, dy * (1 - k) * 160 + out * 30, lerp(.92, 1, k) - out * .04 - .05 * dim);
+    $(id).style.filter = dim > .01 ? "blur(" + (dim * 10).toFixed(1) + "px)" : "";
+  }
+  if (t > 2 && t < 13.5) {
+    drawMapAt(t); drawG(t);
+    // Tempo, Gang, Drehzahl
+    const sp = Math.round(lerp(0, 212, ease.out(seg(t, 2.6, 8))) + 8 * Math.sin(t * 1.4) * seg(t, 8, 9));
+    set($("#spd"), String(Math.max(0, sp)));
+    const gears = [[2.6, 1], [3.6, 2], [4.6, 3], [5.8, 4], [7.2, 5], [8.8, 6]]; let gN = 1, gT = 0; for (const [a, gg] of gears) if (t >= a) { gN = gg; gT = a; }
+    set($("#gear"), String(gN)); $("#gear").classList.toggle("sh", t - gT > .82 && t - gT < 1.0 && gN < 6);
+    const rp = gN < 6 ? lerp(.35, .96, clamp((t - gT) / 1.05)) : .78 + .03 * Math.sin(t * 6); $("#rpm").style.width = (rp * 100).toFixed(1) + "%"; $("#rpm").style.background = rp > .9 ? "#ff453a" : rp > .8 ? "#ffd60a" : "#fff";
+    // Navi: Entfernung zählt herunter
+    const d = lerp(4.2, 1.1, seg(t, 4.5, 12)); set($("#navd"), d.toFixed(1).replace(".", P.lang === "en" ? "." : ",") + " km");
+    show($("#nav"), ease.out(seg(t, 4.2, 4.7)) * (1 - seg(t, 11.3, 11.6)), 0, lerp(-30, 0, ease.out(seg(t, 4.2, 4.7))));
+    // Police-Chase-Sterne
+    const st = t < 5 ? 0 : t < 6.6 ? 1 : t < 8.2 ? 2 : 3; $("#stars").innerHTML = "<b>" + "★".repeat(st) + "</b>" + "★".repeat(6 - st);
+    $("#pct").style.opacity = (st && Math.floor(t * 2.4) % 2 === 0) ? "1" : ".45";
+    // Wählhebel: P -> D -> S+
+    const sel = t < 3.4 ? 0 : t < 7.6 ? 2 : 3; $$("#sel span").forEach((e, i) => e.classList.toggle("on", i === sel));
+    $("#prog").style.width = (30 + t * 2.2).toFixed(1) + "%";
+    const frs = [["#bf5af2", "anna_rs", 1.2], ["#30d158", "kenji", .8], ["#ff9f0a", "lena.gt", 2.6]];
+    $("#fr").innerHTML = frs.map(([c, n, k]) => '<div style="display:flex;align-items:center;gap:14px"><i style="width:18px;height:18px;border-radius:9px;background:' + c + ';box-shadow:0 0 12px ' + c + '"></i>' + n + '<span class="num" style="margin-left:auto;color:var(--muted);font-weight:600">' + (k + Math.sin(t * .7 + k) * .2).toFixed(1).replace(".", P.lang === "en" ? "." : ",") + ' km</span></div>').join("");
+  }
+  // 9–12,6 s: Funktions-Chips
+  chipEls.forEach((e, i) => { const a = 8.9 + i * .22, k = ease.back(seg(t, a, a + .55)); show(e, Math.min(seg(t, a, a + .3), 1 - seg(t, 12.2, 12.6)), 0, (1 - k) * 60); });
+  // Ende: Zeichen, Name, Knopf
+  { const a = 12.9, o = seg(t, a, a + .5); show($("#end"), o, 0, 0, 1);
+    show($("#mark"), o, 0, 0, lerp(.6, 1, ease.back(seg(t, a, a + .9))));
+    $$("#end h2, #end p, #end .cta").forEach((e, i) => show(e, seg(t, a + .3 + i * .18, a + .7 + i * .18), 0, (1 - ease.out(seg(t, a + .3 + i * .18, a + 1 + i * .18))) * 40)); }
+}
+play(render, DUR);
+</script>
+</body>
+</html>

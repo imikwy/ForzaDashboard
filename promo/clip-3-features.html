@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forza CarPlay – Funktionen</title>
+<link rel="stylesheet" href="promo.css">
+<style>
+#bg{position:absolute;inset:0}
+.hook{position:absolute;left:70px;right:70px;top:700px;text-align:center}
+.hook h1{font-size:112px;font-weight:900;letter-spacing:-.045em;line-height:.98}
+.hook h1 em{font-style:normal;background:linear-gradient(90deg,#6cb6ff,#bf5af2 55%,#ff375f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.card{left:70px;top:520px;width:940px;height:1020px;border-radius:64px;overflow:hidden}
+.card canvas{position:absolute;inset:0}
+.head{position:absolute;left:70px;right:70px;top:190px}
+.head .n{font-size:30px;font-weight:800;letter-spacing:.14em;color:var(--muted)}
+.head h2{margin-top:14px;font-size:92px;font-weight:900;letter-spacing:-.04em;line-height:1}
+.head p{margin-top:18px;font-size:38px;font-weight:600;color:var(--muted);line-height:1.25}
+.dots{position:absolute;left:0;right:0;bottom:200px;display:flex;justify-content:center;gap:16px}
+.dots i{width:16px;height:16px;border-radius:8px;background:rgba(255,255,255,.25)}
+.dots i.on{width:48px;background:#fff}
+.end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 80px}
+.end .mark{width:220px;height:220px;border-radius:62px;display:grid;place-items:center;margin-bottom:60px}
+.end .mark svg{width:140px;height:140px}
+.end h2{font-size:132px;font-weight:900;letter-spacing:-.045em;line-height:.95}
+.end p{margin-top:30px;font-size:46px;font-weight:600;color:var(--muted);line-height:1.3}
+.end .cta{margin-top:70px;height:118px;padding:0 64px;border-radius:59px;display:flex;align-items:center;font-size:48px;font-weight:800;background:#fff;color:#0b0d12}
+.end small{position:absolute;bottom:80px;left:80px;right:80px;font-size:26px;font-weight:500;color:rgba(255,255,255,.4)}
+</style>
+</head>
+<body>
+<div id="stage" data-w="1080" data-h="1920" style="width:1080px;height:1920px">
+  <canvas id="bg" width="1080" height="1920"></canvas>
+  <div class="hook" id="hook"><h1 data-de="Dein Forza hat jetzt <em>Infotainment.</em>" data-en="Your Forza just got <em>infotainment.</em>"></h1></div>
+  <div class="head" id="head"><div class="n" id="hn"></div><h2 id="ht"></h2><p id="hp"></p></div>
+  <div class="glass abs card" id="card"><canvas id="cc" width="940" height="1020"></canvas></div>
+  <div class="dots" id="dots"></div>
+  <div class="end" id="end">
+    <div class="glass mark" id="mark"></div>
+    <h2>Forza<br>CarPlay</h2>
+    <p data-de="Kostenlos für Forza Horizon 6 – PC, Handy und Tablet." data-en="Free for Forza Horizon 6 – PC, phone and tablet."></p>
+    <div class="cta" data-de="Auf Nexus Mods" data-en="On Nexus Mods"></div>
+    <small data-de="Fan-Projekt · nicht verbunden mit Microsoft, Xbox Game Studios oder Playground Games" data-en="Fan project · not affiliated with Microsoft, Xbox Game Studios or Playground Games"></small>
+  </div>
+</div>
+<div class="hint">Leertaste = Pause · R = von vorn · ?lang=en</div>
+<script src="promo.js"></script>
+<script>
+"use strict";
+$("#mark").innerHTML = MARK_SVG;
+const HOOK = 2.2, PER = 2.9;
+const FEAT = [
+  ["#0a84ff", tr("Live-Karte & Navi", "Live map & navigation"), tr("Route, Abbiegen, Ansagen – neben dem Spiel.", "Routes, turns, voice – right next to the game.")],
+  ["#30d158", tr("Mit Freunden fahren", "Drive with friends"), tr("Lobby-Code teilen, alle auf einer Karte.", "Share a code, see everyone on one map.")],
+  ["#bf5af2", tr("Eigene Automatik", "Custom gearbox"), tr("Wählhebel P R D S+ – auch mit Lenkrad.", "Gear selector P R D S+ – even on a wheel.")],
+  ["#ff9f0a", tr("Overlay im Spiel", "In-game overlay"), tr("Karte, Tempo, Musik direkt über Forza.", "Map, speed and music right on top of Forza.")],
+  ["#1ed760", tr("Spotify & YouTube", "Spotify & YouTube"), tr("Musik und Videos ohne Alt-Tab.", "Music and videos without alt-tab.")],
+];
+const DUR = HOOK + PER * FEAT.length + 3.4;
+$("#dots").innerHTML = FEAT.map(() => "<i></i>").join("");
+const bg = $("#bg").getContext("2d"), cc = $("#cc").getContext("2d");
+function drawBg(t, col){
+  bg.fillStyle = "#05060a"; bg.fillRect(0, 0, 1080, 1920);
+  bg.globalCompositeOperation = "lighter";
+  [[.2, .25, col, 900], [.85, .7, "#5e5ce6", 760], [.3, .95, "#ff375f", 600]].forEach(([x, y, c, r], i) => {
+    const cx = 1080 * (x + .06 * Math.sin(t * .5 + i * 2)), cy = 1920 * (y + .04 * Math.cos(t * .4 + i));
+    const gr = bg.createRadialGradient(cx, cy, 0, cx, cy, r); gr.addColorStop(0, c + "55"); gr.addColorStop(1, c + "00"); bg.fillStyle = gr; bg.fillRect(0, 0, 1080, 1920);
+  });
+  bg.globalCompositeOperation = "source-over";
+}
+// --- Inhalte der Karten (alle nur von der Zeit in der Karte abhängig) ---
+const ROUTE = spline(ROADS[0], 30), R2 = spline(ROADS[2], 30), R1 = spline(ROADS[1], 30);
+function mapView(g, k, zoom, rot0, extra, center){
+  const me = along(ROUTE, k), rot = me.h * (rot0 ?? 1), c = center || me;
+  g.fillStyle = "#0d1116"; g.fillRect(0, 0, 940, 1020);
+  g.save(); g.translate(470, center ? 450 : 640); g.rotate(-rot); g.scale(zoom, zoom); g.translate(-c.x, -c.y);
+  g.fillStyle = "#0f2236"; g.beginPath(); g.moveTo(640, 760); g.bezierCurveTo(760, 700, 980, 720, 1100, 820); g.lineTo(1100, 1100); g.lineTo(560, 1100); g.bezierCurveTo(560, 920, 600, 800, 640, 760); g.fill();
+  g.fillStyle = "#12241a"; for (const [x, y, rx, ry, r] of [[240, 380, 120, 80, .3], [760, 420, 90, 140, -.4], [120, 820, 90, 70, 0], [960, 120, 110, 70, .5]]) { g.beginPath(); g.ellipse(x, y, rx, ry, r, 0, 7); g.fill(); }
+  drawRoads(g, {w: 11, col: "#2f3846"});
+  if (extra) extra(g, me, rot, zoom);
+  g.restore();
+  if (center) { const dx = (me.x - c.x) * zoom, dy = (me.y - c.y) * zoom; drawArrow(g, 470 + dx, 450 + dy, me.h, 1.6, "#0a84ff"); }
+  else drawArrow(g, 470, 640, (rot0 === 0 ? me.h : 0), 1.6, "#0a84ff");
+}
+function glassBox(g, x, y, w, h, r, fill){ g.fillStyle = fill || "rgba(22,26,34,.86)"; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); g.strokeStyle = "rgba(255,255,255,.14)"; g.lineWidth = 2; g.stroke(); }
+const CARD = [
+  // 1 Navi
+  u => {
+    const k = .12 + .25 * u;
+    mapView(cc, k, 1.5, 1, (g) => { drawPath(g, ROUTE, k, k + .45, "rgba(10,132,255,.35)", 22); drawPath(g, ROUTE, k, k + .45, "#3d8bff", 9); });
+    glassBox(cc, 36, 36, 868, 150, 40, "rgba(18,82,52,.94)");
+    cc.fillStyle = "#fff"; cc.font = "800 60px Inter, sans-serif"; cc.textBaseline = "middle"; cc.textAlign = "left";
+    cc.fillText(Math.max(0, Math.round(lerp(400, 60, u) / 10) * 10) + " m", 150, 92);
+    cc.font = "600 30px Inter, sans-serif"; cc.fillStyle = "rgba(255,255,255,.8)"; cc.fillText(tr("Links halten · Küstenstraße", "Keep left · Coast Road"), 150, 145);
+    cc.strokeStyle = "#fff"; cc.lineWidth = 9; cc.lineCap = cc.lineJoin = "round"; cc.beginPath(); cc.moveTo(100, 150); cc.lineTo(100, 100); cc.quadraticCurveTo(100, 70, 74, 62); cc.stroke(); cc.beginPath(); cc.moveTo(88, 46); cc.lineTo(70, 62); cc.lineTo(88, 80); cc.stroke();
+  },
+  // 2 Freunde
+  u => {
+    const k = .3 + .12 * u;
+    // ganze Gegend im Blick (Norden oben), alle Freunde auf ihren Straßen
+    mapView(cc, k, .8, 0, (g, me, rot, zoom) => {
+      for (const [p, c, n, o] of [[R2, "#bf5af2", "anna_rs", .66], [R1, "#ff9f0a", "lena.gt", .3], [ROUTE, "#30d158", "kenji", .0]]) {
+        const f = along(p, (o + (p === ROUTE ? k - .07 : u * .1)) % 1); g.save(); g.translate(f.x, f.y); g.scale(1.9 / zoom, 1.9 / zoom); drawDot(g, 0, 0, c, 11, n); g.restore();
+      }
+    }, {x: 520, y: 520});
+    glassBox(cc, 170, 860, 600, 120, 60);
+    cc.fillStyle = "rgba(255,255,255,.6)"; cc.font = "700 26px Inter, sans-serif"; cc.textAlign = "center"; cc.textBaseline = "middle"; cc.fillText(tr("Lobby-Code", "Lobby code"), 470, 896);
+    cc.fillStyle = "#fff"; cc.font = "800 46px Inter, sans-serif"; cc.fillText("K7M-2QX-9PA", 470, 942);
+  },
+  // 3 Automatik
+  u => {
+    cc.fillStyle = "#0f1116"; cc.fillRect(0, 0, 940, 1020);
+    const modes = ["P", "R", "D", "C", "S+", "M"], cols = ["#ff453a", "#ff9f0a", "#0a84ff", "#30d158", "#ff375f", "#bf5af2"];
+    const sel = u < .25 ? 0 : u < .55 ? 2 : u < .8 ? 4 : 5;
+    modes.forEach((m, i) => {
+      const x = 95 + i * 150, on = i === sel;
+      cc.fillStyle = on ? cols[i] : "rgba(255,255,255,.07)"; cc.beginPath(); cc.roundRect(x - 62, 120, 124, 124, 34); cc.fill();
+      if (on) { cc.save(); cc.shadowColor = cols[i]; cc.shadowBlur = 40; cc.fill(); cc.restore(); }
+      cc.fillStyle = on ? "#fff" : "rgba(255,255,255,.4)"; cc.font = "900 " + (m.length > 1 ? 50 : 60) + "px Inter, sans-serif"; cc.textAlign = "center"; cc.textBaseline = "middle"; cc.fillText(m, x, 184);
+    });
+    // Drehzahlbogen mit Gang
+    const gear = sel === 2 ? 1 + Math.floor(seg(u, .25, .55) * 3.99) : sel >= 4 ? 4 + Math.floor(seg(u, .55, 1) * 2.99) : 1;
+    const rpm = sel === 0 ? .1 : .3 + .6 * ((u * 6.2) % 1);
+    cc.lineCap = "round"; cc.lineWidth = 34; cc.strokeStyle = "rgba(255,255,255,.08)"; cc.beginPath(); cc.arc(470, 640, 260, Math.PI * .75, Math.PI * 2.25); cc.stroke();
+    cc.strokeStyle = rpm > .82 ? "#ff453a" : cols[sel]; cc.beginPath(); cc.arc(470, 640, 260, Math.PI * .75, Math.PI * (.75 + 1.5 * rpm)); cc.stroke();
+    cc.fillStyle = "#fff"; cc.font = "900 210px Inter, sans-serif"; cc.textAlign = "center"; cc.fillText(sel === 0 ? "P" : String(gear), 470, 640);
+    cc.fillStyle = "rgba(255,255,255,.55)"; cc.font = "700 34px Inter, sans-serif"; cc.fillText(tr(["Parken", "", "Automatik", "", "Sport+", "Manuell"][sel], ["Park", "", "Drive", "", "Sport+", "Manual"][sel]), 470, 790);
+  },
+  // 4 Overlay
+  u => {
+    // abstrakte Fahrt: Horizont, Straße, vorbeiziehende Linien
+    const gr = cc.createLinearGradient(0, 0, 0, 1020); gr.addColorStop(0, "#3a4f8a"); gr.addColorStop(.48, "#e58a6b"); gr.addColorStop(.5, "#2a2f3a"); gr.addColorStop(1, "#14161b"); cc.fillStyle = gr; cc.fillRect(0, 0, 940, 1020);
+    cc.fillStyle = "#1d2029"; cc.beginPath(); cc.moveTo(430, 500); cc.lineTo(510, 500); cc.lineTo(900, 1020); cc.lineTo(40, 1020); cc.fill();
+    for (let i = 0; i < 6; i++) { const z = ((i / 6 + u * 2.2) % 1), y = 500 + z * z * 520, w = 4 + z * 18, h = 8 + z * 60; cc.fillStyle = "rgba(255,255,255,.75)"; cc.fillRect(470 - w / 2, y, w, h); }
+    // Glas-Widgets oben drauf
+    glassBox(cc, 40, 40, 330, 330, 50, "rgba(14,16,22,.72)");
+    cc.save(); cc.beginPath(); cc.roundRect(52, 52, 306, 306, 40); cc.clip(); cc.translate(52, 52); cc.scale(306 / 940, 306 / 1020); mapView(cc, .2 + .1 * u, 1.2, 1); cc.restore();
+    glassBox(cc, 570, 40, 330, 150, 50, "rgba(14,16,22,.72)");
+    cc.fillStyle = "#fff"; cc.font = "900 84px Inter, sans-serif"; cc.textAlign = "right"; cc.textBaseline = "middle"; cc.fillText(String(Math.round(168 + 30 * u)), 790, 118);
+    cc.font = "700 26px Inter, sans-serif"; cc.fillStyle = "rgba(255,255,255,.6)"; cc.textAlign = "left"; cc.fillText("km/h", 800, 132);
+    glassBox(cc, 40, 870, 860, 110, 55, "rgba(14,16,22,.72)");
+    cc.fillStyle = "#1ed760"; cc.beginPath(); cc.arc(110, 925, 30, 0, 7); cc.fill();
+    cc.fillStyle = "#fff"; cc.font = "800 32px Inter, sans-serif"; cc.textAlign = "left"; cc.fillText("Neon Highway", 160, 912); cc.font = "600 24px Inter, sans-serif"; cc.fillStyle = "rgba(255,255,255,.6)"; cc.fillText("Midnight Drivers", 160, 945);
+  },
+  // 5 Spotify & YouTube
+  u => {
+    cc.fillStyle = "#101114"; cc.fillRect(0, 0, 940, 1020);
+    const art = cc.createLinearGradient(170, 90, 770, 690); art.addColorStop(0, "#ff375f"); art.addColorStop(.6, "#5e5ce6"); art.addColorStop(1, "#0a84ff");
+    cc.fillStyle = art; cc.beginPath(); cc.roundRect(190, 90, 560, 560, 48); cc.fill();
+    // Equalizer im Cover
+    for (let i = 0; i < 9; i++) { const h = 60 + 120 * Math.abs(Math.sin(u * 14 + i * .9)); cc.fillStyle = "rgba(255,255,255,.85)"; cc.beginPath(); cc.roundRect(270 + i * 46, 560 - h, 26, h, 13); cc.fill(); }
+    cc.fillStyle = "#fff"; cc.font = "800 54px Inter, sans-serif"; cc.textAlign = "center"; cc.textBaseline = "middle"; cc.fillText("Neon Highway", 470, 730);
+    cc.fillStyle = "rgba(255,255,255,.55)"; cc.font = "600 32px Inter, sans-serif"; cc.fillText("Midnight Drivers", 470, 782);
+    cc.fillStyle = "rgba(255,255,255,.15)"; cc.beginPath(); cc.roundRect(120, 840, 700, 10, 5); cc.fill(); cc.fillStyle = "#fff"; cc.beginPath(); cc.roundRect(120, 840, 700 * (.25 + .5 * u), 10, 5); cc.fill();
+    cc.beginPath(); cc.arc(470, 930, 52, 0, 7); cc.fill(); cc.fillStyle = "#101114"; cc.fillRect(452, 905, 12, 50); cc.fillRect(476, 905, 12, 50);
+  },
+];
+const show = (el, o, dy = 0, sc = 1) => { el.style.opacity = o.toFixed(3); el.style.visibility = o > .002 ? "visible" : "hidden"; el.style.transform = "translateY(" + dy.toFixed(1) + "px) scale(" + sc.toFixed(4) + ")"; };
+function render(t){
+  const i = clamp(Math.floor((t - HOOK) / PER), 0, FEAT.length - 1), u = seg(t, HOOK + i * PER, HOOK + (i + 1) * PER), inF = t >= HOOK && t < HOOK + PER * FEAT.length;
+  drawBg(t, FEAT[i][0]);
+  show($("#hook"), fadeWin(t, 0, HOOK, .35, .4), lerp(40, 0, ease.out(seg(t, 0, .6))) - 60 * seg(t, HOOK - .4, HOOK), lerp(1.1, 1, ease.out(seg(t, 0, .6))));
+  if (inF) {
+    CARD[i](u);
+    const enter = ease.back(seg(u, 0, .22)), leave = ease.in(seg(u, .88, 1)), last = i === FEAT.length - 1;
+    show($("#card"), Math.min(seg(u, 0, .12), last ? 1 - seg(u, .9, 1) : 1), (1 - enter) * 260 - leave * (last ? 0 : 160), lerp(.9, 1, enter) - leave * .06);
+    $("#card").style.boxShadow = "inset 0 0 0 2px " + FEAT[i][0] + "55, 0 40px 120px " + FEAT[i][0] + "33";
+    const ho = fadeWin(u, 0, 1, .12, .1);
+    $("#hn").textContent = String(i + 1).padStart(2, "0") + " / " + String(FEAT.length).padStart(2, "0"); $("#hn").style.color = FEAT[i][0];
+    $("#ht").textContent = FEAT[i][1]; $("#hp").textContent = FEAT[i][2];
+    show($("#head"), ho, (1 - ease.out(seg(u, 0, .2))) * 40);
+    $$("#dots i").forEach((d, j) => d.classList.toggle("on", j === i)); show($("#dots"), 1);
+  } else { show($("#card"), 0); show($("#head"), 0); show($("#dots"), 0); }
+  const a = HOOK + PER * FEAT.length + .1;
+  show($("#end"), seg(t, a, a + .4)); show($("#mark"), seg(t, a, a + .4), 0, lerp(.6, 1, ease.back(seg(t, a, a + .9))));
+  $$("#end h2, #end p, #end .cta").forEach((e, j) => show(e, seg(t, a + .3 + j * .2, a + .7 + j * .2), (1 - ease.out(seg(t, a + .3 + j * .2, a + 1 + j * .2))) * 50));
+}
+play(render, DUR);
+</script>
+</body>
+</html>

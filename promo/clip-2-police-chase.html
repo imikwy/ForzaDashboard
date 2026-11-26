@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forza CarPlay – Police Chase</title>
+<link rel="stylesheet" href="promo.css">
+<style>
+#mc{position:absolute;inset:0}
+.siren{position:absolute;left:0;right:0;top:0;height:1100px;pointer-events:none}
+.title{position:absolute;left:0;right:0;top:640px;text-align:center}
+.title h1{font-size:150px;font-weight:900;letter-spacing:-.04em;line-height:.92}
+.title p{margin-top:34px;font-size:46px;font-weight:700;color:var(--muted)}
+.pill{left:50%;top:150px;height:112px;padding:0 40px;border-radius:56px;display:flex;align-items:center;gap:26px;font-size:46px;font-weight:800;white-space:nowrap}
+.pill .sep{width:2px;height:44px;background:rgba(255,255,255,.2)}
+.pill small{font-size:36px;font-weight:700;color:var(--muted)}
+.stars{font-size:46px;letter-spacing:2px;color:rgba(255,255,255,.2)}
+.stars b{font-weight:400;color:var(--yellow);text-shadow:0 0 18px rgba(255,214,10,.7)}
+.pill.hot{background:rgba(120,20,26,.82);box-shadow:inset 0 0 0 2px rgba(255,69,58,.7),0 18px 50px rgba(255,69,58,.35)}
+.bar{position:absolute;left:40px;right:40px;bottom:16px;height:10px;border-radius:5px;background:rgba(255,255,255,.15);overflow:hidden}
+.bar u{display:block;height:100%;background:var(--red);border-radius:5px}
+.flash{position:absolute;left:0;right:0;text-align:center;font-weight:900;letter-spacing:-.03em}
+.big{top:1200px;left:40px;right:40px;font-size:112px;line-height:1}
+.sub{top:1380px;font-size:44px;font-weight:700;color:rgba(255,255,255,.75)}
+.cap{left:70px;right:70px;bottom:150px;padding:34px 40px;border-radius:44px;font-size:44px;font-weight:700;line-height:1.25;text-align:center}
+.end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 80px}
+.end .mark{width:220px;height:220px;border-radius:62px;display:grid;place-items:center;margin-bottom:60px}
+.end .mark svg{width:140px;height:140px}
+.end h2{font-size:132px;font-weight:900;letter-spacing:-.045em;line-height:.95}
+.end p{margin-top:30px;font-size:46px;font-weight:600;color:var(--muted);line-height:1.3}
+.end .cta{margin-top:70px;height:118px;padding:0 64px;border-radius:59px;display:flex;align-items:center;font-size:48px;font-weight:800;background:#fff;color:#0b0d12}
+.end small{position:absolute;bottom:80px;left:80px;right:80px;font-size:26px;font-weight:500;color:rgba(255,255,255,.4)}
+</style>
+</head>
+<body>
+<div id="stage" data-w="1080" data-h="1920" style="width:1080px;height:1920px">
+  <canvas id="mc" width="1080" height="1920"></canvas>
+  <canvas class="siren" id="siren" width="1080" height="1100"></canvas>
+  <div class="glass abs pill" id="pill"><b class="num" id="clock">14:32</b><span class="sep"></span><span class="stars" id="stars"></span><span class="sep"></span><small id="info"></small><div class="bar" id="bar"><u id="baru"></u></div></div>
+  <div class="flash big" id="f1"></div>
+  <div class="flash sub" id="f2"></div>
+  <div class="glass abs cap" id="cap"></div>
+  <div class="title" id="title"><h1>POLICE<br>CHASE</h1><p data-de="Du gegen deine Freunde." data-en="You vs. your friends."></p></div>
+  <div class="end" id="end">
+    <div class="glass mark" id="mark"></div>
+    <h2>Forza<br>CarPlay</h2>
+    <p data-de="Police Chase, Live-Karte, Navi und mehr – für Forza Horizon 6. Kostenlos." data-en="Police Chase, live map, navigation and more – for Forza Horizon 6. Free."></p>
+    <div class="cta" data-de="Auf Nexus Mods" data-en="On Nexus Mods"></div>
+    <small data-de="Fan-Projekt · nicht verbunden mit Microsoft, Xbox Game Studios oder Playground Games" data-en="Fan project · not affiliated with Microsoft, Xbox Game Studios or Playground Games"></small>
+  </div>
+</div>
+<div class="hint">Leertaste = Pause · R = von vorn · ?lang=en</div>
+<script src="promo.js"></script>
+<script>
+"use strict";
+const DUR = 15;
+$("#mark").innerHTML = MARK_SVG;
+const g = $("#mc").getContext("2d"), sg = $("#siren").getContext("2d");
+const ROUTE = spline(ROADS[0], 30), C1 = spline(ROADS[2], 30), C2 = spline(ROADS[1], 30);
+const SEE = 150, CAT = 34;   // Suchkreis und Fangkreis (Weltmaß dieses Clips)
+// Flüchtiger (du): fährt die Route entlang, ab 8,4 s mit Vollgas davon
+const kRun = t => .1 + .42 * seg(t, 1.2, 8.4) + .3 * ease.in(seg(t, 8.4, 12));
+function runner(t){ return along(ROUTE, kRun(t)); }
+// Polizist 1 jagt von hinten: kommt bis in den Fangkreis heran, fällt ab 8,6 s zurück
+function cop1(t){
+  const gap = t < 3.8 ? lerp(.1, .07, seg(t, 1.2, 3.8)) : t < 6.6 ? lerp(.07, .012, ease.inOut(seg(t, 3.8, 6.6))) : t < 8.6 ? .012 : lerp(.012, .3, ease.out(seg(t, 8.6, 10.4)));
+  return along(ROUTE, Math.max(0, kRun(t) - gap));
+}
+// Polizist 2 kommt quer über die Kreuzung
+function cop2(t){ return along(C2, .12 + .5 * seg(t, 1, 13)); }
+function cops(t){ return [cop1(t), cop2(t)]; }
+
+function drawWorld(t){
+  const W = 1080, H = 1920, me = runner(t), zoom = lerp(1.9, 1.45, ease.inOut(seg(t, 1, 12))), rot = me.h * .55;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = "#0b0e13"; g.fillRect(0, 0, W, H);
+  g.save(); g.translate(W / 2, H * .58); g.rotate(-rot); g.scale(zoom, zoom); g.translate(-me.x, -me.y);
+  g.fillStyle = "#0e1f31"; g.beginPath(); g.moveTo(640, 760); g.bezierCurveTo(760, 700, 980, 720, 1100, 820); g.lineTo(1100, 1100); g.lineTo(560, 1100); g.bezierCurveTo(560, 920, 600, 800, 640, 760); g.fill();
+  g.fillStyle = "#112218"; for (const [x, y, rx, ry, r] of [[240, 380, 120, 80, .3], [760, 420, 90, 140, -.4], [120, 820, 90, 70, 0], [960, 120, 110, 70, .5]]) { g.beginPath(); g.ellipse(x, y, rx, ry, r, 0, 7); g.fill(); }
+  drawRoads(g, {w: 11, col: "#2c3442"});
+  // gefahrene Spur
+  drawPath(g, ROUTE, Math.max(0, kRun(t) - .12), kRun(t), "rgba(10,132,255,.55)", 7);
+  // Such- und Fangkreise um die Polizei
+  const pulse = (t * 1.6) % 1;
+  for (const c of cops(t)) {
+    g.fillStyle = "rgba(255,59,48,.10)"; g.beginPath(); g.arc(c.x, c.y, SEE, 0, 7); g.fill();
+    g.strokeStyle = "rgba(255,69,58,.55)"; g.lineWidth = 2.2 / zoom; g.beginPath(); g.arc(c.x, c.y, SEE, 0, 7); g.stroke();
+    g.fillStyle = "rgba(255,59,48,.22)"; g.beginPath(); g.arc(c.x, c.y, CAT, 0, 7); g.fill();
+    g.strokeStyle = "rgba(255,69,58,.95)"; g.beginPath(); g.arc(c.x, c.y, CAT, 0, 7); g.stroke();
+    g.globalAlpha = 1 - pulse; g.strokeStyle = "rgba(255,69,58,.8)"; g.lineWidth = 3 / zoom; g.beginPath(); g.arc(c.x, c.y, CAT + pulse * 60, 0, 7); g.stroke(); g.globalAlpha = 1;
+  }
+  // Ping: alle Polizisten sehen kurz, wo du warst
+  const pk = seg(t, 5.1, 6.3);
+  if (pk > 0 && pk < 1) { g.globalAlpha = 1 - pk; g.strokeStyle = "#ffd60a"; g.lineWidth = 4 / zoom; const p = runner(5.1); g.beginPath(); g.arc(p.x, p.y, 20 + pk * 140, 0, 7); g.stroke(); g.globalAlpha = 1; }
+  g.restore();
+  // Polizeiautos mit Blaulicht
+  const scr = p => { const c = Math.cos(-rot), s = Math.sin(-rot), dx = (p.x - me.x) * zoom, dy = (p.y - me.y) * zoom; return [W / 2 + dx * c - dy * s, H * .58 + dx * s + dy * c]; };
+  cops(t).forEach((c, i) => {
+    const [x, y] = scr(c), on = Math.floor(t * 6 + i) % 2 === 0;
+    g.fillStyle = on ? "rgba(255,59,48,.55)" : "rgba(10,132,255,.55)"; g.beginPath(); g.arc(x, y, 34, 0, 7); g.fill();
+    g.fillStyle = "#fff"; g.beginPath(); g.arc(x, y, 17, 0, 7); g.fill();
+    g.fillStyle = on ? "#ff453a" : "#0a84ff"; g.beginPath(); g.arc(x, y, 13, 0, 7); g.fill();
+    g.font = "800 28px Inter, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    const n = ["kenji_touge", "anna_rs"][i], tw = g.measureText(n).width + 30;
+    g.fillStyle = "rgba(12,14,18,.85)"; g.beginPath(); g.roundRect(x - tw / 2, y - 82, tw, 46, 23); g.fill(); g.fillStyle = "#ff6961"; g.fillText(n, x, y - 58);
+  });
+  drawArrow(g, W / 2, H * .58, me.h - rot, 1.9, "#0a84ff");
+  // Rand rot glühen lassen, solange es eng wird
+  const heat = Math.max(seg(t, 6.2, 6.8) * (1 - seg(t, 8.8, 9.6)), 0);
+  if (heat > 0) { const vg = g.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .75); vg.addColorStop(0, "rgba(255,30,30,0)"); vg.addColorStop(1, "rgba(255,30,30," + (.45 * heat * (.75 + .25 * Math.sin(t * 14))).toFixed(3) + ")"); g.fillStyle = vg; g.fillRect(0, 0, W, H); }
+}
+function drawSiren(t){
+  sg.clearRect(0, 0, 1080, 1100);
+  const k = (Math.sin(t * 9) + 1) / 2, a = .55 * (1 - seg(t, 11.6, 12.2));
+  for (const [x, col, w] of [[0, "255,40,40", k], [1080, "40,110,255", 1 - k]]) {
+    const gr = sg.createRadialGradient(x, 0, 0, x, 0, 640); gr.addColorStop(0, "rgba(" + col + "," + (a * (.35 + .65 * w)).toFixed(3) + ")"); gr.addColorStop(1, "rgba(" + col + ",0)");
+    sg.fillStyle = gr; sg.fillRect(0, 0, 1080, 1100);
+  }
+}
+const set = (el, h) => { if (el.innerHTML !== h) el.innerHTML = h; };
+const show = (el, o, dy = 0, sc = 1) => { el.style.opacity = o.toFixed(3); el.style.visibility = o > .002 ? "visible" : "hidden"; el.style.transform = (el.classList.contains("pill") ? "translateX(-50%) " : "") + "translateY(" + dy.toFixed(1) + "px) scale(" + sc.toFixed(4) + ")"; };
+
+function render(t){
+  drawWorld(t); drawSiren(t);
+  show($("#title"), fadeWin(t, 0, 1.8, .25, .45), -60 * seg(t, 1.3, 1.8), lerp(1.25, 1, ease.out(seg(t, 0, .6))));
+  // Sterne: 1. bei 2,9 s (Suchkreis von anna_rs), 2. bei 4,6 s (kenji)
+  const st = t < 2.9 ? 0 : t < 4.6 ? 1 : 2;
+  set($("#stars"), "<b>" + "★".repeat(st) + "</b>" + "★".repeat(6 - st));
+  set($("#clock"), pcClock(t));
+  const catchK = t < 6.6 ? 0 : t < 8.6 ? (t - 6.6) / 2.6 : Math.max(0, (8.6 - 6.6) / 2.6 - (t - 8.6) * 2 / 2.6);   // 10 s → hier gerafft
+  const seen = t > 2.9 && t < 10;
+  set($("#info"), catchK > .01 ? tr("Fangkreis!", "Catch zone!") : seen ? '<span style="color:#ff6961">' + tr("Gesehen", "Spotted") + "</span>" : tr("Ping ", "Ping ") + Math.max(1, Math.ceil(5.1 - t + (t > 5.1 ? 30 : 0))) + " s");
+  $("#pill").classList.toggle("hot", catchK > .01);
+  $("#baru").style.width = (catchK * 100).toFixed(1) + "%"; $("#bar").style.opacity = catchK > .01 ? "1" : "0";
+  show($("#pill"), seg(t, 1.5, 2) * (1 - seg(t, 11.6, 12)), (1 - ease.back(seg(t, 1.5, 2.1))) * -80);
+  // große Einblendungen
+  const flashes = [[2.9, 3.9, tr("★ GESEHEN", "★ SPOTTED"), "#ffd60a"], [4.6, 5.5, tr("★★ ZWEI STERNE", "★★ TWO STARS"), "#ffd60a"], [6.6, 8.6, tr("GLEICH GEFASST", "ALMOST CAUGHT"), "#ff453a"], [9.6, 11.8, tr("ENTKOMMEN!", "ESCAPED!"), "#30d158"]];
+  let fo = 0, ft = "", fc = "#fff";
+  for (const [a, b, txt, c] of flashes) { const o = fadeWin(t, a, b, .15, .3); if (o > fo) { fo = o; ft = txt; fc = c; } }
+  set($("#f1"), ft); $("#f1").style.color = fc; $("#f1").style.textShadow = "0 0 40px " + fc + "88, 0 8px 30px rgba(0,0,0,.6)";
+  show($("#f1"), fo, 0, lerp(1.25, 1, ease.out(Math.min(1, fo * 1.6))));
+  const caps = [[2.2, 6.4, tr("Komm in den Suchkreis der Polizei – und du bekommst einen Stern.", "Enter a cop's search circle – and you get a star.")],
+    [6.6, 9.2, tr("10 Sekunden im Fangkreis = gefasst.", "10 seconds in the catch zone = busted.")],
+    [9.4, 11.8, tr("Alle 30 s ein Ping. Dazwischen bist du unsichtbar.", "A ping every 30 s. In between, you're invisible.")]];
+  let co = 0, ct = ""; for (const [a, b, txt] of caps) { const o = fadeWin(t, a, b, .3, .3); if (o > co) { co = o; ct = txt; } }
+  set($("#cap"), ct); show($("#cap"), co, (1 - ease.out(Math.min(1, co * 1.4))) * 40);
+  // Ende
+  { const a = 12; show($("#end"), seg(t, a, a + .4)); $("#end").style.background = "rgba(5,6,10," + (.86 * seg(t, a, a + .4)).toFixed(3) + ")";
+    show($("#mark"), seg(t, a, a + .4), 0, lerp(.6, 1, ease.back(seg(t, a, a + .9))));
+    $$("#end h2, #end p, #end .cta").forEach((e, i) => show(e, seg(t, a + .3 + i * .2, a + .7 + i * .2), (1 - ease.out(seg(t, a + .3 + i * .2, a + 1 + i * .2))) * 50)); }
+}
+function pcClock(t){ const s = Math.max(0, 14 * 60 + 32 - Math.floor(t)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+play(render, DUR);
+</script>
+</body>
+</html>

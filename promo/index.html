@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forza CarPlay – Werbeclips</title>
+<link rel="stylesheet" href="promo.css">
+<style>
+html,body{overflow:auto;background:#07080c}
+main{max-width:1100px;margin:0 auto;padding:56px 24px 80px}
+h1{font-size:44px;font-weight:900;letter-spacing:-.03em}
+.lead{margin-top:10px;font-size:18px;color:var(--muted);line-height:1.5;max-width:720px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;margin-top:36px}
+a.card{display:block;padding:22px;border-radius:28px;color:#fff;text-decoration:none;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);transition:background .2s}
+a.card:hover{background:rgba(255,255,255,.09)}
+.card b{display:block;font-size:22px;font-weight:800}
+.card small{display:block;margin-top:6px;font-size:15px;color:var(--muted);line-height:1.45}
+.card .fmt{display:inline-block;margin-top:14px;padding:4px 10px;border-radius:9px;background:rgba(10,132,255,.2);color:#6cb6ff;font-size:13px;font-weight:700}
+h2{margin-top:52px;font-size:24px;font-weight:800}
+ol{margin:14px 0 0 22px;color:var(--muted);line-height:1.8;font-size:16px}
+code{font:600 14px ui-monospace,Consolas,monospace;background:rgba(255,255,255,.08);padding:2px 7px;border-radius:6px;color:#fff}
+#stage{display:none}
+</style>
+</head>
+<body>
+<main>
+  <h1>Forza CarPlay – Werbeclips</h1>
+  <p class="lead">Animationen im Glas-Stil des Dashboards. Sie laufen direkt im Browser (Vollbild mit F11), lassen sich als Bildschirmvideo aufnehmen oder sauber Bild für Bild als MP4 rendern. Englische Fassung: an die Adresse <code>?lang=en</code> anhängen.</p>
+  <div class="grid">
+    <a class="card" href="clip-1-reveal.html"><b>1 · Reveal</b><small>Das Dashboard baut sich auf: Karte, Navi, Police Chase, Wählhebel, Musik, Freunde. Danach Funktionen und Abschluss.</small><span class="fmt">16:9 · 16 s · YouTube, Nexus, Reddit</span></a>
+    <a class="card" href="clip-2-police-chase.html"><b>2 · Police Chase</b><small>Verfolgungsjagd von oben: Suchkreise, Sterne, Ping, Fangkreis – und am Ende entkommen.</small><span class="fmt">9:16 · 15 s · TikTok, Shorts, Reels</span></a>
+    <a class="card" href="clip-3-features.html"><b>3 · Funktionen</b><small>„Dein Forza hat jetzt Infotainment.“ Fünf Funktionen als Karten, schnell geschnitten.</small><span class="fmt">9:16 · 20 s · TikTok, Shorts, Reels</span></a>
+  </div>
+  <h2>Als Video aufnehmen</h2>
+  <ol>
+    <li>Einfach: Clip öffnen, F11, mit OBS oder der Xbox Game Bar (Win+Alt+R) aufnehmen. Leertaste = Pause, R = von vorn.</li>
+    <li>Sauber, Bild für Bild: <code>node promo/aufnehmen.js</code> (braucht Node, Playwright und ffmpeg). Die MP4-Dateien landen in <code>promo/videos/</code>.</li>
+  </ol>
+  <h2>Texte</h2>
+  <ol><li>Beschreibung für Nexus (BBCode), Bildunterschriften und Hashtags: <code>promo/texte.md</code></li></ol>
+</main>
+</body>
+</html>
