@@ -492,8 +492,9 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .hud .hm button{width:36px;height:36px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center;flex:none}
 .hud .hm svg{width:16px;height:16px}
 
-.wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at center,rgba(16,20,25,.55),rgba(16,20,25,.94));transition:opacity .4s}
-.wait.hide{opacity:0;pointer-events:none}
+.wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at center,rgba(16,20,25,.55),rgba(16,20,25,.94));transition:opacity .4s,visibility 0s}
+/* ausgeblendet: nach dem Verblassen ganz aus dem Bild (sonst lagen Glas-Unschärfe und der drehende Kreis unsichtbar über der Karte) */
+.wait.hide{opacity:0;pointer-events:none;visibility:hidden;transition:opacity .4s,visibility 0s .4s}.wait.hide .spinner{animation-play-state:paused}
 .wait .box{max-width:440px;padding:26px 28px;border-radius:var(--r)}
 .wait h2{font-size:21px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:10px;text-wrap:balance}
 .wait p{color:var(--muted);font-size:14px;line-height:1.5;font-weight:500}
@@ -823,7 +824,7 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .G .hrh b{color:#fff;font-size:15px;font-weight:600}
 .G .hud .hr{width:auto;height:12px;border-radius:6px;background:rgba(255,255,255,.15);position:relative;overflow:visible}
 .G .hud .hr::after{content:"";position:absolute;right:0;top:0;bottom:0;width:11%;border-radius:0 6px 6px 0;background:repeating-linear-gradient(135deg,rgba(255,69,58,.45) 0 3px,rgba(255,69,58,.18) 3px 6px)}
-.G .hud .hr i{position:relative;z-index:1;border-radius:6px;transition:width .1s linear,background .25s,box-shadow .25s}
+.G .hud .hr i{position:relative;z-index:1;border-radius:6px;transition:background .25s,box-shadow .25s}
 .G .hud .hr.shift i{animation:gblink .2s steps(2) infinite}
 @keyframes gblink{50%{opacity:.3}}
 .G .gsign{display:block;width:52px;height:52px;flex:none}
@@ -1698,15 +1699,15 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .mdprog i{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
 .mdprog i u{display:block;height:100%;width:0;background:#30d158;transition:width .3s}
 .mdprog.err{background:rgba(120,20,20,.92)}
-.mdlb{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .25s;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);cursor:zoom-out}
-.mdlb.on{opacity:1;pointer-events:auto}
+.mdlb{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .25s,visibility 0s .25s;visibility:hidden;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);cursor:zoom-out}
+.mdlb.on{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .25s}
 .mdlb img{max-width:92vw;max-height:88vh;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.6);transform:scale(.96);transition:transform .25s}
 .mdlb.on img{transform:none}
 .mdwait{display:flex;align-items:center;gap:10px}
 .mdwait>span:nth-child(2){flex:1;line-height:1.4}
 .mdwait .spin{flex:none}
-.mdway{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.5);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .2s;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-.mdway.on{opacity:1;pointer-events:auto}
+.mdway{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.5);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .2s,visibility 0s .2s;visibility:hidden;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.mdway.on{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .2s}
 .mdway>div{width:min(560px,92vw);background:rgba(30,32,38,.95);border-radius:26px;padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 24px 70px rgba(0,0,0,.55);transform:scale(.97);transition:transform .2s}
 .mdway.on>div{transform:none}
 .mdway .sub{font-size:13px;color:var(--dim);margin:-6px 0 4px;font-weight:600}
@@ -6328,9 +6329,10 @@ function drawMap(){
   }
   const target = 110 / s, nice = [5,10,20,50,100,200,250,500,1000,2000,5000,10000];
   let len = nice[0]; for (const v of nice) if (v <= target) len = v;
-  const sc = $("scale"); sc.firstElementChild.style.width = Math.round(len * s) + "px";
+  // Maßstab und Kompassnadel nur anfassen, wenn sich etwas ändert (jede Stil-Zuweisung kostet eine Stil-Neuberechnung)
+  const sc = $("scale"), sw = Math.round(len * s) + "px"; if (MC.scW !== sw) { MC.scW = sw; sc.firstElementChild.style.width = sw; }
   setText(sc.lastElementChild, len >= 1000 ? nf1.format(len / 1000) + " km" : len + " m");
-  $("needle").style.transform = "rotate(" + (-cam.rot) + "rad)";
+  const nd = "rotate(" + (-cam.rot).toFixed(3) + "rad)"; if (MC.nd !== nd) { MC.nd = nd; $("needle").style.transform = nd; }
 }
 function setMode(m){
   if (WATCH.id) watchStop();   // Folgen, Übersicht, Verschieben: zurück zu mir
