@@ -2008,6 +2008,7 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .pcp.cop{box-shadow:inset 0 0 0 1px rgba(64,156,255,.45),0 6px 18px rgba(0,0,0,.3)}
 .pcp.hot{background:rgba(110,22,26,.84);box-shadow:inset 0 0 0 1px rgba(255,69,58,.5),0 6px 18px rgba(0,0,0,.3)}
 .pcp.end{box-shadow:inset 0 0 0 1px rgba(255,214,10,.4),0 6px 18px rgba(0,0,0,.3)}
+.pcp .pz{display:inline-flex;align-items:center;gap:5px;color:#ffd60a}.pcp .pz small{color:#ffd60a}
 .pcp .bar{position:absolute;left:12px;right:12px;bottom:3px;height:3px;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden}.pcp .bar u{display:block;height:100%;background:#ff453a;transition:width .25s}
 .main:has(.navbanner:not([hidden])) .pcp{top:104px}
 .G .main:has(.navbanner:not([hidden])) .pcp{top:136px}
@@ -7340,11 +7341,14 @@ function kolTuning(l, mem, ev, mine){
 // Jeder neue Eintritt in einen Suchkreis gibt einen Stern (max. 6; neu erst nach > 400 m Abstand und 15 s).
 // Gefasst: insgesamt 10 s (ab 3 Sternen 8 s, bei 6 Sternen 6 s) im Fangkreis; draußen läuft der Zähler doppelt so schnell zurück.
 // Das Gerät des Flüchtigen misst selbst und meldet Sterne/Festnahme über die Event-Daten. Ende: alle gefasst = Polizei, Zeit um = Flüchtige.
-const PCR = {see:350, far:400, cat:40, head:15e3, min:4, gap:15e3};
+// Pause-Schutz: Im Pausemenü (Forza meldet „nicht im Rennen“ oder schickt nichts) ist ein Flüchtiger für die Polizei
+// unsichtbar und sein Fangzähler steht. Er hat dann 10 s, um zurückzukommen und loszufahren – sonst ist er raus (Grund „Pause“).
+// Das Pausen-Konto füllt sich beim Fahren halb so schnell wieder auf: mehrmals kurz pausieren hilft also nicht.
+const PCR = {see:350, far:400, cat:40, head:15e3, min:4, gap:15e3, pause:10, move:2};
 const pcCops = n => Math.min(n - 1, 2 * Math.ceil(n / 6));
 const pcNeed = st => st >= 6 ? 6 : st >= 3 ? 8 : 10;
 const pcEvery = st => (st >= 6 ? 15 : st >= 4 ? 20 : 30) * 1000;
-const PC = {rid:"", st:0, far:true, starT:-1e9, ct:0, out:false, by:"", seen:false, near:null, sent:"", lastT:0, raw:new Map(), vis:new Set(), pings:new Map(), outs:new Set(), init:false, dur:20, endT:0, allT:0, endSure:0, res:""};
+const PC = {rid:"", st:0, far:true, starT:-1e9, ct:0, out:false, by:"", why:"", pt:0, pz:false, dl:0, seen:false, near:null, sent:"", lastT:0, raw:new Map(), vis:new Set(), pings:new Map(), outs:new Set(), init:false, dur:20, endT:0, allT:0, endSure:0, res:""};
 const pcMmss = ms => { const t = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
 const pcStars = n => '<span class="pcst">' + '<i>★</i>'.repeat(n) + '★'.repeat(6 - n) + '</span>';
 function pcLobby(){ return (FR.lobbys || []).find(x => x.an && ((kolType(x.name) || kolType(x.code) || [])[0] === "police")); }
@@ -7359,7 +7363,7 @@ function pcCtx(kc){
 }
 // Sterne und Status eines Flüchtigen in dieser Runde (für mich selbst zählt mein eigener Stand)
 function pcRun(c, id){
-  if (id === c.me && c.role === "run" && PC.rid === c.p.rid) return {st:PC.st, out:PC.out, by:PC.by};
+  if (id === c.me && c.role === "run" && PC.rid === c.p.rid) return {st:PC.st, out:PC.out, by:PC.by, why:PC.why, dl:PC.dl};
   const e = (c.ev[id] || {}).pc; return e && e.rid === c.p.rid ? e : {st:0, out:false, by:""};
 }
 const pcGone = (c, id) => id !== c.me && !(c.kk.mem || []).some(m => m.d === id);
@@ -7416,12 +7420,12 @@ function pcRule(S, x, z, cops, now, dt){
   return r;
 }
 function pcSend(c){
-  const sig = c.p.rid + "|" + PC.st + "|" + PC.out; if (sig === PC.sent) return; PC.sent = sig;
-  pcApi("/lobby/ev", {code:c.l.code, pc:{rid:c.p.rid, st:PC.st, out:PC.out, by:PC.by}, c:D && D.car}).then(j => { if (!j || !j.ok) PC.sent = ""; }).catch(() => { PC.sent = ""; });
+  const sig = c.p.rid + "|" + PC.st + "|" + PC.out + "|" + PC.dl; if (sig === PC.sent) return; PC.sent = sig;
+  pcApi("/lobby/ev", {code:c.l.code, pc:{rid:c.p.rid, st:PC.st, out:PC.out, by:PC.by, why:PC.why, dl:PC.dl}, c:D && D.car}).then(j => { if (!j || !j.ok) PC.sent = ""; }).catch(() => { PC.sent = ""; });
 }
 function pcReset(c){
   const mine = (c.ev[c.me] || {}).pc, same = !!(mine && mine.rid === c.p.rid);
-  Object.assign(PC, {rid:c.p.rid, st:same ? mine.st : 0, out:same && !!mine.out, by:same ? mine.by : "", far:true, starT:-1e9, ct:0, seen:false, near:null, sent:"", endT:0, allT:0, res:"", init:false});
+  Object.assign(PC, {rid:c.p.rid, st:same ? mine.st : 0, out:same && !!mine.out, by:same ? mine.by : "", why:same ? mine.why || "" : "", pt:0, pz:false, dl:0, far:true, starT:-1e9, ct:0, seen:false, near:null, sent:"", endT:0, allT:0, res:"", init:false});
   PC.pings.clear(); PC.outs.clear();
   if (c.role === "run" && c.ph !== "end") pcSend(c);
   if (c.ph === "head" && c.now - c.p.start < 15000)
@@ -7434,6 +7438,25 @@ function pcRunner(c, dt){
   const r = pcRule(PC, D.px, D.pz, cops, c.now, dt);
   if (r.star) { pcSend(c); toast("🚨 Im Suchkreis – " + PC.st + (PC.st === 1 ? " Stern" : " Sterne") + (PC.st === 3 || PC.st === 6 ? " · Fangzeit kürzer" : PC.st === 4 ? " · Ping alle 20 s" : "")); }
   if (r.caught) { pcSend(c); toast("🚔 Gefasst von " + r.caught.n + " – du bist raus"); }
+}
+// Ist der Flüchtige gerade im Spiel? Nein, wenn Forza „nicht im Rennen“ meldet (Pausemenü, Ladebildschirm),
+// keine Position schickt oder seit 2 s gar nichts mehr kommt.
+function pcInGame(){ return !!(D && D.on && D.dash && (D.px || D.pz) && performance.now() - lastMsg < 2000); }
+// Pause-Schutz (nur in der Jagd, nur auf dem Gerät des Flüchtigen): Konto pt in Sekunden, voll = 10 s = raus.
+// Eine Pause endet erst, wenn er wieder im Spiel ist UND fährt (mehr als 2 m/s) – Stehenbleiben im Menü-Ausgang zählt weiter.
+function pcPause(c, dt){
+  const back = pcInGame() && Math.abs(D.spd || 0) > PCR.move;
+  if (!back && (PC.pz || !pcInGame())) {
+    if (!PC.pz) { PC.pz = true; toast("Pause erkannt – in " + Math.max(1, Math.ceil(PCR.pause - PC.pt)) + " s zurück ins Spiel und losfahren, sonst bist du raus", "err"); }
+    PC.pt += dt; PC.near = null; PC.seen = false;   // Fangzähler bleibt stehen (nicht zurück!) – wer im Fangkreis pausiert, ist danach sofort wieder dran
+    const dl = c.now + Math.max(0, PCR.pause - PC.pt) * 1000;
+    if (!PC.dl || Math.abs(dl - PC.dl) > 1500) { PC.dl = Math.round(dl); pcSend(c); }   // Frist an die anderen (nur bei Sprüngen neu)
+    if (PC.pt >= PCR.pause) { PC.out = true; PC.by = ""; PC.why = "pause"; PC.dl = 0; PC.pz = false; pcSend(c); toast("Zu lange pausiert – du bist raus", "err"); }
+    return true;
+  }
+  if (PC.pz) { PC.pz = false; PC.dl = 0; pcSend(c); toast("▶ Weiter geht's – Pause beendet"); }
+  PC.pt = Math.max(0, PC.pt - dt * 0.5);
+  return false;
 }
 // zu den gemeinsamen Ping-Zeitpunkten die Position jedes Flüchtigen festhalten (gezeigt nur aus Sicht der Polizei)
 function pcPings(c){
@@ -7463,7 +7486,7 @@ function pcNews(c){
   for (const id of c.p.runs) {
     const r = pcRun(c, id); if (!r.out || PC.outs.has(id)) continue;
     PC.outs.add(id);
-    if (PC.init && id !== c.me) toast("🚔 " + pcName(c, id) + " wurde gefasst" + (r.by ? " – von " + (r.by === c.me ? "dir" : pcName(c, r.by)) : ""));
+    if (PC.init && id !== c.me) toast(r.why === "pause" ? "⏸ " + pcName(c, id) + " ist raus – zu lange pausiert" : "🚔 " + pcName(c, id) + " wurde gefasst" + (r.by ? " – von " + (r.by === c.me ? "dir" : pcName(c, r.by)) : ""));
   }
   PC.init = true;
   const res = pcResOf(c);
@@ -7477,8 +7500,8 @@ function pcStep(){
   if (WATCH.id && (!FR.m.get(WATCH.id) || !pcCanWatch(WATCH.id))) watchStop(true);
   if (!c || !c.p) { pcPill(null); return; }
   if (PC.rid !== c.p.rid) pcReset(c);
-  if (c.role === "run" && c.ph === "run" && !PC.out && D && D.on && D.dash) pcRunner(c, dt);
-  else { PC.near = null; PC.seen = false; }
+  if (c.role === "run" && c.ph === "run" && !PC.out && !pcPause(c, dt)) pcRunner(c, dt);
+  else { PC.near = null; PC.seen = false; if (PC.dl && (c.role !== "run" || c.ph !== "run" || PC.out)) { PC.dl = 0; PC.pz = false; } }
   if (c.ph === "run") pcPings(c);
   pcLeader(c); pcNews(c); pcPill(c);
 }
@@ -7500,6 +7523,13 @@ function watchCam(){
 }
 function pchTick(d){ pcStep(); }
 setInterval(() => { try { pcStep(); } catch (e) {} }, 500);
+// pausierte Flüchtige (Frist läuft) als kurzer Hinweis: „⏸ Name 6 s“ bzw. „⏸ 2 pausiert · 4 s“
+function pcPausedTxt(c){
+  const ps = c.p.runs.filter(id => id !== c.me).map(id => ({id, r:pcRun(c, id)})).filter(x => !x.r.out && x.r.dl > c.now).sort((a, b) => a.r.dl - b.r.dl);
+  if (!ps.length) return "";
+  const sec = Math.max(0, Math.ceil((ps[0].r.dl - c.now) / 1000)) + " s";
+  return '<span class="sep"></span><span class="pz">⏸ ' + (ps.length === 1 ? "<small>" + esc(pcName(c, ps[0].id)) + "</small>" : "<small>" + ps.length + " pausiert</small>") + " <b>" + sec + "</b></span>";
+}
 // kleine Glas-Pille oben auf der Karte: Restzeit, Sterne bzw. nächster Ping, Fang-Balken nur wenn nötig
 function pcPill(c){
   const el = $("pcPill"); if (!el) return;
@@ -7512,7 +7542,7 @@ function pcPill(c){
     if (live) {
       const {p, now} = c, clock = pcMmss(c.ph === "head" ? p.start + PCR.head - now : p.start + p.dur - now);
       if (v.role === "cop") { const left = p.runs.filter(id => !pcRun(c, id).out); h += sep + "🚓 <b>" + clock + "</b>" + sep + "<small>" + (p.runs.length - left.length) + "/" + p.runs.length + " gefasst</small>"; cls = "cop"; }
-      else if (v.role === "run") { const r = pcRun(c, v.id); h += sep + "<b>" + clock + "</b>" + sep + (r.out ? "<small>gefasst</small>" : pcStars(r.st || 0)); }
+      else if (v.role === "run") { const r = pcRun(c, v.id); h += sep + "<b>" + clock + "</b>" + sep + (r.out ? "<small>" + (r.why === "pause" ? "raus (Pause)" : "gefasst") + "</small>" : r.dl > now ? '<span class="pz">⏸ <b>' + Math.max(0, Math.ceil((r.dl - now) / 1000)) + ' s</b></span>' : pcStars(r.st || 0)); }
       else h += sep + "<b>" + clock + "</b>";
     }
     h += '<span class="x" aria-label="Zuschauen beenden">✕</span>'; cls += " w";
@@ -7524,13 +7554,17 @@ function pcPill(c){
     } else if (ph === "head") {
       const sec = Math.ceil((p.start + PCR.head - now) / 1000) + " s";
       h = role === "cop" ? "🚓 <small>Jagd beginnt in</small> <b>" + sec + "</b>" : role === "run" ? "🏃 <small>Vorsprung</small> <b>" + sec + "</b>" : "🚨 <small>Police Chase startet in</small> <b>" + sec + "</b>";
+    } else if (role === "run" && !PC.out && PC.pz) {
+      // Pause: groß die verbleibende Frist, der Balken läuft leer
+      const left = Math.max(0, PCR.pause - PC.pt);
+      h = '⏸ <small>Zurück ins Spiel und losfahren</small> <b>' + Math.ceil(left) + ' s</b><i class="bar"><u style="width:' + (left / PCR.pause * 100).toFixed(0) + '%"></u></i>'; cls = "hot";
     } else if (role === "run" && !PC.out) {
       h = "<b>" + clock + "</b>" + sep + pcStars(PC.st) + sep + (PC.seen ? '<small class="r">Gesehen</small>' : "<small>Ping " + pcNextPing(c, PC.st) + " s</small>");
       if (PC.ct > 0.05) { h += '<i class="bar"><u style="width:' + Math.min(100, PC.ct / pcNeed(PC.st) * 100).toFixed(0) + '%"></u></i>'; cls = "hot"; }
     } else if (role === "cop") {
       const left = p.runs.filter(id => !pcRun(c, id).out), nxt = left.length ? Math.min(...left.map(id => pcNextPing(c, pcRun(c, id).st))) : 0;
-      h = "🚓 <b>" + clock + "</b>" + sep + "<small>Ping " + nxt + " s</small>" + sep + "<small>" + (p.runs.length - left.length) + "/" + p.runs.length + " gefasst</small>"; cls = "cop";
-    } else h = (role === "run" ? "🚔 <small>Gefasst</small>" : "👀 <small>Zuschauen</small>") + sep + "<b>" + clock + "</b>" + sep + "<small>" + free + " frei</small>";
+      h = "🚓 <b>" + clock + "</b>" + sep + "<small>Ping " + nxt + " s</small>" + sep + "<small>" + (p.runs.length - left.length) + "/" + p.runs.length + " gefasst</small>" + pcPausedTxt(c); cls = "cop";
+    } else h = (role === "run" ? (PC.why === "pause" ? "⏸ <small>Raus – zu lange pausiert</small>" : "🚔 <small>Gefasst</small>") : "👀 <small>Zuschauen</small>") + sep + "<b>" + clock + "</b>" + sep + "<small>" + free + " frei</small>" + pcPausedTxt(c);
   }
   if (!h) { if (!el.hidden) el.hidden = true; return; }
   el.hidden = false; el.className = "pcp" + (cls ? " " + cls.trim() : "");
@@ -7591,14 +7625,14 @@ function kolPolice(l, mem, ev, mine){
       + (lead ? '<div class="seg2 sm pcseg">' + [15, 20, 30].map(m => '<button data-a="pcdur" data-s="' + m + '" class="' + (PC.dur === m ? "on" : "") + '">' + m + '′</button>').join("") + '</div><button class="kbtn pri" data-a="pcstart" data-c="' + code + '"' + (ok ? '' : ' disabled') + '>Start</button>' : '') + '</div>';
     if (p) { const res = pcResOf(c), got = p.runs.filter(id => pcRun(c, id).out).length;
       s += '<div class="irow"><div class="tx"><b>' + (res === "cop" ? "🚓 Polizei hat gewonnen" : res === "run" ? "🏃 Flüchtige haben gewonnen" : "Letzte Runde abgebrochen") + '</b><small>' + got + ' von ' + p.runs.length + ' gefasst · ' + Math.round(p.dur / 60000) + ' min</small></div></div>'; }
-    else s += '<div class="irow"><div class="tx"><small>' + PCR.head / 1000 + ' s Vorsprung · Suchkreis 350 m · Ping alle 30 s · 6 Sterne · 10 s im Fangkreis (40 m) = gefasst</small></div></div>';
+    else s += '<div class="irow"><div class="tx"><small>' + PCR.head / 1000 + ' s Vorsprung · Suchkreis 350 m · Ping alle 30 s · 6 Sterne · 10 s im Fangkreis (40 m) = gefasst · Flüchtige im Pausemenü: ' + PCR.pause + ' s, dann raus</small></div></div>';
   }
   s += '</div>';
   if (!p) return s;
   const nm = id => esc((p.nm || {})[id] || "Fahrer") + (id === c.me ? ' <span class="kyou">du</span>' : '');
   const runs = p.runs.map(id => ({id, r:pcRun(c, id), gone:pcGone(c, id)})).sort((a, b) => a.r.out - b.r.out || b.r.st - a.r.st);
   s += '<div class="ihd">🏃 Flüchtige · ' + runs.filter(x => !x.r.out).length + ' frei</div><div class="ilist">' + runs.map(x => '<div class="irow' + (x.r.out ? ' off' : '') + '"><div class="tx"><b>' + nm(x.id) + '</b><small>'
-    + (x.r.out ? 'gefasst' + (x.r.by ? (x.r.by === c.me ? ' von dir' : ' von ' + esc(pcName(c, x.r.by))) : '') : x.gone ? 'nicht da' : live ? 'auf der Flucht' : 'entkommen') + '</small></div>' + pcStars(x.r.st || 0) + '</div>').join("") + '</div>';
+    + (x.r.out ? (x.r.why === "pause" ? 'raus – zu lange pausiert' : 'gefasst' + (x.r.by ? (x.r.by === c.me ? ' von dir' : ' von ' + esc(pcName(c, x.r.by))) : '')) : x.gone ? 'nicht da' : live && x.r.dl > c.now ? '⏸ pausiert – noch ' + Math.max(0, Math.ceil((x.r.dl - c.now) / 1000)) + ' s' : live ? 'auf der Flucht' : 'entkommen') + '</small></div>' + pcStars(x.r.st || 0) + '</div>').join("") + '</div>';
   const by = {}; for (const x of runs) if (x.r.out && x.r.by) by[x.r.by] = (by[x.r.by] || 0) + 1;
   s += '<div class="ihd">🚓 Polizei · ' + p.cops.length + '</div><div class="ilist">' + p.cops.slice().sort((a, b) => (by[b] || 0) - (by[a] || 0)).map(id => '<div class="irow"><div class="tx"><b>' + nm(id) + '</b><small>' + (by[id] ? by[id] + (by[id] === 1 ? ' Festnahme' : ' Festnahmen') : 'noch keine Festnahme') + (pcGone(c, id) ? ' · nicht da' : '') + '</small></div></div>').join("") + '</div>';
   return s;

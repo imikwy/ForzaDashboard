@@ -10,11 +10,14 @@ function mk(me, leader){
   const ctx = {
     Date:FDate, performance:{now:() => T}, setInterval(){}, Math, String, Set, Map, Object, isFinite, Promise, console,
     toast:t => toasts.push(t), sessPost:(p, body) => { posts.push([p, body]); return Promise.resolve({ok:true}); },
-    $:() => pill, esc:t => String(t), mirror:() => 1, CAR:{ok:false}, D:{on:true, dash:true, px:0, pz:0, car:1},
+    $:() => pill, esc:t => String(t), mirror:() => 1, CAR:{ok:false}, D:{on:true, dash:true, px:1, pz:0, car:1, spd:0},
     kolType:n => n === "Police Chase" ? ["police", "Police Chase"] : null,
     FR:{lobbys:[{code:"AAA-BBB-CCC", an:true, name:"Police Chase"}], m:new Map(), kc:null},
   };
   ctx.kolInfo = l => ({kk:ctx.FR.kc.kol[0]});
+  // letzte Telemetrie: kommt laufend an, außer der Test schaltet sie ab (Spiel zu / Verbindung weg)
+  let quiet = false; Object.defineProperty(ctx, "lastMsg", {get: () => quiet ? T - 5000 : T});
+  ctx.__quiet = v => { quiet = v; };
   vm.createContext(ctx);
   vm.runInContext(code, ctx);
   const kk = {code:"AAA-BBB-CCC", me, leader, mem:[], ev:{}, pc:null};
@@ -164,3 +167,77 @@ t("Zuschauen: Sicht des Polizisten, aktive Polizisten nicht bei Flüchtigen", ()
   c.kk.pc = round({end:T, res:"cop"}); assert.strictEqual(c.run("pcCanWatch(\"R1\")"), true, "nach der Runde alles erlaubt");
 });
 console.log("fertig");
+
+// ---------------- Pause-Schutz ----------------
+// Flüchtiger geht ins Pausemenü (Forza: on = 0) oder es kommt nichts mehr: 10 s Zeit, zurückzukommen und loszufahren
+const pauseWorld = (st) => {
+  T = START + 60e3; const w = mk("R1", "C1"); w.kk.mem = [{d:"C1"}, {d:"C2"}, {d:"R2"}]; w.kk.pc = round();
+  w.kk.ev.R1 = {pc:{rid:"AB12CD", st:st || 1, out:false}};
+  w.ctx.FR.m.set("C1", {tx:2000, tz:0, g:1, n:"Cop1"});
+  w.ctx.D.spd = 20; adv(w, 1e3); return w;
+};
+const evs = w => w.posts.filter(p => p[0] === "/lobby/ev").map(p => p[1].pc);
+t("Pause: 9,5 s im Menü, dann zurück und losfahren -> bleibt im Spiel", () => {
+  const w = pauseWorld();
+  w.ctx.D.on = false; adv(w, 9.5e3);
+  assert.strictEqual(w.run("PC.out"), false, "noch nicht raus");
+  assert.ok(w.toasts.some(x => x.includes("Pause erkannt")), w.toasts.join(" | "));
+  assert.ok(w.pill.innerHTML.includes("Zurück ins Spiel") && w.pill.className.includes("hot"), w.pill.innerHTML);
+  const dl = evs(w).filter(e => e.dl).pop(); assert.ok(dl && Math.abs(dl.dl - (START + 61e3 + 10e3)) < 1500, "Frist an die anderen: " + (dl && dl.dl - START));
+  w.ctx.D.on = true; w.ctx.D.spd = 15; adv(w, 0.3e3);
+  assert.strictEqual(w.run("PC.pz"), false, "Pause vorbei");
+  assert.strictEqual(evs(w).pop().dl, 0, "Frist aufgehoben gemeldet");
+  adv(w, 60e3); assert.strictEqual(w.run("PC.out"), false);
+  assert.ok(w.run("PC.pt") < 0.01, "Konto wieder voll: " + w.run("PC.pt"));
+});
+t("Pause: 10 s im Menü -> raus (wie gefasst, Grund Pause, keine Festnahme für die Polizei)", () => {
+  const w = pauseWorld(3);
+  w.ctx.D.on = false; adv(w, 9.8e3); assert.strictEqual(w.run("PC.out"), false);
+  adv(w, 0.4e3); assert.strictEqual(w.run("PC.out"), true, "nach 10 s raus");
+  const last = evs(w).pop(); assert.deepStrictEqual([last.out, last.by, last.why, last.dl, last.st], [true, "", "pause", 0, 3]);
+  assert.ok(w.toasts.some(x => x.includes("Zu lange pausiert")));
+  assert.ok(w.pill.innerHTML.includes("zu lange pausiert"), w.pill.innerHTML);
+  w.ctx.D.on = true; adv(w, 5e3); assert.strictEqual(w.run("PC.out"), true, "bleibt raus");
+});
+t("Pause: zurück, aber stehen bleiben zählt weiter; Funkstille zählt als Pause", () => {
+  let w = pauseWorld();
+  w.ctx.D.on = false; adv(w, 4e3); w.ctx.D.on = true; w.ctx.D.spd = 0; adv(w, 5e3);
+  assert.strictEqual(w.run("PC.out"), false); assert.strictEqual(w.run("PC.pz"), true, "steht noch -> Pause läuft");
+  adv(w, 1.3e3); assert.strictEqual(w.run("PC.out"), true, "4 s Menü + 6 s Stehen = raus");
+  w = pauseWorld(); w.ctx.__quiet(true); adv(w, 10.3e3); assert.strictEqual(w.run("PC.out"), true, "keine Daten mehr = Pause");
+  w = pauseWorld(); w.ctx.D.px = 0; w.ctx.D.pz = 0; adv(w, 10.3e3); assert.strictEqual(w.run("PC.out"), true, "keine Position = Pause");
+});
+t("Pause: Konto füllt sich nur halb so schnell auf (mehrmals kurz pausieren hilft nicht)", () => {
+  const w = pauseWorld();
+  w.ctx.D.on = false; adv(w, 8e3); w.ctx.D.on = true; adv(w, 4e3);   // 8 s Pause, 4 s fahren -> Konto 6 s
+  assert.ok(Math.abs(w.run("PC.pt") - 6) < 0.3, "Konto " + w.run("PC.pt"));
+  w.ctx.D.on = false; adv(w, 3.7e3); assert.strictEqual(w.run("PC.out"), false);
+  adv(w, 0.6e3); assert.strictEqual(w.run("PC.out"), true, "nach ~4 s statt 10 s raus");
+});
+t("Pause: Fangzähler bleibt stehen (wer im Fangkreis pausiert, ist danach sofort dran)", () => {
+  const w = pauseWorld(); const cop = w.ctx.FR.m.get("C1"); cop.tx = 20;
+  adv(w, 7e3); const ct = w.run("PC.ct"); assert.ok(ct > 6.5 && ct < 7.5, "ct " + ct);
+  w.ctx.D.on = false; adv(w, 9e3); assert.ok(Math.abs(w.run("PC.ct") - ct) < 0.01, "steht still statt zurückzulaufen");
+  w.ctx.D.on = true; adv(w, 3.5e3); assert.strictEqual(w.run("PC.out"), true); assert.strictEqual(w.run("PC.by"), "C1", "danach normal gefasst");
+});
+t("Pause im Vorsprung zählt nicht – erst ab Beginn der Jagd", () => {
+  T = START; const w = mk("R1", "C1"); w.kk.mem = [{d:"C1"}, {d:"C2"}, {d:"R2"}]; w.kk.pc = round();
+  w.ctx.FR.m.set("C1", {tx:2000, tz:0, g:1, n:"Cop1"}); w.ctx.D.on = false;
+  adv(w, H - 1e3); assert.ok(w.run("PC.pt") === 0 && !w.run("PC.pz"));
+  adv(w, 10.5e3); assert.strictEqual(w.run("PC.out"), false, "9,5 s nach Jagdbeginn noch drin");
+  adv(w, 0.7e3); assert.strictEqual(w.run("PC.out"), true, "ab Jagdbeginn 10 s");
+});
+t("Polizei sieht den pausierten Flüchtigen kompakt, Meldung bei Disqualifikation, Führer wertet als Polizei-Sieg", () => {
+  T = START + 100e3; const w = mk("C1", "C1"); w.kk.mem = [{d:"C2"}, {d:"R1", n:"Run1"}, {d:"R2", n:"Run2"}]; w.kk.pc = round();
+  w.kk.ev.R1 = {pc:{rid:"AB12CD", st:2, out:false, dl:T + 7e3}}; w.kk.ev.R2 = {pc:{rid:"AB12CD", st:1, out:true, by:"C2"}};
+  adv(w, 1e3);
+  assert.ok(w.pill.innerHTML.includes("⏸") && w.pill.innerHTML.includes("Run1") && w.pill.innerHTML.includes("6 s"), w.pill.innerHTML);
+  const l = w.ctx.FR.lobbys[0], mem = [{d:"C1", n:"Ich", self:true}].concat(w.kk.mem);
+  let h = w.ctx.kolPolice(l, mem, w.kk.ev, {}); assert.ok(h.includes("pausiert – noch 6 s"), h);
+  w.kk.ev.R1.pc = {rid:"AB12CD", st:2, out:true, by:"", why:"pause"}; adv(w, 1e3);
+  assert.ok(w.toasts.some(x => x.includes("Run1 ist raus – zu lange pausiert")), w.toasts.join(" | "));
+  h = w.ctx.kolPolice(l, mem, w.kk.ev, {}); assert.ok(h.includes("raus – zu lange pausiert"), h);
+  assert.ok(!/Ich[^]*?1 Festnahme/.test(h), "keine Festnahme für die Polizei durch Pause");
+  adv(w, 9e3); const e = w.posts.filter(p => p[0] === "/lobby/pc"); assert.strictEqual(e.length, 1); assert.strictEqual(e[0][1].res, "cop");
+});
+console.log("Pause-Schutz geprüft");

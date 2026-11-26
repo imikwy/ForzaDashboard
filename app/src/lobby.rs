@@ -684,7 +684,9 @@ fn clean_ev(o: &Value) -> Value {
     let role = o["role"].as_str().filter(|r| *r == "cop" || *r == "run").unwrap_or("");
     let p = &o["pc"];
     let pc = match p["rid"].as_str().filter(|r| !r.is_empty() && r.len() <= 16) {
-        Some(rid) => json!({"rid": rid, "st": p["st"].as_u64().unwrap_or(0).min(6), "out": p["out"] == true, "by": take_chars(p["by"].as_str().unwrap_or(""), 40), "t": p["t"].as_u64().unwrap_or(0)}),
+        // why: Grund fürs Ausscheiden ("pause" = zu lange im Pausemenü), dl: Frist (ms) eines gerade pausierten Flüchtigen
+        Some(rid) => json!({"rid": rid, "st": p["st"].as_u64().unwrap_or(0).min(6), "out": p["out"] == true, "by": take_chars(p["by"].as_str().unwrap_or(""), 40), "t": p["t"].as_u64().unwrap_or(0),
+            "why": if p["why"] == "pause" { "pause" } else { "" }, "dl": if p["out"] == true { 0 } else { p["dl"].as_u64().unwrap_or(0) }}),
         None => Value::Null,
     };
     let caught: Vec<Value> = o["caught"].as_array().map(|a| { let skip = a.len().saturating_sub(50); a.iter().skip(skip).filter_map(|x| Some(json!({"by": take_chars(x["by"].as_str()?, 40), "t": x["t"].as_u64().unwrap_or(0)}))).collect() }).unwrap_or_default();
@@ -769,6 +771,10 @@ mod tests {
         let e = clean_ev(&json!({"pc": {"rid": "AB12CD", "st": 9, "out": true, "by": "a", "t": 5}}));
         assert_eq!(e["pc"]["st"], 6); assert_eq!(e["pc"]["out"], true);
         assert!(clean_ev(&json!({"pc": {"st": 2}}))["pc"].is_null());
+        let z = clean_ev(&json!({"pc": {"rid": "AB12CD", "st": 1, "out": false, "dl": 123_456, "why": "egal"}}));
+        assert_eq!(z["pc"]["dl"], 123_456); assert_eq!(z["pc"]["why"], "");
+        let r = clean_ev(&json!({"pc": {"rid": "AB12CD", "out": true, "dl": 5, "why": "pause"}}));
+        assert_eq!(r["pc"]["why"], "pause"); assert_eq!(r["pc"]["dl"], 0);
     }
 }
 
