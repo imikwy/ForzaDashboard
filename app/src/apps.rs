@@ -130,7 +130,9 @@ pub fn steuern(app: &tauri::AppHandle, id: &str, q: &HashMap<String, String>) ->
     let url = q.get("nav").filter(|u| allowed(id, u)).map(String::as_str).unwrap_or(start);
     let Ok(parsed) = url.parse() else { return json!({"ok": false}) };
     // gleicher Datenordner wie das Dashboard-Fenster (WebView2 verlangt das für Seiten im selben Fenster)
-    let b = WebviewBuilder::new(&label, WebviewUrl::External(parsed)).data_directory(crate::webview_dir());
+    let mut b = WebviewBuilder::new(&label, WebviewUrl::External(parsed)).data_directory(crate::webview_dir());
+    // YouTube: höchstens 1080p und kein AV1, damit Videos neben Forza flüssig laufen (siehe youtube-flussig.js)
+    if id == "youtube" { b = b.initialization_script(include_str!("youtube-flussig.js")); }
     match window.add_child(b, PhysicalPosition::new(px(x), px(y)), PhysicalSize::new(px(w), px(h))) {
         Ok(wv) => { platzieren(&wv, px(x), px(y), px(w), px(h), rr, f); log(format!("{id}: geöffnet bei {}/{} {}×{} (Faktor {f:.3})", px(x), px(y), px(w), px(h))); json!({"ok": true, "open": true}) }
         Err(e) => { log(format!("{id} konnte nicht geöffnet werden: {e}")); json!({"ok": false, "why": e.to_string()}) }
