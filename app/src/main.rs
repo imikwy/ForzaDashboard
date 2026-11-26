@@ -14,6 +14,7 @@ mod kanal;
 mod karte;
 mod lobby;
 mod media;
+mod schaltung;
 mod mqtt;
 mod overlay;
 mod profil;
@@ -46,7 +47,7 @@ use tokio::time::{sleep, timeout};
 use util::{log, now_ms};
 
 // Format JJJJ-MM-TT.N. BAU_VER zählt ForzaDashboard-bauen.bat hoch; Releases auf GitHub setzen FD_VERSION beim Bauen.
-const BAU_VER: &str = "2026-11-20.2";
+const BAU_VER: &str = "2026-11-25.2";
 pub const APP_VER: &str = match option_env!("FD_VERSION") { Some(v) => v, None => BAU_VER };
 // hier kommen Karten- und Programm-Updates her (in einstellungen.txt mit update_repo=… änderbar)
 pub const REPO: &str = "imikwy/ForzaDashboard";
@@ -241,7 +242,9 @@ async fn udp_loop(s: Arc<Shared>, sock: UdpSocket) {
     loop {
         let Ok((n, _)) = sock.recv_from(&mut buf).await else { continue };
         if n < 232 { continue; }
-        let p = telemetry::parse(&buf[..n]);
+        let mut p = telemetry::parse(&buf[..n]);
+        // eigene Automatik: schaltet bei Bedarf und meldet die Fahrstufe mit (für die Anzeige im Dashboard und Overlay)
+        if let Some(m) = schaltung::tick(&p.json) { if let serde_json::Value::Object(o) = &mut p.json { o.insert("gsel".into(), serde_json::json!(m)); } }
         let data: Arc<str> = p.json.to_string().into();
         *s.latest.lock().unwrap() = Some(data.clone());
         s.packets.fetch_add(1, Ordering::Relaxed);

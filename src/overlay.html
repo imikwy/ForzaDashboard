@@ -88,6 +88,19 @@ body.edit{background:#16181d}
 #note b{display:block;font-size:16px;font-weight:700}
 #note small{display:block;font-size:12.5px;color:rgba(255,255,255,.65);margin-top:1px}
 #note.hid{opacity:0}
+/* Wählhebel der eigenen Automatik: unten in der Mitte, nur kurz beim Einlegen einer Fahrstufe */
+#gsel{position:absolute;left:50%;bottom:0;transform-origin:50% 100%;z-index:7;pointer-events:none;display:flex;align-items:center;gap:13px;padding:7px 20px 7px 7px;border-radius:40px;
+  background:linear-gradient(160deg,rgba(66,70,82,.84),rgba(22,24,30,.9));box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 1px 0 rgba(255,255,255,.24),0 14px 40px rgba(0,0,0,.4);
+  opacity:0;transition:opacity .35s ease}
+#gsel.on{opacity:1}
+#gsel .gsc{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;flex:none;background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--gc) 70%,#fff),var(--gc) 62%);box-shadow:0 0 0 3px rgba(255,255,255,.1),0 4px 18px color-mix(in srgb,var(--gc) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
+#gsel .gsc b{font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1}
+#gsel .gst{display:flex;flex-direction:column;gap:5px}
+#gsel .gsn b{font-size:16px;font-weight:700}
+#gsel .gsn small{font-size:12px;color:rgba(255,255,255,.6);margin-left:7px}
+#gsel .gsr{display:flex;gap:3px}
+#gsel .gsr i{font-style:normal;font-size:11.5px;font-weight:750;min-width:22px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;display:grid;place-items:center;color:rgba(255,255,255,.42)}
+#gsel .gsr i.on{background:var(--gc);color:#fff}
 /* PC-Leistung */
 .pcw{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;height:100%;align-content:center}
 .pcr{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -252,6 +265,7 @@ body.edit{background:#16181d}
 #gx{width:1px;top:0;bottom:0}#gy{height:1px;left:0;right:0}
 </style></head><body>
 <div id="stage"></div>
+<div id="gsel"><div class="gsc"><b></b></div><div class="gst"><span class="gsn"></span><span class="gsr"></span></div></div>
 <div id="note" class="hid"><div class="ahb"><div class="ahc"><span class="ni"></span><div><b></b><small></small></div></div></div></div>
 <i class="guide" id="gx"></i><i class="guide" id="gy"></i>
 <div id="bar">
@@ -358,11 +372,27 @@ const LAMP_SVG = {
   fuel:'<svg viewBox="0 0 24 24"><path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M5 10h9M14 8h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V9l-3-3"/></svg>',
   pb:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.2"/><path d="M5 6.5a8.5 8.5 0 0 0 0 11M19 6.5a8.5 8.5 0 0 1 0 11"/><path d="M10.4 15.2V8.8h2a1.9 1.9 0 0 1 0 3.8h-2"/></svg>',
 };
-const LAMPS = ["mkl", "tc", "li", "pb", "fuel"];
+const LAMPS = ["mkl", "tc", "pb", "fuel"];
 const lampHtml = cls => '<div class="lmp ' + (cls || "") + '">' + LAMPS.map(k => '<i data-lamp="' + k + '" title="' + {mkl:"Motorkontrolle", tc:"Traktionskontrolle", li:"Licht", pb:"Handbremse", fuel:"Tank"}[k] + '">' + LAMP_SVG[k] + '</i>').join("") + '</div>';
 // Zustand: TC blinkt bei durchdrehenden Antriebsrädern, MKL blinkt beim Verschalten/Begrenzer und leuchtet bei Schaden,
 // Tank gelb/rot bei wenig Sprit, Licht grün (per Lenkradtaste mitgeschaltet – Forza meldet das Licht nicht)
 const LS = {tc:-1e9, mkl:-1e9, lim:0, gear:0, gT:0};
+// Wählhebel der eigenen Automatik (kommt mit jedem Paket als d.gsel): nur beim Wechsel 2 s einblenden
+const GSO = {m:"", h:0};
+const GSO_N = {P:["Parken", "Handbremse angezogen"], R:["Rückwärts", ""], D:["Drive", "Automatik"], E:["Eco", "früh schalten"], S:["Sport+", "spät schalten"], M:["Manuell", "du schaltest selbst"]};
+const GSO_C = {P:"#ff453a", R:"#ff9f0a", D:"#0a84ff", E:"#30d158", S:"#ff375f", M:"#bf5af2"};
+function gsoTick(d){
+  const m = (d && d.gsel) || "";
+  if (m === GSO.m) return; GSO.m = m; if (!m) return;
+  const el = $("gsel"), L2 = x => x === "S" ? "S+" : x, n = GSO_N[m] || [m, ""];
+  if (!el.dataset.b) { el.dataset.b = 1; el.querySelector(".gsr").innerHTML = "PRDESM".split("").map(x => '<i data-m="' + x + '">' + L2(x) + '</i>').join(""); }
+  el.style.setProperty("--gc", GSO_C[m] || "#0a84ff");
+  el.style.transform = "translateX(-50%) translateY(-" + Math.round(VH() * .12) + "px) scale(" + kf() + ")";
+  el.querySelector(".gsc b").textContent = L2(m);
+  el.querySelector(".gsn").innerHTML = "<b>" + n[0] + "</b><small>" + n[1] + "</small>";
+  el.querySelectorAll(".gsr i").forEach(i => i.classList.toggle("on", i.dataset.m === m));
+  el.classList.add("on"); clearTimeout(GSO.h); GSO.h = setTimeout(() => el.classList.remove("on"), 2200);
+}
 function lampTick(d){
   const now = performance.now();
   if (!d || !d.on) return;
@@ -427,7 +457,7 @@ const TYPES = {
     return '<div class="pad cmb' + (c.map === "r" ? " r" : "") + '"' + (lm ? ' style="bottom:46px"' : '') + '>' + map + col + '</div>' + (lm ? lampHtml("cmbl").replace('class="lmp cmbl"', 'class="lmp cmbl" style="' + lpos + '"') : '');
   }},
   perf:{n:"PC-Leistung", d:"CPU, GPU, Speicher", w:300, h:96, html:() => '<div class="pad pcw" style="inset:12px 16px">' + ["cpu", "gpu", "ram", "vram"].map(k => '<div class="pcr"><div><small>' + SV[k].s + '</small><b data-sv="' + k + '">–</b></div><i><u data-pc="' + k + '"></u></i></div>').join("") + '</div>'},
-  lamps:{n:"Kontrollleuchten", d:"MKL, TC, Licht, Handbremse, Tank", w:250, h:56, html:() => '<div class="pad" style="inset:0">' + lampHtml("lmw") + '</div>'},
+  lamps:{n:"Kontrollleuchten", d:"MKL, TC, Handbremse, Tank", w:250, h:56, html:() => '<div class="pad" style="inset:0">' + lampHtml("lmw") + '</div>'},
   map:{n:"Minikarte", d:"Karte mit Route", w:230, h:230, html:() => '<div class="pad" style="inset:10px"><div class="map"><canvas data-map></canvas>' + BLK + (spdW() ? '' : '<div class="bub"><b data-f="kmh">0</b><small>km/h</small></div>') + '</div></div>'},
   blink:{n:"Blinker", d:"Dein Blinker", w:200, h:76, html:() => '<div class="pad blw" style="inset:10px" data-blw><i data-b="l">' + AL + '</i><i data-b="r">' + AR + '</i></div>'},
   nav:{n:"Abbiegen", d:"Nächster Hinweis", w:320, h:74, html:() => '<div class="pad" style="inset:14px">' + navHtml + '</div>'},
@@ -677,7 +707,7 @@ function onNav(v){
 }
 function connect(){
   const es = new EventSource("/events");
-  if (!EDIT) es.onmessage = e => { try { const d = JSON.parse(e.data); if (d && typeof d.on !== "undefined") { T = d; tT = performance.now(); lampTick(d); } } catch (x) {} };
+  if (!EDIT) es.onmessage = e => { try { const d = JSON.parse(e.data); if (d && typeof d.on !== "undefined") { T = d; tT = performance.now(); lampTick(d); gsoTick(d); } } catch (x) {} };
   if (!EDIT) es.addEventListener("sys", e => { try { SYS = JSON.parse(e.data); } catch (x) {} });
   es.addEventListener("ov", e => { try { onNav(JSON.parse(e.data)); } catch (x) {} });
   es.addEventListener("ovlayout", e => { try { if (!EDIT) { L = JSON.parse(e.data); migrate(); build(); } } catch (x) {} });

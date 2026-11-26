@@ -107,7 +107,7 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/sys", get(|| async move { j(crate::system::last()) }))
         .route("/ov/state", get(|State(s): S| async move { let on = s.app.get().map(crate::overlay::is_on).unwrap_or(false); j(json!({"on": on})) }))
         .route("/ov/last", get(|| async move { j(crate::overlay::last()) }))
-        .route("/ov/toggle", get(|State(s): S, ConnectInfo(a): Addr| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } let Some(app) = s.app.get().cloned() else { return j(json!({"ok": false})) }; let on = tokio::task::spawn_blocking(move || crate::overlay::toggle(&app, &s)).await.unwrap_or(false); j(json!({"ok": true, "on": on})) }))
+        .route("/ov/toggle", get(|State(s): S, ConnectInfo(a): Addr| async move { if !heimnetz(&a) { return (StatusCode::FORBIDDEN, "").into_response(); } let Some(app) = s.app.get().cloned() else { return j(json!({"ok": false})) }; let on = tokio::task::spawn_blocking(move || crate::overlay::toggle(&app, &s)).await.unwrap_or(false); j(json!({"ok": true, "on": on})) }))
         .route("/ov/layout", get(|State(s): S| async move { j(crate::overlay::layout(&s)) }).post(|State(s): S, ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(json!({"ok": crate::overlay::set_layout(&s, body(&b))})) }))
         .route("/overlay/vorschau.jpg", get(|| async move { ([(header::CONTENT_TYPE, "image/jpeg"), (header::CACHE_CONTROL, "max-age=86400")], OVERLAY_VORSCHAU).into_response() }))
         .route("/ov/map", get(|| async move { let b = crate::overlay::map(); if b.is_empty() { return (StatusCode::NOT_FOUND, "").into_response(); } ([(header::CONTENT_TYPE, "image/webp"), (header::CACHE_CONTROL, "no-store")], b).into_response() }).post(|ConnectInfo(a): Addr, b: Bytes| async move { if !a.ip().is_loopback() { return (StatusCode::FORBIDDEN, "").into_response(); } j(json!({"ok": crate::overlay::set_map(&b)})) }))
@@ -175,6 +175,7 @@ pub fn router(s: Arc<Shared>) -> Router {
         .route("/lobby/chat", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().send_chat(&b, &s.name())) }))
         .route("/lobby/leader", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().promote(&b, &s.name())) }))
         .route("/lobby/ev", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().ev_set(&b, &s.name())) }))
+        .route("/schaltung", get(|| async { j(crate::schaltung::state()) }).post(|ConnectInfo(a): Addr, b: Bytes| async move { if !heimnetz(&a) { return (StatusCode::FORBIDDEN, "").into_response(); } j(crate::schaltung::set(&body(&b))) }))
         .route("/handbremse", post(|b: Bytes| async move { let b = body(&b); j(crate::media::handbremse(b["an"].as_bool().unwrap_or(false))) }))
         .route("/lobby/kick", post(|State(s): S, b: Bytes| async move { let b = body(&b); j(s.lobbys().vote(&b, &s.name())) }))
         .route("/lobby/wegpunkt/weg", post(|State(s): S| async move { let ok = s.lobbys().clear_wp(); j(json!({"ok": ok})) }))
@@ -329,6 +330,15 @@ fn tune_photo(k: &str) -> Response {
 }
 static OVERLAY_VORSCHAU: &[u8] = include_bytes!("../../src/overlay-vorschau.jpg");
 static OVERLAY_HTML: &str = include_str!("../../src/overlay.html");
+// Anfrage aus dem eigenen Heimnetz (PC selbst, Handy/Tablet im WLAN) – nicht aus dem Internet
+fn heimnetz(a: &SocketAddr) -> bool {
+    match a.ip() {
+        std::net::IpAddr::V4(v) => v.is_loopback() || v.is_private() || v.is_link_local(),
+        std::net::IpAddr::V6(v) => v.is_loopback() || (v.segments()[0] & 0xfe00) == 0xfc00 || (v.segments()[0] & 0xffc0) == 0xfe80
+            || v.to_ipv4_mapped().map(|x| x.is_loopback() || x.is_private() || x.is_link_local()).unwrap_or(false),
+    }
+}
+
 async fn overlay_page(State(s): S) -> Response {
     // eine overlay.html im Datenordner hat Vorrang (zum Ausprobieren ohne neu zu bauen)
     let body = std::fs::read_to_string(s.file("overlay.html")).unwrap_or_else(|_| OVERLAY_HTML.to_string());

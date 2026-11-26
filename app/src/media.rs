@@ -162,6 +162,7 @@ pub fn press_key(vk: u16, times: usize) {
 // Sicherung: meldet sich das Dashboard 3 s nicht mehr, wird sie von selbst losgelassen (kein hängender Tastendruck).
 static HB: std::sync::Mutex<(bool, u64)> = std::sync::Mutex::new((false, 0));
 fn space(down: bool) {
+    if crate::schaltung::hb_pad(down) { return; }   // eigene Automatik mit Controller: Handbremse dort (A), Forza bleibt beim Lenkrad
     let flags = if down { KEYEVENTF_SCANCODE } else { KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP };
     let inp = [INPUT { r#type: INPUT_KEYBOARD, Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: VIRTUAL_KEY(0), wScan: 0x39, dwFlags: flags, time: 0, dwExtraInfo: 0 } } }];
     unsafe { SendInput(&inp, std::mem::size_of::<INPUT>() as i32); }

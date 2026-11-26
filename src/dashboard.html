@@ -574,6 +574,20 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
 .whi:not(.wapp) svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .whi.wapp svg{width:20px;height:20px}
 .whr .plus{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--surface3);color:var(--accent);font-size:22px;font-weight:500;flex:none}
+/* Wählhebel-Anzeige der eigenen Automatik: kommt nur kurz, wenn eine Fahrstufe eingelegt wird */
+#gsel{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:9000;display:flex;align-items:center;gap:13px;padding:7px 20px 7px 7px;border-radius:40px;pointer-events:none;color:#fff;
+  background:linear-gradient(160deg,rgba(66,70,82,.82),rgba(22,24,30,.88));-webkit-backdrop-filter:blur(26px) saturate(1.6);backdrop-filter:blur(26px) saturate(1.6);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 1px 0 rgba(255,255,255,.24),0 14px 40px rgba(0,0,0,.4);
+  opacity:0;transform:translate(-50%,-14px) scale(.94);transition:opacity .35s ease,transform .45s cubic-bezier(.2,.9,.25,1.15)}
+#gsel.on{opacity:1;transform:translate(-50%,0) scale(1)}
+#gsel .gsc{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;flex:none;background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--gc) 70%,#fff),var(--gc) 62%);box-shadow:0 0 0 3px rgba(255,255,255,.1),0 4px 18px color-mix(in srgb,var(--gc) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
+#gsel .gsc b{font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1}
+#gsel .gst{display:flex;flex-direction:column;gap:5px;min-width:0}
+#gsel .gsn b{font-size:16px;font-weight:700;letter-spacing:-.01em}
+#gsel .gsn small{font-size:12px;color:rgba(255,255,255,.6);margin-left:7px}
+#gsel .gsr{display:flex;gap:3px}
+#gsel .gsr i{font-style:normal;font-size:11.5px;font-weight:750;min-width:22px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;display:grid;place-items:center;color:rgba(255,255,255,.42);transition:background .3s,color .3s}
+#gsel .gsr i.on{background:var(--gc);color:#fff}
 .gico[data-ac="off"]{filter:grayscale(.85) brightness(.7)}
 .gico[data-ac="pin"]::after{content:"";position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#30d158;box-shadow:0 0 0 2px rgba(0,0,0,.35)}
 .whdev{display:flex;gap:6px;padding:12px 14px 0}
@@ -2165,6 +2179,290 @@ body.editui .wgrid>.card.droptarget{outline:3px solid var(--accent);animation:no
   .G .gacrow{display:flex;grid-row:2;grid-column:2;align-items:flex-end;overflow:hidden;min-height:0}
 }
 @media (max-width:900px),(orientation:portrait){ .G .grail{flex-direction:row} .G .gdiv{width:1px;height:40px} .G .gsig{margin:0 6px} }
+/* ---------- Handy (dev-phone): wie eine Navi-App – schmale App-Leiste links, die Seite scrollt nie,
+   Home ist die Karte (ohne Kacheln). Listen wie Community/Profil scrollen nur in ihrem eigenen Fenster. ---------- */
+html.dev-phone,html.dev-phone body{height:100%!important;overflow:hidden!important;overscroll-behavior:none}
+.G.dev-phone .app{display:grid!important;grid-template-columns:60px minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;gap:8px;height:100dvh!important;min-height:0!important;padding:calc(6px + env(safe-area-inset-top)) calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left))!important}
+.G.dev-phone .dock{position:relative!important;inset:auto!important;grid-row:1;grid-column:1;order:0;flex-direction:column!important;align-items:center;justify-content:center;padding:8px 0!important;border-radius:22px!important;gap:0;height:100%;min-height:0;overflow:hidden}
+.G.dev-phone :is(.dock .clock,.gsig,.grail .gdiv,.grail .gstart,.gdemo,.dock .spacer,.gacrow){display:none!important}
+.G.dev-phone .grail{flex-direction:column!important;justify-content:space-evenly;align-items:center;flex:1;width:100%;gap:6px;overflow-y:auto!important;overflow-x:hidden!important;padding:2px 0!important;margin:0!important;-webkit-mask-image:none!important;mask-image:none!important}
+.G.dev-phone .grail :is(.gico,.gdots){width:44px;height:44px;border-radius:13px;flex:none}
+.G.dev-phone .grail .gdots{display:grid;place-items:center;background:rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.G.dev-phone .grail .gdots svg{width:22px;height:15px}
+.G.dev-phone .grail .gico>svg:not(.ghr){width:25px;height:25px}
+.G.dev-phone .grail .gico .ghr{inset:-5px;width:54px;height:54px}
+.G.dev-phone .main{grid-row:1;grid-column:2;display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;gap:0!important;height:100%;min-height:0;overflow:hidden}
+.G.dev-phone .main>*{grid-row:1;grid-column:1;min-height:0}
+.G.dev-phone .main>.side,.G.dev-phone .main.perfmode>.mapcard{display:none!important}
+.G.dev-phone .mapcard{height:100%!important;min-height:0;border-radius:22px}
+.G.dev-phone .main>:is(.gtune,.gfr,.gset,.gapps,.gperf,.gmods,.gweb){height:100%!important;max-height:100%;overflow-y:auto!important;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.G.dev-phone .card{border-radius:24px}
+/* Karte: kleinere Knöpfe rechts, Fahrleiste flacher – passt auch quer */
+.G.dev-phone .mctl{right:8px;top:8px;border-radius:21px}
+.G.dev-phone .mctl button{width:42px;height:42px;font-size:21px}
+.G.dev-phone .compass{right:8px;top:100px;width:42px;height:42px}
+.G.dev-phone .compass svg{width:26px;height:26px}
+.G.dev-phone .voicew{right:8px;top:150px}
+.G.dev-phone .voicebtn{width:42px;height:42px}
+.G.dev-phone :is(.mapsetup,.mapedit){display:none!important}
+.G.dev-phone .mtop{top:8px;max-width:calc(100% - 120px)}
+.G.dev-phone .mtop .pill{font-size:12.5px;padding:6px 12px}
+.G.dev-phone .hud{left:8px;right:8px;bottom:8px;height:58px;border-radius:29px;padding:0 8px;gap:10px}
+.G.dev-phone .hud .hs{min-width:0}
+.G.dev-phone .hud .hs b{font-size:28px}
+.G.dev-phone .hud .hg{width:38px;height:38px;font-size:19px}
+.G.dev-phone .hud .mbtn{height:40px;min-width:40px;padding:0 10px;font-size:13px}
+.G.dev-phone .navbanner{left:8px;top:8px;max-width:calc(100% - 70px);padding:10px 14px;gap:10px;border-radius:20px}
+.G.dev-phone .navbanner .tx b{font-size:22px}
+.G.dev-phone .navbanner .tx span{font-size:14px}
+.G.dev-phone .pfp{grid-template-columns:minmax(0,1fr)}
+.G.dev-phone .gset{border-radius:30px}
+.G.dev-phone .gset .panel{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;padding:18px 14px 20px;border-radius:24px;height:auto;min-height:100%;overflow:visible;gap:10px 0}
+.G.dev-phone .gset .panel .hd{grid-column:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.G.dev-phone .gset .panel:not(.pdet) .spages,.G.dev-phone .gset .panel.pdet .scats{display:none}
+.G.dev-phone .gset .scats button{height:50px;font-size:16px;background:rgba(255,255,255,.06)}
+.G.dev-phone .gset .scats button.on{background:rgba(255,255,255,.06);color:var(--text)}
+.G.dev-phone .gset .spages{overflow:visible;padding-right:0}
+.G.dev-phone .gset .srow{flex-direction:column;align-items:stretch;gap:10px}
+.G.dev-phone .gset .srow>.lbl{width:100%}
+.G.dev-phone .gset .srow>:not(.lbl){align-self:flex-start;max-width:100%;overflow-x:auto}
+.G.dev-phone #scats :is([data-cat="overlay"],[data-cat="wheel"],[data-cat="tiles"]){display:none}
+.pback{display:none}
+.G.dev-phone .gset .panel.pdet .pback{display:inline-flex;align-items:center;gap:2px;color:#0a84ff;font-size:16px;font-weight:600;background:none;padding:0;height:30px;margin-left:-6px}
+.G.dev-phone .pback svg{width:22px;height:22px}
+.G.dev-phone .gperf{flex:none;border-radius:24px;padding:14px 12px 14px}
+.G.dev-phone .pfgrid{flex:none;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(132px,auto)}
+.G.dev-phone .pft{grid-column:span 1!important;grid-row:span 1!important;padding:12px 12px}
+.G.dev-phone .pft:is([style*="span 2"],[style*="span 3"],[style*="span 4"]){grid-column:span 2!important}
+.G.dev-phone .gapps{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:18px 8px;padding:20px 10px;border-radius:24px;align-content:start}
+.G.dev-phone .gapp{font-size:13px;gap:7px;text-align:center}
+.G.dev-phone .gapp small{font-size:11px}
+.G.dev-phone .gapp .gico{width:64px;height:64px;border-radius:17px}
+.G.dev-phone .gapp .gico>svg:not(.ghr){width:36px;height:36px}
+.G.dev-phone .pfs2{grid-template-columns:minmax(0,1fr)}
+.G.dev-phone .mapedit{display:none!important}
+.G.dev-phone .frw .seg2 button{padding-left:4px;padding-right:4px;font-size:12.5px}
+/* Handy hochkant: App-Leiste unten im freien Platz, Karte wie bei Apple Karten (Abbiege-Tafel oben breit, Ankunft unten als Karte) */
+@media (orientation:portrait){
+  .G.dev-phone .app{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) 62px!important}
+  .G.dev-phone .dock{grid-row:2;grid-column:1;flex-direction:row!important;height:62px;padding:0 10px!important;border-radius:22px!important}
+  .G.dev-phone .grail{flex-direction:row!important;justify-content:space-evenly;overflow-x:auto!important;overflow-y:hidden!important;height:100%;width:100%}
+  .G.dev-phone .grail :is(.gico,.gdots){width:44px;height:44px}
+  .G.dev-phone .main{grid-row:1;grid-column:1}
+  .G.dev-phone .navbanner{left:8px;right:8px;max-width:none;top:8px;padding:14px 16px;gap:14px;border-radius:24px}
+  .G.dev-phone .navbanner .ico{width:48px;height:48px}.G.dev-phone .navbanner .ico svg{width:42px;height:42px}
+  .G.dev-phone .navbanner .tx b{font-size:28px}
+  .G.dev-phone .navbanner .tx span{font-size:17px}
+  /* mit Abbiege-Tafel: Knöpfe rechts darunter */
+  .G.dev-phone .mapcard:has(.navbanner:not([hidden])) .mctl{top:98px}
+  .G.dev-phone .mapcard:has(.navbanner:not([hidden])) .compass{top:190px}
+  .G.dev-phone .mapcard:has(.navbanner:not([hidden])) .voicew{top:240px}
+  .G.dev-phone .mapcard:has(.navbanner:not([hidden])) .mtop{display:none}
+  /* Ankunft: breite Karte über der Fahrleiste, drei Spalten wie bei Apple */
+  .G.dev-phone .garr{left:8px;right:8px;bottom:74px;height:auto;padding:10px 10px 10px 16px;border-radius:22px;gap:0;display:none;align-items:center}
+  .G.dev-phone .mapcard:has(.navbanner:not([hidden])) .garr{display:flex}
+  .G.dev-phone .garr>span{flex:1;display:flex;flex-direction:column;align-items:center;font-size:12px;line-height:1.25}
+  .G.dev-phone .garr b{font-size:24px;margin:0}
+  .G.dev-phone .garr button{width:34px;height:34px;font-size:13px;flex:none}
+  /* Fahrleiste: nur das Wichtigste */
+  .G.dev-phone .hud :is(.hlm,.hbl,.hrw,#overview){display:none!important}
+  .G.dev-phone .hud .hs{flex:none;min-width:max-content}
+  .G.dev-phone .hud .mbtns{flex:1;min-width:0;justify-content:flex-end;gap:6px}
+  .G.dev-phone .hud .gsign{transform:scale(.82);transform-origin:left center;margin-right:-8px}
+  .G.dev-phone .hud .mbtns .mbtn{width:42px;min-width:42px;padding:0;font-size:0;gap:0;justify-content:center}
+}
+/* Handy quer: Abbiege-Hinweis und Ankunft klein, damit die Karte frei bleibt */
+@media (orientation:landscape){
+  .G.dev-phone .navbanner{left:8px;top:8px;max-width:46%;padding:8px 14px 8px 10px;gap:10px;border-radius:18px}
+  .G.dev-phone .navbanner .ico{width:32px;height:32px}.G.dev-phone .navbanner .ico svg{width:28px;height:28px}
+  .G.dev-phone .navbanner .tx b{font-size:19px}
+  .G.dev-phone .navbanner .tx span{font-size:12.5px}
+  .G.dev-phone .garr{left:8px;bottom:72px;height:36px;padding:0 4px 0 12px;border-radius:18px;gap:10px;font-size:11px}
+  .G.dev-phone .garr b{font-size:15px;margin-right:3px}
+  .G.dev-phone .garr button{width:28px;height:28px;font-size:11px}
+}
+/* Handy v3: Karte randlos bis unter die runden Ecken, App-Leiste schwebt darüber; Abstände nur für Kamera/Home-Balken */
+.G.dev-phone{--phl:8px;--phr:8px;--pht:calc(6px + env(safe-area-inset-top));--phb:calc(6px + env(safe-area-inset-bottom))}
+.G.dev-phone .app{padding:0!important}
+.G.dev-phone .mapcard{border-radius:0!important}
+.G.dev-phone .dock{position:fixed!important;z-index:30}
+.G.dev-phone .main{grid-column:1!important;grid-row:1!important}
+.G.dev-phone .main:is(.tunemode,.frmode,.setmode,.appsmode,.perfmode,.modsmode,.webmode){padding:var(--pht) var(--phr) var(--phb) var(--phl)}
+.G.dev-phone .navbanner{left:var(--phl)}
+.G.dev-phone .garr{left:var(--phl)}
+.G.dev-phone .hud{left:var(--phl);right:var(--phr)}
+.G.dev-phone :is(.mctl,.compass,.voicew){right:var(--phr)}
+@media (orientation:landscape){
+  .G.dev-phone{--rail:max(6px, calc(env(safe-area-inset-left) * .8));--phl:calc(var(--rail) + 68px);--phr:max(8px, calc(env(safe-area-inset-right) * .8));--pht:8px;--phb:8px}
+  .G.dev-phone .app{grid-template-columns:minmax(0,1fr)!important}
+  .G.dev-phone .dock{left:var(--rail)!important;top:8px!important;bottom:8px!important;right:auto!important;width:60px;height:auto!important}
+  .G.dev-phone :is(.mctl,.navbanner,.mtop){top:8px}
+  .G.dev-phone .hud{bottom:8px}
+  .G.dev-phone .garr{bottom:76px}
+}
+@media (orientation:portrait){
+  .G.dev-phone{--phb:calc(env(safe-area-inset-bottom) + 76px)}
+  .G.dev-phone .app{grid-template-rows:minmax(0,1fr)!important}
+  .G.dev-phone .dock{left:8px!important;right:8px!important;bottom:calc(env(safe-area-inset-bottom) + 6px)!important;top:auto!important;height:62px!important}
+  .G.dev-phone :is(.mctl,.mtop){top:var(--pht)}
+  .G.dev-phone .compass{top:calc(var(--pht) + 92px)}
+  .G.dev-phone .voicew{top:calc(var(--pht) + 142px)}
+  .G.dev-phone .navbanner{top:var(--pht)}
+  .G.dev-phone .mapcard:has(.navbanner:not([hidden])) .mctl{top:calc(var(--pht) + 90px)}
+  .G.dev-phone .mapcard:has(.navbanner:not([hidden])) .compass{top:calc(var(--pht) + 182px)}
+  .G.dev-phone .mapcard:has(.navbanner:not([hidden])) .voicew{top:calc(var(--pht) + 232px)}
+  .G.dev-phone .hud{bottom:var(--phb)}
+  .G.dev-phone .garr{bottom:calc(var(--phb) + 66px)}
+}
+/* Fahrleiste: größer und ruhig – Tempo mit fester Breite (gleich breite Ziffern), Drehzahl bekommt festen Platz */
+.G.dev-phone .hud{height:64px;border-radius:32px;gap:12px}
+.G.dev-phone .hud .hs{flex:none;min-width:0}
+.G.dev-phone .hud .hs b{font-size:34px;font-variant-numeric:tabular-nums;display:inline-block;min-width:3.1ch;text-align:right}
+.G.dev-phone .hud .hs small{font-size:13px}
+.G.dev-phone .hud .hg{width:44px;height:44px;font-size:22px}
+.G.dev-phone .hud .hrw{flex:1 1 120px;min-width:110px;gap:6px}
+.G.dev-phone .hud .hrh{white-space:nowrap;font-size:13px}
+.G.dev-phone .hud .hrh b{font-size:21px;font-variant-numeric:tabular-nums;display:inline-block;min-width:4.6ch;text-align:right}
+.G.dev-phone .hud .hr{height:6px}
+.G.dev-phone .hud .mbtns{flex:none;gap:6px}
+.G.dev-phone .hud .mbtns .mbtn{width:44px;min-width:44px;height:44px;padding:0;font-size:0;gap:0;justify-content:center}
+@media (orientation:portrait){ .G.dev-phone .hud .hs b{font-size:32px} .G.dev-phone .hud .mbtns{flex:1;justify-content:flex-end;border-left:0;padding-left:0} .G.dev-phone .hud .hrw{display:none!important} }
+/* Musik auf Handy/Tablet: einfacher Player für die Musik am PC */
+.G .gweb.phm>:not(.phmusic){display:none!important}
+.phmusic{display:none}
+.G .gweb.phm>.phmusic{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px 16px;min-height:0;position:relative;z-index:1}
+.phcov{width:min(64vw,40vh,300px);aspect-ratio:1;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,#1ed760,#0b6b31);display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.45);flex:none}
+.phcov img{width:100%;height:100%;object-fit:cover}.phcov span{font-size:72px;color:#fff}
+.phtx{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;max-width:100%;min-width:0}
+.phtx small{font-size:11.5px;font-weight:700;color:#1ed760;text-transform:uppercase;letter-spacing:.06em}
+.phtx b{font-size:22px;max-width:86vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phtx span{font-size:15px;color:var(--muted);max-width:86vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phctl{display:flex;align-items:center;gap:24px}
+.phctl button{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.1)}
+.phctl button.pp{width:74px;height:74px;background:#fff;color:#111}
+.phctl svg{width:26px;height:26px}.phctl .pp svg{width:32px;height:32px}
+.phvol{display:flex;align-items:center;gap:14px;color:var(--muted);font-size:13px;font-weight:600}
+.phvol button{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);color:#fff}
+.phvol svg{width:22px;height:22px}
+@media (orientation:landscape){
+  .G .gweb.phm>.phmusic{display:grid;grid-template-columns:auto minmax(0,auto);grid-template-rows:auto auto auto;column-gap:34px;row-gap:16px;align-content:center;justify-content:center;justify-items:start}
+  .phmusic .phcov{grid-row:1/4;width:min(62vh,260px)}
+  .phmusic .phtx{align-items:flex-start;text-align:left}
+  .phmusic .phtx b,.phmusic .phtx span{max-width:42vw}
+}
+/* Community auf dem Handy: kompakter Kopf, Event-Details direkt unter den Events (nicht ganz unten), quer Bild und Liste nebeneinander */
+.G.dev-phone #gtune .cxtop{gap:8px;flex-wrap:wrap;align-items:center}
+.G.dev-phone #gtune .cxtop h2{font-size:24px;margin-right:4px}
+.G.dev-phone #gtune .cxtop .cmsearch{flex:1 1 140px;min-width:0;height:34px}
+.G.dev-phone #gtune .cxtop :is(.cmpill){height:34px;padding:0 12px;font-size:13px}
+.G.dev-phone #gtune .cxtop .cmnew{width:34px;height:34px}
+.G.dev-phone #gtune .cxsub{font-size:12px;margin:4px 0 8px}
+.G.dev-phone #gtune .cxw{display:flex!important;flex-direction:column;gap:12px}
+.G.dev-phone #gtune :is(.cxmain,.cxside){display:contents}
+.G.dev-phone #gtune :is(.cxmain,.cxside)>*{order:3}
+.G.dev-phone #gtune .cxev{order:1}
+.G.dev-phone #gtune .cxbd{order:2}
+.G.dev-phone #gtune .cxsim:empty{display:none}
+.G.dev-phone #gtune .cxhero{height:180px;min-height:0;border-radius:20px}
+.G.dev-phone #gtune .cxhero .tx{padding:12px 14px}
+.G.dev-phone #gtune .cxhero .tx :is(h3,b){font-size:20px;line-height:1.15}
+.G.dev-phone #gtune .cxer{min-height:0;padding:8px 10px;gap:10px}
+.G.dev-phone #gtune .cxer>img{display:none}
+.G.dev-phone #gtune .cxer>.t{flex:1;min-width:0}
+.G.dev-phone #gtune .cxer>.cxb{height:32px;padding:0 12px;font-size:12.5px;flex:none}
+.G.dev-phone #gtune .cxtop .cmsearch{flex-basis:80px}
+.G.dev-phone #gtune .cxseg button{padding:0 10px;font-size:12.5px}
+.G.dev-phone #gtune .cxtop h2{font-size:22px}
+.G.dev-phone #gtune .cxgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.G.dev-phone #gtune .cxtl{grid-template-columns:minmax(0,1fr)}
+@media (orientation:landscape){
+  .G.dev-phone #gtune .cxev{display:grid!important;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:10px;align-items:start}
+  .G.dev-phone #gtune .cxhero{height:200px}
+  .G.dev-phone #gtune .cxevl{max-height:200px;overflow-y:auto}
+  .G.dev-phone #gtune .cxgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .G.dev-phone #gtune .cxtl{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* Spotify auf dem Handy: die volle Ansicht (Start, Zuletzt gehört, Top-Künstler, Playlists, Suche) in einer Spalte, Player-Leiste kompakt unten */
+.G.dev-phone .gweb.spm>.spx{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) auto!important;gap:8px;padding:8px}
+.G.dev-phone .gweb.spm :is(.splib,.spnow){display:none!important}
+.G.dev-phone .spmain{border-radius:22px}
+.G.dev-phone .sptop{gap:8px;padding:10px 12px}
+.G.dev-phone .sptop .spsearch{flex:1;min-width:0}
+.G.dev-phone .sptop>span[style],.G.dev-phone .spme{display:none}
+.G.dev-phone .spview{padding:4px 12px 18px}
+.G.dev-phone .spview h2{font-size:24px;margin:6px 0 12px}
+.G.dev-phone .spview h3{font-size:17px;margin:18px 0 8px}
+.G.dev-phone .spq{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.G.dev-phone .spq div{height:50px;font-size:12.5px;gap:10px;border-radius:12px}
+.G.dev-phone .spq :is(img,.ph){width:50px;height:50px}
+.G.dev-phone .sprow{grid-auto-columns:122px;gap:4px}
+.G.dev-phone .spc{padding:6px;border-radius:16px}
+.G.dev-phone .spc b{font-size:12.5px}.G.dev-phone .spc small{font-size:11.5px}
+.G.dev-phone .sphead{gap:14px;margin:6px 0 14px}
+.G.dev-phone .sphead :is(img,.ph){width:104px;height:104px;border-radius:18px}
+.G.dev-phone .sphead h1{font-size:24px}
+.G.dev-phone .sptr{grid-template-columns:22px minmax(0,1fr) 40px;gap:8px;padding:6px 6px}
+.G.dev-phone .sptr .al{display:none}
+.G.dev-phone .sptr .tt img{width:38px;height:38px}
+.G.dev-phone .spbar{grid-column:1!important;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;padding:8px 10px 8px 8px;border-radius:20px}
+.G.dev-phone .spbar .cur img{width:44px;height:44px;border-radius:11px}
+.G.dev-phone .spbar .cur b{font-size:13.5px}.G.dev-phone .spbar .cur small{font-size:12px}
+.G.dev-phone .spctl .bt{gap:14px}
+.G.dev-phone .spctl .bt :is([data-pc="shuffle"],[data-pc="repeat"]){display:none}
+.G.dev-phone .spctl .spprog{display:none}
+.G.dev-phone .spright{gap:0}
+.G.dev-phone .spright>:not([data-pc="devices"]){display:none}
+@media (orientation:landscape){
+  .G.dev-phone .spq{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .G.dev-phone .spctl .bt :is([data-pc="shuffle"],[data-pc="repeat"]){display:grid}
+  .G.dev-phone .spctl .spprog{display:flex;width:220px}
+  .G.dev-phone .sphead{margin:2px 0 8px;gap:12px}
+  .G.dev-phone .sphead :is(img,.ph){width:64px;height:64px;border-radius:14px}
+  .G.dev-phone .sphead h1{font-size:20px;margin:2px 0 4px}
+  .G.dev-phone .spview .spplay{width:44px;height:44px;margin:0 0 6px}
+}
+/* Performance aufs Handy skaliert (feste Größen statt bildschirmhoher Schrift) */
+.G.dev-phone .pfhero{gap:14px;padding:0 4px 10px}
+.G.dev-phone .pfgear{font-size:60px}
+.G.dev-phone .pfspd b{font-size:38px}
+.G.dev-phone .pfspd small{font-size:13px}
+.G.dev-phone .pfrpmn{font-size:11.5px}
+.G.dev-phone .pfedit{height:30px;padding:0 12px;font-size:12.5px}
+.G.dev-phone .pfgrid{margin-top:-6px}
+.G.dev-phone .pft{gap:6px}
+.G.dev-phone .pft>small{font-size:10px}
+.G.dev-phone .pfv>b{font-size:24px}
+.G.dev-phone .pf4{gap:2px 8px}
+.G.dev-phone .pf4>div{font-size:15px;gap:5px;white-space:nowrap}
+.G.dev-phone .pf4>div em{width:16px;font-size:9.5px}
+.G.dev-phone .pflaps b{font-size:15px}
+.G.dev-phone .pfpos b{font-size:30px}
+.G.dev-phone .pfring svg{max-height:84px}
+.G.dev-phone .pfcar svg{max-height:80px}
+@media (orientation:landscape){
+  .G.dev-phone .pfhero{grid-template-columns:auto minmax(0,1fr) auto;padding-bottom:6px}
+  .G.dev-phone .pfgear{font-size:42px}
+  .G.dev-phone .pfspd b{font-size:28px}
+  .G.dev-phone .pfgrid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:120px}
+  .G.dev-phone .pfring svg{max-height:70px}
+}
+/* ---------- Tablet (dev-tablet) hochkant: App-Leiste unten, zwei Spalten Kacheln; quer bleibt es wie am PC ---------- */
+@media (orientation:portrait){
+  .G.dev-tablet .app{display:flex;flex-direction:column;gap:14px;padding:14px 14px calc(108px + env(safe-area-inset-bottom));min-height:100dvh;height:auto}
+  .G.dev-tablet .dock{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;flex-direction:row;align-items:center;padding:10px 16px;border-radius:34px;gap:12px;min-height:0;height:auto}
+  .G.dev-tablet .dock .clock{font-size:19px}
+  .G.dev-tablet .dock .spacer{display:none}
+  .G.dev-tablet .gset .panel{grid-template-columns:190px minmax(0,1fr);padding:24px 22px;gap:0 18px;height:calc(100dvh - 150px)}
+  .G.dev-tablet #scats :is([data-cat="overlay"],[data-cat="wheel"]){display:none}
+  .G.dev-tablet .grail{-webkit-mask-image:none!important;mask-image:none!important}
+  .G.dev-tablet .grail{flex-direction:row;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;gap:12px;padding:2px 4px;margin:0;flex:1;min-width:0}
+  .G.dev-tablet .grail :is(.gico,.gdots){width:56px;height:56px;flex:none}
+  .G.dev-tablet .main{display:flex;flex-direction:column;gap:14px;min-height:0}
+  .G.dev-tablet .mapcard{height:46vh;flex:none}
+  .G.dev-tablet .main.mapmode .mapcard{height:calc(100dvh - 150px - env(safe-area-inset-bottom))}
+  .G.dev-tablet .side{overflow:visible;flex:none}
+  .G.dev-tablet .wgrid{flex:none;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:220px;grid-auto-flow:row dense}
+}
 </style>
 </head>
 <body>
@@ -2374,6 +2672,24 @@ const S = JSON.parse(JSON.stringify(DEF));
 try { const raw = localStorage.getItem("fd.settings"); const st = JSON.parse(raw || "{}"); Object.assign(S, st); S.w = Object.assign({}, DEF.w, st.w || {});
   if (!raw) { S.w = Object.assign({}, DEF.w, LAYOUT_STD.w); S.order = LAYOUT_STD.order.slice(); S.size = Object.assign({}, LAYOUT_STD.size); S.sysSeen = 1; S.fuelSeen = 1; }   // neuer Spieler: Standard-Kacheln
 } catch (e) {}
+// ---- Gerät erkennen: Handy / Tablet / PC. Der PC (Browser und Programmfenster) bleibt genau wie bisher. ----
+// Von Hand festlegen geht in den Einstellungen (localStorage „fd.dev“).
+const DEVK = (() => {
+  try { const o = localStorage.getItem("fd.dev"); if (o === "phone" || o === "tablet" || o === "desktop") return o; } catch (e) {}
+  if (window.FD_EXE) return "desktop";
+  const ua = navigator.userAgent || "", touch = (navigator.maxTouchPoints || 0) > 0, sw = Math.min(screen.width, screen.height);
+  if (/iPhone|iPod|Windows Phone|Android.+Mobile|Mobile.+Firefox/i.test(ua) || (touch && sw < 600)) return "phone";
+  if (/iPad|Tablet|Android|Silk|Kindle/i.test(ua) || (touch && /Macintosh/i.test(ua)) || (touch && sw < 1100)) return "tablet";
+  return "desktop";
+})();
+document.documentElement.classList.add("dev-" + DEVK);
+// Handy und Tablet immer im Glas-Design (nur dort gibt es Community, Freunde, Profil …)
+if (DEVK !== "desktop") S.design = "glass";
+// Apps, die nur im Programmfenster am PC laufen (eingebettete Seiten, Spiel-Overlay) oder auf dem Handy keinen Platz haben
+const DEV_HIDE = {phone:new Set(["youtube", "twitch", "discord", "mods", "quit", "edit", "tiles"]), tablet:new Set(["youtube", "twitch", "discord", "quit"])};
+const devMusic = () => DEVK !== "desktop" && !window.FD_EXE;   // Handy/Tablet: statt eingebettetem Spotify ein einfacher Player für die Musik am PC
+const devHide = k => !!(DEV_HIDE[DEVK] && DEV_HIDE[DEVK].has(k));
+const PHONE_RAIL = ["home", "spotify", "tuning", "friends", "perf"];   // Home ist auf dem Handy die Karte
 if (S.voice !== undefined) { if (S.voice && S.voiceMode === "off") S.voiceMode = S.voiceTurns ? "turns" : "on"; delete S.voice; delete S.voiceTurns; }   // alte Schalter übernehmen
 const voiceOn = () => S.voiceMode === "on" || S.voiceMode === "turns";
 // alte Stufen der Untergrund-Erkennung umrechnen
@@ -2450,6 +2766,7 @@ function onData(d){
   try { liveTick(d); } catch (e) {}
   try { hgtTick(d); } catch (e) {}
   try { pbTick(d); } catch (e) {}
+  try { gsTick(d); } catch (e) {}
   if (!d.on && !d.px && !d.pz) { const lp = lastPos || (() => { try { return JSON.parse(localStorage.getItem("fd.lastpos") || "null"); } catch (e) { return null; } })(); if (lp && (lp.x || lp.z)) { d.px = lp.x; d.pz = lp.z; } }
   // Overlay im Spiel: auch versorgen, wenn das Dashboard-Fenster hinter Forza liegt (dann zeichnet es selbst kaum noch)
   if (d.on && d.dash && window.OV && OV.on && performance.now() - (OV.tk || 0) > 250) { OV.tk = performance.now(); try { navBanner(OV.tk); } catch (e) {} }
@@ -2484,7 +2801,7 @@ function onData(d){
   fuelTick(d);
   try { hlmTick(d); } catch (e) {}
 }
-// ---- Kontrollleuchten in der Fahrleiste (wie im Overlay): MKL, Traktionskontrolle, Licht, Tank ----
+// ---- Kontrollleuchten in der Fahrleiste (wie im Overlay): MKL, Traktionskontrolle, Handbremse, Tank ----
 const HLM_SVG = {
   mkl:'<svg viewBox="0 0 24 24"><path d="M4 10v6M4 13h2.5M6.5 9.5h2l1.5-2h4l1.5 2h2.5l1.5 2h1.5v4h-1.5l-1.5 2H9.5l-3-2v-6z"/><path d="M10 7.5V5.5M8 5.5h4"/></svg>',
   tc:'<svg viewBox="0 0 24 24"><path d="M6.5 12.5 8 8.5h8l1.5 4"/><path d="M5.5 12.5h13v3h-13z"/><path d="M7 15.5v1.5M17 15.5v1.5"/><path d="M6 20.5c1.2-1.4 2.4 1.4 3.6 0M14.4 20.5c1.2-1.4 2.4 1.4 3.6 0"/></svg>',
@@ -2497,7 +2814,7 @@ const HLM ={tc:-1e9, mkl:-1e9, lim:0, gear:0, gT:0, t:0};
 function hlmRender(){
   const el = $("hlm"); if (!el) return;
   el.hidden = !S.lampsDash;
-  if (S.lampsDash && !el.firstChild) el.innerHTML = ["mkl", "tc", "li", "pb", "fuel"].map(k => '<i data-lamp="' + k + '" title="' + {mkl:"Motorkontrolle", tc:"Traktionskontrolle", li:"Licht", pb:"Handbremse", fuel:"Tank"}[k] + '">' + HLM_SVG[k] + '</i>').join("");
+  if (S.lampsDash && !el.firstChild) el.innerHTML = ["mkl", "tc", "pb", "fuel"].map(k => '<i data-lamp="' + k + '" title="' + {mkl:"Motorkontrolle", tc:"Traktionskontrolle", li:"Licht", pb:"Handbremse", fuel:"Tank"}[k] + '">' + HLM_SVG[k] + '</i>').join("");
 }
 function hlmTick(d){
   if (!S.lampsDash) return;
@@ -2750,7 +3067,7 @@ function pollMedia(){
   if (demo || !live) return;
   fetch("/media", {cache:"no-store"}).then(r => r.json()).then(m => {
     music.src = "app"; music.running = !!m.running; music.playing = !!m.playing;
-    music.title = m.title || ""; music.artist = m.artist || ""; music.cover = m.cover || ""; music.vol = typeof m.vol === "number" ? m.vol : null; music.volMode = m.volMode || ""; try { songSync(); } catch (e) {}
+    music.title = m.title || ""; music.artist = m.artist || ""; music.cover = m.cover || ""; music.vol = typeof m.vol === "number" ? m.vol : null; music.volMode = m.volMode || ""; try { songSync(); } catch (e) {} try { if (GR.view === "spotify" && devMusic() && $("gweb").classList.contains("phm")) phMusic(); } catch (e) {}
   }).catch(() => {});
 }
 function mediaCmd(cmd){
@@ -4570,7 +4887,7 @@ const PAD_ACT = {
   blinkR:["Blinker rechts", () => blPress("r")],
   hazard:["Warnblinker", () => blSet(BL.m === "h" ? "" : "h")],
   pbrake:["Handbremse (halten = anziehen, antippen = lösen)", () => pbPress()],
-  lights:["Licht an/aus (Kontrollleuchte)", () => { LIGHT.on = !LIGHT.on; try { ovKick(); } catch (e) {} toast(LIGHT.on ? "Licht an" : "Licht aus"); }],
+  gsCyc:["Fahrmodus durchschalten (D → S+ → E → M)", () => gselSet({D:"S", S:"E", E:"M"}[GS.mode] || "D")],
 };
 // Belegung: einfach drücken, doppelt drücken (2× schnell) oder Kombination (eine Taste halten + andere drücken)
 // S.binds[aktion] = {dev, name, btn, how:"1"|"2"|"+", mod:<gehaltene Taste bei Kombi>}
@@ -4607,7 +4924,7 @@ const padBtn = (b, dev) => b >= 2000 ? kbName(b - 2000) : b > 1000 ? "Steuerkreu
   : dev && dev.startsWith("045E:") && PAD_XBOX[b - 1] ? PAD_XBOX[b - 1] : dev && dev.startsWith("054C:") && PAD_PS[b - 1] ? PAD_PS[b - 1] : "Taste " + b;
 const padName = b => !b ? "–" : (b.name || "Controller") + " · " + (b.how === "+" ? padBtn(b.mod, b.dev) + " + " + padBtn(b.btn, b.dev) : padBtn(b.btn, b.dev) + (b.how === "2" ? " · 2×" : ""));
 const padHow = b => (b && b.how) || "1";
-const padActive = a => !(!S.blinkOn && /^(blink|hazard)/.test(a));
+const padActive = a => !(!S.blinkOn && /^(blink|hazard)/.test(a)) && !(!S.gsOn && /^gs/.test(a));
 const padFire = a => {
   const b = S.binds && S.binds[a];
   if (!(b && b.tab) && !PAD_ACT[a]) return;
@@ -4674,11 +4991,13 @@ const WH_GROUPS = [
   ["Ansicht", "#5e5ce6", ["overlay"]],
   ["Navigation", "#30d158", ["home", "voice"]],
   ["Blinker", "#ff9f0a", ["blinkL", "blinkR", "hazard"]],
-  ["Auto", "#30d158", ["lights", "pbrake"]],
+  ["Auto", "#30d158", ["pbrake"]],
+  ["Wählhebel", "#0a84ff", ["gsCyc"]],
 ];
 const WH_ICO = {playpause:'<path d="M7 5v14l11-7z"/>', next:'<path d="M6 5v14l9-7zM18 5v14"/>', prev:'<path d="M18 5v14l-9-7zM6 5v14"/>', volup:'<path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>', voldown:'<path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7"/>',
   perf:'<path d="M4.5 17a8.5 8.5 0 1 1 15 0"/><path d="m12 13 4-4"/>', map:'<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>', overlay:'<rect x="3" y="5" width="18" height="13" rx="2.5"/><rect x="12" y="11" width="6" height="4" rx="1"/>',
   pbrake:'<circle cx="12" cy="12" r="8.5"/><path d="M10 16.5v-9h2.8a2.6 2.6 0 0 1 0 5.2H10"/>', home:'<path d="M3 11 12 4l9 7M5.5 9.5V20h13V9.5"/>', voice:'<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  gsCyc:'<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
   lights:'<path d="M12.5 6c-4.5 0-7 2.7-7 6s2.5 6 7 6c.8 0 1.5-.6 1.5-1.4V7.4c0-.8-.7-1.4-1.5-1.4zM16.5 8.5 21 10M16.5 12 21 13.5M16.5 15.5 21 17"/>', blinkL:'<path d="M14 6l-6 6 6 6"/>', blinkR:'<path d="M10 6l6 6-6 6"/>', hazard:'<path d="M12 4 21 19H3z"/>'};
 // Belegung kurz: „Taste 5“ + „2×“ bzw. „Taste 3 + Taste 5“
 const padShort = b => !b ? '<u>Nicht belegt</u>' : (b.dev === "KBD" ? '<u class="pdev">⌨</u>' : '') + (b.how === "+" ? '<em>' + padBtn(b.mod, b.dev).replace("Taste ", "") + '</em>+<em>' + padBtn(b.btn, b.dev).replace("Taste ", "") + '</em>' : '<em>' + padBtn(b.btn, b.dev).replace("Taste ", "") + '</em>' + (b.how === "2" ? '<u>2×</u>' : ''));
@@ -4719,9 +5038,10 @@ function buildWheelSettings(){
     g.appendChild(grp);
   }
   for (const [title, col, acts] of WH_GROUPS) {
-    const list = acts.filter(a => PAD_ACT[a] && padActive(a)); if (!list.length) continue;
-    const h = document.createElement("h4"); h.className = "wh4"; h.textContent = title; g.appendChild(h);
+    const list = acts.filter(a => PAD_ACT[a] && padActive(a)), isGs = acts.includes("gsCyc"); if (!list.length && !isGs) continue;
+    const h = document.createElement("h4"); h.className = "wh4"; h.textContent = isGs ? "Eigene Automatik (Wählhebel)" : title; g.appendChild(h);
     const grp = document.createElement("div"); grp.className = "group";
+    if (isGs) gsSettings(grp);
     for (const a of list) {
       const b = S.binds && S.binds[a], learn = PAD.learn === a;
       const r = document.createElement("button"); r.className = "whr" + (learn ? " learn" : "");
@@ -4744,6 +5064,83 @@ function buildWheelSettings(){
     }
     g.appendChild(grp);
   }
+}
+
+// ---- Eigene Automatik mit Wählhebel: Forza steht auf „Manuell“, das Programm schaltet per Tastendruck (E/Q) ----
+// P = Handbremse an, R, D, E (Eco), S+ (Sport), M = selbst schalten. Die Fahrstufe kommt mit jedem Telemetrie-Paket
+// zurück (d.gsel) – die Anzeige blendet sich nur kurz ein, wenn sie sich ändert (und einmal am Anfang).
+const GS = {mode:"", t:0, hide:0, st:null, hint:"", poll:0};
+const GS_NAME = {P:"Parken", R:"Rückwärts", D:"Drive", E:"Eco", S:"Sport+", M:"Manuell"};
+const GS_SUB = {P:"Handbremse angezogen", R:"Rückwärtsgang", D:"Automatik", E:"früh schalten, sparsam", S:"spät schalten, hält den Gang", M:"du schaltest selbst"};
+const GS_COL = {P:"#ff453a", R:"#ff9f0a", D:"#0a84ff", E:"#30d158", S:"#ff375f", M:"#bf5af2"};
+const GS_KEYS = {pad:[0, 0, "Controller RB / LB"], eq:[0x12, 0x10, "Tastatur E / Q"], rf:[0x13, 0x21, "R / F"]};
+const gsL = m => m === "S" ? "S+" : m;
+function gsIco(t){ return '<text x="12" y="16.3" text-anchor="middle" font-size="' + (t.length > 1 ? 10.5 : 13) + '" font-weight="800" fill="#fff" stroke="none" font-family="-apple-system,Segoe UI,system-ui,sans-serif">' + t + '</text>'; }
+function gsPost(b){
+  return fetch("/schaltung", {method:"POST", body:JSON.stringify(b)}).then(r => r.ok ? r.json() : null).then(v => { if (v) GS.st = v; return v; }).catch(() => null);
+}
+function gsCfg(){ const id = GS_KEYS[S.gsKeys] ? S.gsKeys : "pad", k = GS_KEYS[id]; return id === "pad" ? {an:!!S.gsOn, via:"pad"} : {an:!!S.gsOn, via:"key", up:k[0], dn:k[1]}; }
+if (window.FD_EXE) gsPost(gsCfg());
+async function gselSet(m){
+  if (!window.FD_EXE) { toast("Geht nur im ForzaDashboard-Programm am PC"); return; }
+  if (!S.gsOn) { toast("Eigene Automatik ist aus – Einstellungen › Lenkrad"); return; }
+  const slow = Math.abs((D && D.spd) || 0) * 3.6 <= 6;
+  if ((m === "P" || m === "R") && !slow) { toast("Erst anhalten"); return; }
+  if (m === "P") {
+    if (!carLive()) { toast("Geht nur im Auto – nicht im Menü oder im Haus"); return; }
+    if (!PB.on) pbSet(true);
+  } else if (PB.on && GS.mode === "P") pbSet(false);
+  const v = await gsPost({mode:m});
+  if (v && v.err) { toast(v.err); return; }
+  if (v && v.ok) { GS.mode = v.mode; gsShow(v.mode); }
+}
+// Anzeige: Glas-Kapsel oben in der Mitte – Kreis mit der Fahrstufe, daneben P R D E S+ M; nach 2 s weg
+function gsShow(m){
+  let el = $("gsel");
+  if (!el) {
+    el = document.createElement("div"); el.id = "gsel";
+    el.innerHTML = '<div class="gsc"><b></b></div><div class="gst"><span class="gsn"></span><span class="gsr">' + "PRDESM".split("").map(x => '<i data-m="' + x + '">' + gsL(x) + '</i>').join("") + '</span></div>';
+    document.body.appendChild(el);
+  }
+  el.style.setProperty("--gc", GS_COL[m] || "#0a84ff");
+  el.querySelector(".gsc b").textContent = gsL(m);
+  el.querySelector(".gsn").innerHTML = '<b>' + (GS_NAME[m] || m) + '</b><small>' + (GS_SUB[m] || "") + '</small>';
+  el.querySelectorAll(".gsr i").forEach(i => i.classList.toggle("on", i.dataset.m === m));
+  el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
+  clearTimeout(GS.hide); GS.hide = setTimeout(() => el.classList.remove("on"), 2200);
+}
+function gsTick(d){
+  const m = d.gsel || "";
+  if (m !== GS.mode) {
+    const was = GS.mode; GS.mode = m;
+    if (m) gsShow(m);
+    if (was === "P" && m !== "P" && PB.on) pbSet(false);
+  }
+  // Hinweise vom Programm (z. B. „Forza schaltet selbst – auf Manuell stellen“) einmal anzeigen
+  const now = performance.now();
+  if (m && now - GS.poll > 3000) { GS.poll = now; fetch("/schaltung", {cache:"no-store"}).then(r => r.json()).then(v => { GS.st = v; if (v.hint && v.hint !== GS.hint) toast(v.hint); GS.hint = v.hint || ""; }).catch(() => {}); }
+}
+function gsSettings(grp){
+  const sw = document.createElement("span"); sw.className = "sw" + (S.gsOn ? " on" : "");
+  sw.onclick = () => { S.gsOn = !S.gsOn; saveSettings(); gsPost(gsCfg()).then(v => { if (S.gsOn && v) { GS.mode = ""; } }); if (!S.gsOn && PB.on && GS.mode === "P") pbSet(false); toast(S.gsOn ? "Eigene Automatik an – Fahrstufe D" : "Eigene Automatik aus"); buildWheelSettings(); };
+  grp.appendChild(row("Eigene Automatik", "Schaltet für dich – schnell und sanft, bei der Drehzahl, bei der ein echtes Auto schalten würde. Lernt die Gänge jedes Autos beim Fahren.", sw));
+  if (!S.gsOn) {
+    const x = document.createElement("div"); x.className = "info"; x.style.padding = "4px 16px 12px";
+    x.textContent = "Dafür im Spiel unter Einstellungen › Fahrhilfen das Getriebe auf „Manuell“ stellen. Dann Wählhebel-Tasten (P, R, D, E, S+, M) aufs Lenkrad legen.";
+    grp.appendChild(x); return;
+  }
+  const seg = document.createElement("div"); seg.className = "seg";
+  for (const m of "DSEM") { const b = document.createElement("button"); b.textContent = gsL(m); b.className = GS.mode === m ? "on" : ""; b.onclick = () => gselSet(m).then(() => buildWheelSettings()); seg.appendChild(b); }
+  grp.appendChild(row("Fahrmodus", "D = normal · S+ = spät hoch, hält den Gang in Kurven · E = früh hoch, sparsam · M = selbst schalten (geht auch von allein, sobald du selbst schaltest). Am Lenkrad: ein Knopf schaltet durch. Rückwärts: im Stand die Bremse 1 s halten (nochmal = wieder vorwärts). P: Handbremse.", seg));
+  const ks = document.createElement("div"); ks.className = "seg";
+  for (const k of Object.keys(GS_KEYS)) { const b = document.createElement("button"); b.textContent = GS_KEYS[k][2]; b.className = (GS_KEYS[S.gsKeys] ? S.gsKeys : "pad") === k ? "on" : ""; b.onclick = () => { S.gsKeys = k; saveSettings(); gsPost(gsCfg()); buildWheelSettings(); }; ks.appendChild(b); }
+  grp.appendChild(row("Schalten über", "Controller (empfohlen): ein unsichtbarer Xbox-Controller drückt RB = hoch, LB = runter (in Forza beim Controller so belegen) – Forza bleibt beim Lenkrad, kein Ruck. Tastatur nur als Notlösung: Forza springt dabei kurz aufs Keyboard um.", ks));
+  const st = GS.st || {}, x = document.createElement("div"); x.className = "info"; x.style.padding = "4px 16px 12px";
+  x.textContent = "Im Spiel Getriebe auf „Manuell“ stellen (nicht „mit Kupplung“). Geschaltet wird nur, wenn Forza im Vordergrund ist."
+    + (st.pad_err ? " ⚠ Virtueller Controller geht nicht – ViGEmBus-Treiber installiert?" : "")
+    + (st.geschaltet ? " Bisher " + st.geschaltet + "× geschaltet" + (st.gelernt ? ", " + st.gelernt + " Gänge dieses Autos gelernt." : ".") : "")
+    + (st.hint ? " ⚠ " + st.hint : "");
+  grp.appendChild(x);
 }
 
 // ---- Blinker: links/rechts per Taste, beide zusammen = Warnblinker; schaltet sich nach dem Abbiegen selbst aus ----
@@ -4872,7 +5269,7 @@ function buildAssist(){
     vr.onchange = () => { const k = S.blinkSnd || "modern"; if (k !== "aus") { blClick(k, false); setTimeout(() => blClick(k, true), 450); } };
     g.appendChild(row("Lautstärke Blinker", "", vr));
   }
-  g.appendChild(row("Kontrollleuchten", "MKL, Traktionskontrolle, Licht, Handbremse (rot, wenn angezogen) und Tank – klein in der Fahrleiste der Karte, leuchten nur, wenn etwas ist", tg("lampsDash", hlmRender)));
+  g.appendChild(row("Kontrollleuchten", "MKL, Traktionskontrolle, Handbremse (rot, wenn angezogen) und Tank – klein in der Fahrleiste der Karte, leuchten nur, wenn etwas ist", tg("lampsDash", hlmRender)));
   g.appendChild(row("Blinker der anderen", "Wer in deiner Gruppe (oder online) vor dir fährt und blinkt: orange an seinem Punkt auf der Karte und als kurzer Hinweis oben im Overlay. Geht nur bei Mitspielern, die auch ForzaDashboard nutzen.", tg("blinkOthers", () => { try { ovKick(); } catch (e) {} })));
 }
 setTimeout(blRender, 0);
@@ -5627,6 +6024,7 @@ function updateCam(){
   cam.s = cam.init && cam.s > 0 && isFinite(cam.s) ? cam.s * Math.pow(cam.ts / cam.s, kz) : cam.ts; cam.init = true;
   if (!isFinite(cam.spdS)) cam.spdS = 0;
   if (!isFinite(cam.cx) || !isFinite(cam.cy)) { cam.cx = carX || 0; cam.cy = carY || 0; }
+  try { mapxClamp(); } catch (e) {}
   // nach einer Weile ohne Bedienung beim Fahren automatisch wieder folgen (nicht in der Demo: dort will man sich umschauen)
   if (cam.mode === "free" && !ed.on && !cal.open && !demo && D && D.on && D.spd > 4 && performance.now() - lastInteract > 12000) setMode("follow");
 }
@@ -5710,11 +6108,96 @@ function renderStatic(g, c){
   if (ed.pend && ed.pend.length) edPaintPend(g, ed.pend);
   g.restore();
 }
+// ---- Umgebung der Karte: Gelände und Meer laufen über den Kartenrand weiter (gespiegelt, weich, dunkler), dazu Wolken.
+// Weiter als bis zum Rand dieser Umgebung lässt sich nicht herauszoomen oder schieben – die Ansicht ist immer ganz gefüllt.
+const MAPX = {m:0.45, c:null, cl:null, src:null};
+function mapxBuild(){
+  const im = mapImg.bmp; if (!im || !(im.naturalWidth || im.width)) return null;
+  if (MAPX.c && MAPX.src === im) return MAPX;
+  const m = MAPX.m, sc = 0.4, iw = Math.round(mapImg.w * sc), ih = Math.round(mapImg.h * sc), ox = Math.round(iw * m), oy = Math.round(ih * m), W2 = iw + 2 * ox, H2 = ih + 2 * oy;
+  const mk = () => { const c = document.createElement("canvas"); c.width = W2; c.height = H2; return [c, c.getContext("2d")]; };
+  // Abstand zum Kartenrand (0 = am Rand, 1 = ganz außen)
+  const dist = (x, y) => Math.min(1, Math.hypot(Math.max(ox - x, x - (ox + iw), 0) / ox, Math.max(oy - y, y - (oy + ih), 0) / oy));
+  // 1. Kartenbild gespiegelt um sich selbst gelegt → Küsten und Gelände laufen nahtlos weiter
+  const [A, a] = mk(); a.imageSmoothingQuality = "high";
+  for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { a.save(); a.translate(ox + i * iw + (i ? iw : 0), oy + j * ih + (j ? ih : 0)); a.scale(i ? -1 : 1, j ? -1 : 1); a.drawImage(im, 0, 0, iw, ih); a.restore(); }
+  // 2. weit draußen: weich und dunkler; am Kartenrand: genau wie die Karte (keine Kante)
+  const [B, b] = mk();
+  b.filter = "blur(" + Math.max(3, Math.round(iw * 0.018)) + "px) saturate(1.2)"; b.drawImage(A, 0, 0); b.filter = "none";
+  b.fillStyle = "rgba(4,8,14,.28)"; b.fillRect(0, 0, W2, H2);
+  const br = Math.round(Math.min(ox, oy) * 0.5), [M, mm] = mk();
+  const be = Math.round(br * 0.26), bs = Math.max(2, Math.round(br * 0.12));
+  mm.filter = "blur(" + bs + "px)"; mm.fillStyle = "#fff"; mm.fillRect(ox - be, oy - be, iw + 2 * be, ih + 2 * be); mm.filter = "none";   // am Rand voll deckend, gleich daneben weich (keine gespiegelten Formen)
+  a.globalCompositeOperation = "destination-in"; a.drawImage(M, 0, 0); a.globalCompositeOperation = "source-over";
+  b.drawImage(A, 0, 0);
+  // nach außen dunkler
+  const vg = b.createRadialGradient(W2 / 2, H2 / 2, Math.min(iw, ih) * 0.62, W2 / 2, H2 / 2, Math.hypot(W2, H2) / 2);
+  vg.addColorStop(0, "rgba(3,6,12,0)"); vg.addColorStop(1, "rgba(3,6,12,.5)"); b.fillStyle = vg; b.fillRect(0, 0, W2, H2);
+  // 3. Wolken wie aus dem Satellitenbild: fraktales Rauschen (grobe Felder + feine Fransen, leicht verwirbelt),
+  //    oben-links beleuchtet, unten-rechts im Schatten; außen dichter, über dem Kartenrand nur ein Hauch.
+  //    In niedriger Auflösung gerechnet und weich hochskaliert (Wolken sind ohnehin weich) – einmal beim Start.
+  const cw = Math.max(64, Math.round(W2 / 3)), chh = Math.max(64, Math.round(H2 / 3)), sx = W2 / cw, sy = H2 / chh;
+  const hsh = (x, y) => { let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  const smo = t => t * t * (3 - 2 * t);
+  const vn = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), u = smo(x - xi), v = smo(y - yi), p = hsh(xi, yi), q = hsh(xi + 1, yi), r = hsh(xi, yi + 1), w = hsh(xi + 1, yi + 1); return p + (q - p) * u + (r - p) * v + (p - q - r + w) * u * v; };
+  const fbm = (x, y, oct) => { let s = 0, amp = 0.5, f = 1, n = 0; for (let o = 0; o < oct; o++) { s += amp * vn(x * f + o * 17.3, y * f - o * 9.1); n += amp; f *= 2.07; amp *= 0.5; } return s / n; };
+  // Abstand zum Kartenrand: negativ innen, 0 am Rand, 1 ganz außen
+  const sd = (x, y) => { const dx = Math.max(ox - x, x - (ox + iw)), dy = Math.max(oy - y, y - (oy + ih)); if (dx <= 0 && dy <= 0) return Math.max(dx / ox, dy / oy); return Math.min(1, Math.hypot(Math.max(dx, 0) / ox, Math.max(dy, 0) / oy)); };
+  const [C, cg] = mk(), CL = document.createElement("canvas"); CL.width = cw; CL.height = chh;
+  const cl = CL.getContext("2d"), img = cl.createImageData(cw, chh), px = img.data, nsc = 6.5 / Math.min(cw, chh);
+  for (let j = 0; j < chh; j++) for (let i = 0; i < cw; i++) {
+    const X = i * sx, Y = j * sy, d = sd(X, Y), k = (j * cw + i) * 4;
+    if (d < -0.12) { px[k + 3] = 0; continue; }
+    const x = i * nsc, y = j * nsc, wx = fbm(x * 0.6 + 5.2, y * 0.6 + 1.3, 3) - 0.5, wy = fbm(x * 0.6 - 3.7, y * 0.6 + 8.1, 3) - 0.5;   // Verwirbelung
+    const n = fbm(x + wx * 1.6, y + wy * 1.6, 6), n2 = fbm(x + wx * 1.6 - 0.06, y + wy * 1.6 - 0.06, 4);
+    const cover = 0.6 - Math.max(0, d) * 0.2, edge = smo(Math.max(0, Math.min(1, (d + 0.1) / 0.3)));   // außen mehr Bedeckung, zum Rand hin ausgedünnt
+    let a = Math.max(0, Math.min(1, (n - cover) / 0.16)); a = smo(a) * edge * (0.55 + 0.45 * Math.min(1, Math.max(0, d) * 2));
+    if (a <= 0.004) { px[k + 3] = 0; continue; }
+    const lit = Math.max(0, Math.min(1, 0.62 + (n - n2) * 7 + (n - cover) * 1.2));   // Licht von oben links, dichte Stellen heller
+    px[k] = 150 + 92 * lit; px[k + 1] = 162 + 84 * lit; px[k + 2] = 182 + 70 * lit; px[k + 3] = Math.round(255 * Math.min(0.92, a));
+  }
+  cl.putImageData(img, 0, 0);
+  // Schatten der Wolken auf dem Boden (nur außerhalb der Karte, leicht versetzt) – macht die Höhe sichtbar
+  const [SH, shg] = mk(); shg.filter = "blur(" + Math.max(3, Math.round(W2 * 0.006)) + "px)"; shg.imageSmoothingQuality = "high"; shg.drawImage(CL, 0, 0, W2, H2); shg.filter = "none";
+  shg.globalCompositeOperation = "source-in"; shg.fillStyle = "rgba(0,4,10,.85)"; shg.fillRect(0, 0, W2, H2);
+  b.save(); b.globalAlpha = 0.45; b.drawImage(SH, Math.round(W2 * 0.012), Math.round(H2 * 0.012)); b.restore();
+  cg.imageSmoothingEnabled = true; cg.imageSmoothingQuality = "high"; cg.filter = "blur(" + Math.max(1, Math.round(W2 * 0.0015)) + "px)"; cg.drawImage(CL, 0, 0, W2, H2); cg.filter = "none";
+  MAPX.c = B; MAPX.cl = C; MAPX.src = im; return MAPX;
+}
+// Kartenbild samt Umgebung in Kartenkoordinaten [x0, y0, x1, y1] (null = keine Grenze, z. B. beim Kalibrieren)
+function mapxRect(){
+  if (!mapImg.T || !mapImg.bmp || S.mapSrc === "learned" || (typeof cal !== "undefined" && cal.open)) return null;
+  const m = MAPX.m, w = mapImg.w, h = mapImg.h, mr = mirror();
+  const P = [[-m * w, -m * h], [w * (1 + m), -m * h], [-m * w, h * (1 + m)], [w * (1 + m), h * (1 + m)]].map(([u, v]) => { const [x, z] = imgToWorld(u, v); return [mr * x, -z]; });
+  const xs = P.map(p => p[0]).sort((p, q) => p - q), ys = P.map(p => p[1]).sort((p, q) => p - q);
+  return [xs[1], ys[1], xs[2], ys[2]];   // inneres Rechteck: keine Ecke bleibt leer, auch wenn das Bild minimal gedreht ist
+}
+// Größe der Ansicht in Kartenrichtung (bei „Fahrtrichtung oben“ die Diagonale – sonst würde der Zoom beim Lenken pumpen)
+function mapxView(){ if (cam.mode === "follow" && S.orient === "heading") { const d = Math.hypot(W, H); return [d, d]; } const r = cam.rot || 0, c = Math.abs(Math.cos(r)), s = Math.abs(Math.sin(r)); return [W * c + H * s, W * s + H * c]; }
+function mapxMinScale(){ const R = mapxRect(); if (!R || !(W > 20)) return 0; const [ew, eh] = mapxView(); return Math.max(ew / (R[2] - R[0]), eh / (R[3] - R[1])); }
+function mapxClamp(){
+  const R = mapxRect(); if (!R || !(W > 20) || !(cam.s > 0)) return;
+  const smin = mapxMinScale();
+  if (cam.ts < smin) cam.ts = smin;
+  if (cam.s < smin) cam.s = smin;
+  const [ew, eh] = mapxView(), hw = ew / 2 / cam.s, hh = eh / 2 / cam.s, [ax, ay] = anchor(), dx = (W / 2 - ax) / cam.s, dy = (H / 2 - ay) / cam.s, r = cam.rot || 0;
+  const vx = cam.cx + dx * Math.cos(r) - dy * Math.sin(r), vy = cam.cy + dx * Math.sin(r) + dy * Math.cos(r);
+  const cx = R[2] - R[0] <= 2 * hw ? (R[0] + R[2]) / 2 : Math.max(R[0] + hw, Math.min(R[2] - hw, vx));
+  const cy = R[3] - R[1] <= 2 * hh ? (R[1] + R[3]) / 2 : Math.max(R[1] + hh, Math.min(R[3] - hh, vy));
+  cam.cx += cx - vx; cam.cy += cy - vy;
+}
 // Kartenbild (+ Vorlage im Editor) in Bildkoordinaten – g steht vorher in Kartenkoordinaten
 function drawBaseImg(g){
   const T = mapImg.T;
   g.scale(mirror(), -1); g.transform(T[0], T[1], T[2], T[3], T[4], T[5]);
-  if (mapImg.bmp && (!ed.on || LAY.bg)) { g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high"; g.drawImage(mapImg.bmp, 0, 0); }
+  if (mapImg.bmp && (!ed.on || LAY.bg)) {
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+    let X = null; try { X = mapxBuild(); } catch (e) {}
+    const xm = MAPX.m, xw = mapImg.w, xh = mapImg.h;
+    if (X) g.drawImage(X.c, -xm * xw, -xm * xh, xw * (1 + 2 * xm), xh * (1 + 2 * xm));
+    g.drawImage(mapImg.bmp, 0, 0);
+    if (X && X.cl) g.drawImage(X.cl, -xm * xw, -xm * xh, xw * (1 + 2 * xm), xh * (1 + 2 * xm));   // Wolken über dem Kartenrand
+  }
   // Bearbeiten: Vorlage zum Nachzeichnen
   if (ed.on && ed.orig) { const U = underImg(); if (U) { g.save(); g.globalAlpha = ed.origA; const M = U.M; g.transform(M[0][0], M[1][0], M[0][1], M[1][1], M[0][2], M[1][2]); g.drawImage(U.img, 0, 0); g.restore(); } }
 }
@@ -5799,8 +6282,9 @@ function setMode(m){
 }
 function zoomBy(f, instant){
   lastInteract = performance.now();
-  if (cam.mode === "follow") { S.zoom = Math.max(0.12, Math.min(8, S.zoom * f)); saveSettings(); if (instant) cam.s *= f; }
-  else { cam.ts = Math.max(0.002, Math.min(40, cam.ts * f)); if (instant) cam.s = cam.ts; if (cam.mode === "overview") setMode("free"); }
+  const sm = (() => { try { return mapxMinScale(); } catch (e) { return 0; } })();
+  if (cam.mode === "follow") { S.zoom = Math.max(sm > 0 ? 0.02 : 0.12, Math.min(8, S.zoom * f)); const fb = followBase(); if (sm > 0 && fb > 0) S.zoom = Math.max(S.zoom, sm / fb); saveSettings(); if (instant) cam.s = Math.max(sm, cam.s * f); }
+  else { cam.ts = Math.max(0.002, sm, Math.min(40, cam.ts * f)); if (instant) cam.s = cam.ts; if (cam.mode === "overview") setMode("free"); }
 }
 $("zin").onclick = () => zoomBy(1.35);
 $("zout").onclick = () => zoomBy(1 / 1.35);
@@ -6819,6 +7303,8 @@ const PB = {on:false, seen:false, ping:0, badT:0, gasT:0};
 function pbSet(on, why){
   PB.on = on; PB.seen = false; PB.badT = 0; PB.gasT = 0; HLM.t = 0; try { ovKick(); } catch (e) {}
   fetch("/handbremse", {method:"POST", body:JSON.stringify({an:on})}).catch(() => {});
+  // eigene Automatik: Handbremse gelöst (Gas, Taste, Lenkrad) = aus P heraus in D
+  if (!on && S.gsOn && GS.mode === "P") gsPost({mode:"D"}).then(v => { if (v && v.ok) { GS.mode = v.mode; gsShow(v.mode); } });
   if (why) toast(why);
 }
 function pbToggle(){
@@ -6861,6 +7347,26 @@ function pbTick(d){
   if (Math.abs(d.spd || 0) * 3.6 > 20) pbSet(false);
 }
 // ---- gerade gespieltes Lied im Profil (nur Titel, Künstler, Cover) ----
+// Player auf Handy/Tablet: Titel, Cover, Play/Pause, vor/zurück, Lautstärke – steuert die Musik am PC (Medientasten)
+// Handy/Tablet: ist Spotify am PC verbunden, die volle Spotify-Ansicht (Zuletzt gehört, Playlists …) – sonst der einfache Player
+async function spPhone(){
+  if (!SP.st) SP.st = await fetch("/spotify/status", {cache:"no-store"}).then(r => r.json()).catch(() => null);
+  if (GR.view !== "spotify") return;
+  if (SP.st && SP.st.loggedIn) { $("gweb").classList.remove("phm"); spOpen(); } else phMusic();
+}
+function phMusic(){
+  const g = $("gweb"); if (!g) return;
+  g.classList.add("phm"); g.classList.remove("spm");
+  let el = g.querySelector(".phmusic");
+  if (!el) { el = document.createElement("div"); el.className = "phmusic"; g.appendChild(el); el.addEventListener("click", e => { const b = e.target.closest("[data-mc]"); if (b) { mediaCmd(b.dataset.mc); if (b.dataset.mc === "playpause") { music.playing = !music.playing; el.dataset.k = ""; phMusic(); } } }); }
+  const on = !!music.playing, t = music.title || "", a = music.artist || "";
+  const key = [t, a, on, music.cover, music.running].join("|"); if (el.dataset.k === key) return; el.dataset.k = key;
+  const I = p => '<svg viewBox="0 0 24 24" fill="currentColor">' + p + '</svg>';
+  el.innerHTML = '<div class="phcov">' + (music.cover ? '<img src="' + esc(music.cover) + '" alt="">' : '<span>♪</span>') + '</div>'
+    + '<div class="phtx"><small>' + (music.running ? "Läuft am PC" : "Spotify am PC ist nicht offen") + '</small><b>' + esc(t || (on ? "Musik läuft" : "Gerade läuft nichts")) + '</b><span>' + esc(a || (music.running ? "Spotify" : "Starte Spotify am PC")) + '</span></div>'
+    + '<div class="phctl"><button data-mc="prev" aria-label="Zurück">' + I('<path d="M6 5h2.2v14H6zM9.5 12 19 5v14z"/>') + '</button><button class="pp" data-mc="playpause" aria-label="Abspielen/Pause">' + (on ? I('<path d="M6.5 5h4v14h-4zM13.5 5h4v14h-4z"/>') : I('<path d="M7 4.5v15L19.5 12z"/>')) + '</button><button data-mc="next" aria-label="Weiter">' + I('<path d="M15.8 5H18v14h-2.2zM14.5 12 5 5v14z"/>') + '</button></div>'
+    + '<div class="phvol"><button data-mc="voldown" aria-label="Leiser">' + I('<path d="M4 9v6h4l5 4V5L8 9z"/>') + '</button><span>Lautstärke</span><button data-mc="volup" aria-label="Lauter">' + I('<path d="M4 9v6h4l5 4V5L8 9zM15.5 8.6a4.8 4.8 0 0 1 0 6.8l-1-1a3.4 3.4 0 0 0 0-4.8zM17.8 6.3a8 8 0 0 1 0 11.4l-1-1a6.6 6.6 0 0 0 0-9.4z"/>') + '</button></div>';
+}
 function songSync(){
   if (!window.FD_EXE || !PROF.me || !PROF.me.has) return;
   const on = !!(music.playing && music.title), key = on ? music.title + "|" + music.artist + "|" + (music.cover || "") : "";
@@ -8376,17 +8882,17 @@ function ovPush(now, info, R, pr){
   try { const c = fuelCar(D), cap = fuelCap(c), m = sess.dmg || {f:0, r:0, l:0, rt:0}; v.lm = {fu:cap ? Math.round(c.lvl / cap * 1000) / 1000 : null, dm:Math.round(Math.max(m.f, m.r, m.l, m.rt)), li:LIGHT.on, pb:PB.on}; } catch (e) {}
   // markierte Orte in der Nähe (Parkplätze, Tankstellen …) für die Minikarte – immer der aktuelle Stand
   try { if (LR.pois && LR.pois.length && D && D.dash) { const po = []; for (const p of LR.pois) { if (!isFinite(p.x) || Math.hypot(p.x - D.px, p.z - D.pz) > 900) continue; po.push({x:Math.round(p.x), z:Math.round(p.z), k:p.k}); if (po.length >= 30) break; } if (po.length) v.po = po; } } catch (e) {}
-  const txt = JSON.stringify(v); if (OV.sent === txt) return; OV.sent = txt;
+  const txt = JSON.stringify(v); if (OV.sent === txt && now - (OV.st || 0) < 1500) return; OV.sent = txt; OV.st = now;   // spätestens alle 1,5 s neu: sonst gehen gleichbleibende Leuchten (Handbremse) im Overlay aus
   fetch("/ov/push", {method:"POST", body:txt}).catch(() => {});
 }
 async function ovToggle(){
-  if (!window.FD_EXE) { toast("Das Overlay gibt es nur im ForzaDashboard-Programm am PC"); return; }
-  const r = await fetch("/ov/toggle", {cache:"no-store"}).then(x => x.json()).catch(() => null);
-  if (!r) { toast("Overlay ging nicht – Programm neu starten"); return; }
-  OV.on = !!r.on; OV.sent = ""; OVM.t = 0; gRail(); { const sw = $("ovSw"); if (sw) sw.classList.toggle("on", OV.on); }
+  // geht auch vom Handy/Tablet im WLAN: schaltet das Overlay im Spiel am PC
+  const r = await fetch("/ov/toggle", {cache:"no-store"}).then(x => x.ok ? x.json() : null).catch(() => null);
+  if (!r) { toast(window.FD_EXE ? "Overlay ging nicht – Programm neu starten" : "Overlay ging nicht – ForzaDashboard am PC aktualisieren"); return; }
+  OV.on = !!r.on; OV.sent = ""; OVM.t = 0; gRail(); try { gApps(); } catch (e) {} { const sw = $("ovSw"); if (sw) sw.classList.toggle("on", OV.on); }
   toast(OV.on ? "Overlay an – unten rechts im Spiel (Forza im Vollbildfenster/randlos spielen)" : "Overlay aus");
 }
-if (window.FD_EXE) fetch("/ov/state", {cache:"no-store"}).then(x => x.json()).then(r => { OV.on = !!r.on; try { gRail(); } catch (e) {} }).catch(() => {});
+fetch("/ov/state", {cache:"no-store"}).then(x => x.json()).then(r => { OV.on = !!r.on; try { gRail(); gApps(); } catch (e) {} }).catch(() => {});
 
 /* ======================= Selbst gelernte Straßen ======================= */
 // Gefahrene Strecken werden erst unsichtbar vorgemerkt ("Kandidaten"). Eine Straße entsteht erst,
@@ -10965,7 +11471,7 @@ function setView(v){
   $("main").classList.toggle("webmode", (v === "spotify" || v === "youtube" || v === "discord" || v === "twitch")); $("main").classList.toggle("websplit", (v === "youtube" && WEB.yt === "split") || (v === "discord" && WEB.dc === "split"));
   $("v-dash").classList.toggle("active", v === "dash"); $("v-map").classList.toggle("active", v === "map");
   try { localStorage.setItem("fd.view", v); } catch (e) {}
-  GR.view = v; try { sessionStorage.setItem("fd.view", v); } catch (e) {} if (S.design === "glass") { gRail(); if (v === "friends") gFriends(true); if (v === "mods") modsOpen(true); if (v === "tune") tuOpen(); if ((v === "spotify" || v === "youtube" || v === "discord" || v === "twitch")) webShow(v); $("gweb").classList.toggle("spm", v === "spotify" && !SP.login); if (v === "spotify") spOpen(); }
+  GR.view = v; try { sessionStorage.setItem("fd.view", v); } catch (e) {} if (S.design === "glass") { gRail(); if (v === "friends") gFriends(true); if (v === "mods") modsOpen(true); if (v === "tune") tuOpen(); if ((v === "spotify" || v === "youtube" || v === "discord" || v === "twitch")) webShow(v); $("gweb").classList.toggle("spm", v === "spotify" && !SP.login); if (v !== "spotify") $("gweb").classList.remove("phm"); if (v === "spotify") { if (devMusic()) spPhone(); else spOpen(); } }
   requestAnimationFrame(webSync);
   requestAnimationFrame(fitSide);
   if (S.design === "glass") try { gAcSet(); } catch (e) {}   // Klimaleiste: bei YouTube/Spotify zu, sonst wie eingestellt
@@ -10994,9 +11500,29 @@ function navBack(){
 // Seitentasten der Maus: Standard (Browser-Zurück) unterdrücken, Taste 4 = zurück
 ["mousedown", "auxclick"].forEach(t => window.addEventListener(t, e => { if (e.button === 3 || e.button === 4) e.preventDefault(); }));
 window.addEventListener("mouseup", e => { if (e.button === 3) { e.preventDefault(); navBack(); } else if (e.button === 4) e.preventDefault(); });
-function openSettings(){ buildSettings(); if (S.design === "glass") setView("set"); else $("sheet").classList.add("open"); }
+function openSettings(){ buildSettings(); try { devSettingRow(); } catch (e) {} if (DEVK === "phone") setDetail(false); if (S.design === "glass") setView("set"); else $("sheet").classList.add("open"); }
+function setDetail(on){
+  const p = document.querySelector("#sheet .panel") || document.querySelector(".gset .panel"); if (!p) return;
+  p.classList.toggle("pdet", !!on);
+  let b = p.querySelector(".pback");
+  if (!b) { b = document.createElement("button"); b.className = "pback"; b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Einstellungen'; b.onclick = () => setDetail(false); const hd = p.querySelector(".hd"); if (hd) hd.prepend(b); }
+  const h2 = p.querySelector(".hd h2"), cur = document.querySelector("#scats [data-cat].on");
+  if (h2) h2.textContent = on && cur ? cur.textContent.trim() : "Einstellungen";
+  window.scrollTo(0, 0);
+}
+// Einstellung „Ansicht für dieses Gerät“ (nicht im Programmfenster am PC)
+function devSettingRow(){
+  if (window.FD_EXE) return;
+  const g = $("designGroup"); if (!g || g.querySelector(".devrow")) return;
+  const cur = (() => { try { return localStorage.getItem("fd.dev") || "auto"; } catch (e) { return "auto"; } })();
+  const sg = document.createElement("div"); sg.className = "seg";
+  [["auto", "Automatisch"], ["phone", "Handy"], ["tablet", "Tablet"], ["desktop", "PC"]].forEach(([k, t]) => { const b = document.createElement("button"); b.textContent = t; if (cur === k) b.className = "on"; b.onclick = () => { try { if (k === "auto") localStorage.removeItem("fd.dev"); else localStorage.setItem("fd.dev", k); } catch (x) {} location.reload(); }; sg.appendChild(b); });
+  const r = row("Ansicht für dieses Gerät", "Erkannt: " + ({phone:"Handy", tablet:"Tablet", desktop:"PC"})[DEVK] + " – die Seite lädt danach neu", sg); r.classList.add("devrow"); g.prepend(r);
+  // nur Glas-Design auf Handy/Tablet: den Umschalter dafür ausblenden
+  if (DEVK !== "desktop") [...g.querySelectorAll(".srow")].forEach(x => { const l = x.querySelector(".lbl"); if (l && l.firstChild && l.firstChild.textContent.trim() === "Design") x.style.display = "none"; });
+}
 $("v-set").onclick = openSettings;
-$("scats").onclick = e => { const b = e.target.closest("[data-cat]"); if (b) setCatShow(b.dataset.cat); };
+$("scats").onclick = e => { const b = e.target.closest("[data-cat]"); if (b) { setCatShow(b.dataset.cat); if (DEVK === "phone") setDetail(true); } };
 let setCat = (() => { try { return sessionStorage.getItem("fd.setcat") || "look"; } catch (e) { return "look"; } })();
 // Einstellungen ordnen: Zeilen in die passenden Bereiche verschieben (Kacheln, Navigation, Programm) – läuft nach jedem Aufbau
 function settingsTidy(){
@@ -11528,7 +12054,12 @@ const GHR = '<svg class="ghr" viewBox="0 0 76 76"><rect x="2" y="2" width="72" h
 const GR = {view:"dash", edit:false, press:null, drag:null};
 // Apps in der Leiste: Standard G_RAIL, im Bearbeiten-Modus mit + ergänzbar und mit − entfernbar (Home bleibt immer)
 const G_ADDABLE = ["home", "spotify", "map", "perf", "mods", "tuning", "overlay", "friends", "youtube", "twitch", "klima", "set", "tiles", "edit", "full", "discord", "quit"];
-function gRailApps(){ const l = (Array.isArray(S.gRail) ? S.gRail : G_RAIL).filter(k => G_APPS[k] && G_SVG[k] && (k !== "quit" || window.FD_EXE)); if (!l.includes("home")) l.unshift("home"); return l; }
+function gRailApps(){
+  if (DEVK === "phone") return PHONE_RAIL.filter(k => G_APPS[k] && G_SVG[k]);   // Handy: feste, kurze Tab-Leiste – der Rest steckt unter „Mehr“
+  const l = (Array.isArray(S.gRail) ? S.gRail : G_RAIL).filter(k => G_APPS[k] && G_SVG[k] && (k !== "quit" || window.FD_EXE) && !devHide(k)); if (!l.includes("home")) l.unshift("home");
+  if (DEVK === "tablet" && !l.includes("tuning")) l.splice(Math.max(1, l.indexOf("friends") + 1), 0, "tuning");
+  return l;
+}
 function gOrder(){ const apps = gRailApps(), o = (Array.isArray(S.gOrder) ? S.gOrder : []).filter(k => apps.includes(k)); for (const k of apps) if (!o.includes(k)) o.push(k); return o; }
 function gRailAdd(k){ const l = gRailApps(); if (!l.includes(k)) { l.push(k); S.gRail = l; const o = gOrder(); S.gOrder = o; saveSettings(); } gAddPop(false); gFlip(gRail); }
 // Twitch einmalig auch in eine selbst angepasste Leiste aufnehmen
@@ -11539,7 +12070,7 @@ function gAddPop(show){
   if (!show) { if (p) p.classList.remove("on"); return; }
   if (!p) { p = document.createElement("div"); p.id = "gaddPop"; p.className = "gaddpop glass"; document.body.appendChild(p);
     p.addEventListener("click", e => { const b = e.target.closest("[data-add]"); if (b) { e.stopPropagation(); gRailAdd(b.dataset.add); } }); }
-  const have = gRailApps(), list = G_ADDABLE.filter(k => G_APPS[k] && G_SVG[k] && !have.includes(k) && (k !== "quit" || window.FD_EXE));
+  const have = gRailApps(), list = G_ADDABLE.filter(k => G_APPS[k] && G_SVG[k] && !have.includes(k) && (k !== "quit" || window.FD_EXE) && !devHide(k));
   p.innerHTML = '<b>App hinzufügen</b>' + (list.length ? '<div class="gaddgrid">' + list.map(k => '<button data-add="' + k + '">' + gIco(k, "span") + '<small>' + G_APPS[k][0] + '</small></button>').join("") + '</div>' : '<span class="gaddnone">Alle Apps sind schon in der Leiste.</span>');
   const r = $("grail").querySelector(".gplus").getBoundingClientRect(), horiz = getComputedStyle($("grail")).flexDirection === "row";
   p.style.left = (horiz ? Math.max(12, Math.min(innerWidth - 332, r.left - 140)) : r.right + 14) + "px";
@@ -11550,6 +12081,7 @@ function gAddPop(show){
 function gAcAttr(k){ try { return k === "klima" ? ' data-ac="' + gAc.mode + '"' : ""; } catch (e) { return ""; } }
 function gIco(k, tag){ return '<' + tag + ' class="gico" data-k="' + k + '"' + gAcAttr(k) + ' title="' + G_APPS[k][0] + '" style="background:' + G_APPS[k][1] + '">' + G_SVG[k] + (tag === "button" ? GHR : "") + '</' + tag + '>'; }
 function gRail(){
+  if (DEVK === "phone") GR.edit = false;   // Handy: feste Tab-Leiste, kein Umbau
   const r = $("grail"), cur = GR.view === "dash" ? "home" : GR.view;
   r.className = "grail" + (GR.edit ? " edit" : "");
   r.innerHTML = gOrder().map(k => gIco(k, "button")).join("") + (GR.edit ? '<button class="gplus" data-plus="1" title="App hinzufügen" aria-label="App hinzufügen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>' : "") + '<div class="gdiv"></div><button class="gdots" data-k="apps" title="Apps">' + G_SVG.dots + '</button>' + (GR.edit ? '<button class="gdone" data-done="1">Fertig</button>' : "");
@@ -12066,8 +12598,8 @@ async function spLogin(){
 
 /* ---- Apps-Seite ---- */
 function gApps(){
-  const A = [["spotify", "Musik"], ["youtube", "Video"], ["discord", "Sprachchat"], ["twitch", "Streams"], ["map", ""], ["perf", "Fahrzeugdaten"], ["mods", "Nexus Mods"], ["tuning", "Codes & Ideen"], ["overlay", "Im Spiel"], ["friends", "Kolonne"], ["klima", ""], ["tiles", "Anordnen"], ["edit", ""], ["full", ""], ["set", ""]].concat(window.FD_EXE ? [["quit", "App schließen"]] : []);
-  $("gapps").innerHTML = A.map(([k, s]) => '<button class="gapp" data-k="' + k + '">' + gIco(k, "span") + G_APPS[k][0] + (s ? "<small>" + s + "</small>" : "") + '</button>').join("");
+  const A = [["spotify", "Musik"], ["youtube", "Video"], ["discord", "Sprachchat"], ["twitch", "Streams"], ["map", ""], ["perf", "Fahrzeugdaten"], ["mods", "Nexus Mods"], ["tuning", "Codes & Ideen"], ["overlay", DEVK !== "desktop" ? (window.OV && OV.on ? "Im Spiel · an" : "Im Spiel · aus") : "Im Spiel"], ["friends", "Kolonne"], ["klima", ""], ["tiles", "Anordnen"], ["edit", ""], ["full", ""], ["set", ""]].concat(window.FD_EXE ? [["quit", "App schließen"]] : []);
+  $("gapps").innerHTML = A.filter(([k]) => !devHide(k)).map(([k, s]) => '<button class="gapp" data-k="' + k + '">' + gIco(k, "span") + G_APPS[k][0] + (s ? "<small>" + s + "</small>" : "") + '</button>').join("");
 }
 $("gapps").onclick = e => { const b = e.target.closest("[data-k]"); if (b) gOpen(b.dataset.k); };
 
