@@ -12037,7 +12037,7 @@ $("v-set").onclick = openSettings;
 $("scats").onclick = e => { const b = e.target.closest("[data-cat]"); if (b) { setCatShow(b.dataset.cat); if (DEVK === "phone") setDetail(true); } };
 let setCat = (() => { try { return sessionStorage.getItem("fd.setcat") || "look"; } catch (e) { return "look"; } })();
 // Einstellungen ordnen: Zeilen in die passenden Bereiche verschieben (Kacheln, Navigation, Programm) – läuft nach jedem Aufbau
-function settingsTidy(){
+function settingsTidy(light){
   const move = (label, target, first) => { const r = [...document.querySelectorAll(".spages .srow")].find(x => { const l = x.querySelector(".lbl"); return l && l.firstChild && l.firstChild.textContent.trim() === label; }); const t = $(target); if (r && t && r.parentElement !== t) { if (first) t.prepend(r); else t.appendChild(r); } };
   // Kacheln: Marken-Tacho und die Kachel-Liste aus „Aussehen“
   move("Marken-Tacho", "tilesGroup", true);
@@ -12050,6 +12050,8 @@ function settingsTidy(){
   move("Updates", "infoGroup");
   const ib = document.querySelector('#scats [data-cat="info"]'); if (ib && ib.lastChild && ib.lastChild.nodeType === 3) ib.lastChild.textContent = "Programm";
   const ih = document.querySelector('.spages>section[data-cat="info"]>h4'); if (ih) ih.textContent = "Programm";
+  // zweiter Durchgang (nach dem Laden der Fenster-Optionen): nur noch einsortieren und filtern, nichts neu bauen
+  if (light) { settingsFilter(); return; }
   try { buildAssist(); } catch (e) { console.error(e); }
   try { buildWheelSettings(); } catch (e) { console.error(e); }
   try { buildOverlaySettings(); } catch (e) { console.error(e); }
@@ -12069,7 +12071,7 @@ function settingsFilter(){
 }
 $("sSearch").addEventListener("input", settingsFilter);
 $("sSearch").addEventListener("keydown", e => { e.stopPropagation(); if (e.key === "Escape") { e.target.value = ""; settingsFilter(); } });
-{ const _bs = buildSettings; buildSettings = function(){ ["navGroup", "tilesGroup"].forEach(id => { const g = $(id); if (g) g.querySelectorAll(".srow").forEach(x => x.remove()); }); const r = _bs.apply(this, arguments); try { settingsTidy(); setTimeout(settingsTidy, 700); } catch (e) { console.error(e); } return r; }; }
+{ const _bs = buildSettings; buildSettings = function(){ ["navGroup", "tilesGroup"].forEach(id => { const g = $(id); if (g) g.querySelectorAll(".srow").forEach(x => x.remove()); }); const r = _bs.apply(this, arguments); try { settingsTidy(); clearTimeout(settingsTidy.t); settingsTidy.t = setTimeout(() => settingsTidy(true), 700); } catch (e) { console.error(e); } return r; }; }
 function setCatShow(c){
   setCat = c; try { sessionStorage.setItem("fd.setcat", c); } catch (e) {}
   document.querySelectorAll("#scats [data-cat]").forEach(b => b.classList.toggle("on", b.dataset.cat === c));
