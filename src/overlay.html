@@ -6,8 +6,10 @@
 html,body{margin:0;height:100%;background:transparent;overflow:hidden;font:13px/1.25 "SF Pro Display",-apple-system,"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased}
 body.edit{background:#16181d}
 .edit #stage{bottom:auto;background:#0b0d12 url(/overlay/vorschau.jpg) center/100% 100% no-repeat;overflow:hidden}
-#stage{position:absolute;inset:0;opacity:0;transition:opacity .5s}
-#stage.on{opacity:1}
+/* ausgeblendet (Pausemenü, kein Spiel): nach dem Verblassen ganz aus dem Bild – die Glas-Unschärfe der Widgets kostet sonst
+   auch unsichtbar Grafikleistung über dem Spiel */
+#stage{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .5s,visibility 0s .5s}
+#stage.on{opacity:1;visibility:visible;transition:opacity .5s}
 .wd{position:absolute;left:0;top:0;transform-origin:0 0;--o:1}
 .card{position:absolute;inset:0;border-radius:28px;overflow:hidden;
   background:linear-gradient(160deg,rgba(66,70,82,calc(.80*var(--o))) 0%,rgba(30,32,40,calc(.84*var(--o))) 55%,rgba(18,19,24,calc(.88*var(--o))) 100%);
@@ -574,9 +576,13 @@ function drawMap(c, now){
   g.fillStyle = acc; g.beginPath(); g.moveTo(0, -6); g.lineTo(4.6, 4.5); g.lineTo(0, 2.4); g.lineTo(-4.6, 4.5); g.closePath(); g.fill();
   g.restore();
 }
+let hidT = 0;
 function frame(now){
-  const live = EDIT || (T && now - tT < 1500 && T.on);
-  st.classList.toggle("on", !!(live || now - t0 < 4000));
+  const live = EDIT || (T && now - tT < 1500 && T.on), on = !!(live || now - t0 < 4000);
+  st.classList.toggle("on", on);
+  // unsichtbar (nach dem Verblassen): Karten nicht zeichnen, nur alle 250 ms nachsehen, ob es weitergeht
+  if (on) hidT = 0; else if (!hidT) hidT = now;
+  if (!on && now - hidT > 600) { P.t = 0; setTimeout(() => requestAnimationFrame(frame), 250); return; }
   posTick(now);
   { const kmh = T ? Math.abs(T.spd || 0) * 3.6 : 0; zoom += ((kmh > 150 ? 0.55 : kmh > 80 ? 0.75 : 1.05) - zoom) * 0.02; }
   st.querySelectorAll("canvas[data-map]").forEach(c => drawMap(c, now));
